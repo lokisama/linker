@@ -1,5 +1,3 @@
-'use strict';
-
 const knex = appRequire('init/knex').knex;
 const crypto = require('crypto');
 
@@ -179,6 +177,26 @@ const getUserAndPaging = async (opt = {}) => {
   };
 };
 
+const deleteUser = async userId => {
+  if(!userId) {
+    return Promise.reject('invalid userId');
+  }
+  const existAccount = await knex('account_plugin').select().where({
+    userId,
+  });
+  if(existAccount.length) {
+    return Promise.reject('delete user fail');
+  }
+  const deleteCount = await knex('user').delete().where({
+    id: userId,
+  });
+  if(deleteCount >= 1) {
+    return;
+  } else {
+    return Promise.reject('delete user fail');
+  }
+};
+
 exports.add = addUser;
 exports.edit = editUser;
 exports.checkPassword = checkPassword;
@@ -187,3 +205,4 @@ exports.getRecentSignUp = getRecentSignUpUsers;
 exports.getRecentLogin = getRecentLoginUsers;
 exports.getOne = getOneUser;
 exports.getUserAndPaging = getUserAndPaging;
+exports.delete = deleteUser;

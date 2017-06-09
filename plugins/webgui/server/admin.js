@@ -174,11 +174,9 @@ exports.getAccountByPort = (req, res) => {
 };
 
 exports.getOneAccount = (req, res) => {
-  const accountId = req.params.accountId;
-  account.getAccount().then(success => {
-    const accountInfo = success.filter(f => {
-      return f.id === +accountId;
-    })[0];
+  const accountId = +req.params.accountId;
+  account.getAccount({ id: accountId }).then(success => {
+    const accountInfo = success[0];
     if(accountInfo) {
       accountInfo.data = JSON.parse(accountInfo.data);
       if(accountInfo.type >= 2 && accountInfo.type <= 5) {
@@ -199,7 +197,7 @@ exports.getOneAccount = (req, res) => {
       accountInfo.server = accountInfo.server ? JSON.parse(accountInfo.server) : accountInfo.server;
       return res.send(accountInfo);
     }
-    Promise.reject('account not found');
+    return res.status(403).end();
   }).catch(err => {
     console.log(err);
     res.status(403).end();
@@ -503,6 +501,16 @@ exports.getOneUser = (req, res) => {
   });
 };
 
+exports.deleteUser = (req, res) => {
+  const userId = req.params.userId;
+  user.delete(userId).then(success => {
+    return res.send('success');
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
 exports.getUserAccount = (req, res) => {
   account.getAccount().then(success => {
     success = success.filter(f => {
@@ -581,6 +589,29 @@ exports.getOrders = (req, res) => {
 exports.getUserPortLastConnect = (req, res) => {
   const port = +req.params.port;
   flow.getUserPortLastConnect(port).then(success => {
+    return res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.addUser = (req, res) => {
+  req.checkBody('email', 'Invalid email').notEmpty();
+  req.checkBody('password', 'Invalid password').notEmpty();
+  req.getValidationResult().then(result => {
+    if(result.isEmpty()) {
+      const email = req.body.email;
+      const password = req.body.password;
+      return user.add({
+        username: email,
+        email,
+        password,
+        type: 'normal',
+      });
+    }
+    result.throw();
+  }).then(success => {
     return res.send(success);
   }).catch(err => {
     console.log(err);

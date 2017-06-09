@@ -4,6 +4,9 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
   ($scope, $state, $stateParams, adminApi, $mdMedia, $localStorage, userSortDialog, $timeout) => {
     $scope.setTitle('用户');
     $scope.setMenuSearchButton('search');
+    $scope.setFabButton(() => {
+      $state.go('admin.addUser');
+    });
     if(!$localStorage.admin.userSortSettings) {
       $localStorage.admin.userSortSettings = {
         sort: 'id_asc',
@@ -103,6 +106,8 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
             f.lastConnect = success.lastConnect;
           });
         });
+      }).catch(err => {
+        $state.go('admin.user');
       });
     };
     getUserData();
@@ -150,6 +155,43 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
     };
     $scope.showOrderInfo = order => {
       orderDialog.show(order);
+    };
+    $scope.deleteUser = () => {
+      confirmDialog.show({
+      text: '真的要删除该用户吗？',
+      cancel: '取消',
+      confirm: '删除',
+      error: '删除用户失败',
+      fn: function () {
+        return $http.delete(`/api/admin/user/${ userId }`);
+      },
+    }).then(() => {
+      $state.go('admin.user');
+    });
+    };
+  }
+])
+.controller('AdminAddUserController', ['$scope', '$state', '$stateParams', '$http', 'alertDialog',
+  ($scope, $state, $stateParams, $http, alertDialog) => {
+    $scope.setTitle('添加用户');
+    $scope.setMenuButton('arrow_back', 'admin.user');
+    $scope.user = {};
+    $scope.confirm = () => {
+      alertDialog.loading();
+      $http.post('/api/admin/user/add', {
+        email: $scope.user.email,
+        password: $scope.user.password,
+      }, {
+        timeout: 15000,
+      }).then(success => {
+        alertDialog.show('添加用户成功', '确定');
+        $state.go('admin.user');
+      }).catch(() => {
+        alertDialog.show('添加用户失败', '确定');
+      });
+    };
+    $scope.cancel = () => {
+      $state.go('admin.user');
     };
   }
 ]);
