@@ -77,11 +77,9 @@ app
           data: success.account,
           time: Date.now(),
         };
-
       });
     };
 
-    $scope.oldUser = true;
     $scope.alipayStatus = false;
     userApi.getAlipayStatus().then(success => {
       $scope.alipayStatus = success.status;

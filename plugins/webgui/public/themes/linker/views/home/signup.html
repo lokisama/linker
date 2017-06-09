@@ -1,0 +1,78 @@
+<!--Mask-->
+<div class="view hm-black-strong layout-screen">
+    <div class="full-bg-img flex-center justify-content-around">
+        
+            <ul class="flex-text d-flex flex-column hidden-xs-down">
+                <li>
+                    <h1 class="h1-responsive wow fadeInDown" data-wow-delay="0.2s">娱乐、办公从此无国界</h1></li>
+                <li>
+                    <p class="wow fadeInDown"> 快速、简单、安全、便利</p>
+                    <p class="wow fadeInDown">独创全局智能加速技术，国内外网速优化自动切换。</p>
+                </li>
+                <li>
+                    <a href="/home/login" class="btn info-color btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">登录</a>
+                </li>
+            </ul>
+            <div class="d-inline-flex p-2 ">
+                <!--Form with header-->
+                <form name="userForm">
+                <div class="card" style="width:300px;">
+                    <div class="card-block">
+
+                        <!--Header-->
+                        <div class="form-header blue-gradient">
+                            <h3>注册</h3>
+                        </div>
+
+                        <!--Body-->
+                        <md-input-container class="md-block">
+                            <label>邮箱</label>
+                            <input type="email" required name="email" ng-model="user.email">
+                            <div ng-messages="userForm.email.$error">
+                                <div ng-message="required">邮箱不能为空</div>
+                                <div ng-message="email">必须填写一个有效邮箱地址</div>
+                            </div>
+                        </md-input-container>
+
+                        <md-input-container class="md-block">
+                            <label>密码</label>
+                            <input type="password" required name="password" ng-model="user.password">
+                            <div ng-messages="userForm.password.$error">
+                                <div ng-message="required">密码不能为空</div>
+                            </div>
+                        </md-input-container>
+
+                        <div layout="row">
+                            <md-input-container class="md-block" flex="65">
+                                <label>验证码</label>
+                                <input type="text" required name="code" ng-model="user.code">
+                                <div ng-messages="userForm.code.$error">
+                                    <div ng-message="required">验证码不能为空</div>
+                                </div>
+                            </md-input-container>
+                            <div flex layout="row" layout-align="space-between center">
+                                <div flex="5"></div>
+                                <div style="margin-bottom: 25px;">
+                                    <md-button class="btn btn-primary btn-sm" ng-disabled="sendCodeTime || !user.email" ng-click="sendCode()" aria-label="send code">
+                                        <span ng-if="sendCodeTime === 0">获取</span><span ng-if="sendCodeTime > 0">已发送({{sendCodeTime}})</span>
+                                    </md-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+
+                        <div class="text-center">
+                            <button class="btn btn-indigo " ng-disabled="!user.email || !user.code || !user.password" ng-click="signup()">点击注册</button>
+                            <a style="font-size:12px;" href="/home/login">已有账号?点此登录</a>
+                            
+                        </div>
+
+                    </div>
+                </div>
+                </form>
+                <!--/Form with header-->
+            </div>
+    </div>
+</div>
+<!--/.Mask-->

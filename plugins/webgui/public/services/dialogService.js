@@ -161,7 +161,8 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$http', ($mdDialog, $inte
   publicInfo.createOrder = createOrder;
   publicInfo.close = close;
   const dialog = {
-    templateUrl: '/public/views/user/payDialog.html',
+    // templateUrl: '/public/views/user/payDialog.html',
+    templateUrl: '/public/themes/linker/views/user/payDialog.html',
     escapeToClose: false,
     locals: { bind: publicInfo },
     bindToController: true,

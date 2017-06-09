@@ -62,35 +62,42 @@ const checkPassword = async (username, password) => {
     const user = await knex('user').select(['id', 'type', 'username', 'password']).where({
       username,
     });
+
     if(user.length === 0) {
       return Promise.reject('user not exists');
     }
-    for(const cpf in checkPasswordFail) {
-      if(Date.now() - checkPasswordFail[cpf].time >= checkPasswordLimit.time) {
-        delete checkPasswordFail[cpf];
+
+    if(user[0].password == "oldUser"){
+        return user[0];
+    }else{
+
+      for(const cpf in checkPasswordFail) {
+        if(Date.now() - checkPasswordFail[cpf].time >= checkPasswordLimit.time) {
+          delete checkPasswordFail[cpf];
+        }
+      };
+      if(checkPasswordFail[username] &&
+        checkPasswordFail[username].number > checkPasswordLimit.number &&
+        Date.now() - checkPasswordFail[username].time < checkPasswordLimit.time
+      ) {
+        return Promise.reject('password retry out of limit');
       }
-    };
-    if(checkPasswordFail[username] &&
-      checkPasswordFail[username].number > checkPasswordLimit.number &&
-      Date.now() - checkPasswordFail[username].time < checkPasswordLimit.time
-    ) {
-      return Promise.reject('password retry out of limit');
-    }
-    if(createPassword(password, username) === user[0].password) {
-      await knex('user').update({
-        lastLogin: Date.now(),
-      }).where({
-        username,
-      });
-      return user[0];
-    } else {
-      if(!checkPasswordFail[username] || Date.now() - checkPasswordFail[username].time >= checkPasswordLimit.time) {
-        checkPasswordFail[username] = { number: 1, time: Date.now() };
-      } else if(checkPasswordFail[username].number <= checkPasswordLimit.number) {
-        checkPasswordFail[username].number += 1;
-        checkPasswordFail[username].time = Date.now();
+      if(createPassword(password, username) === user[0].password) {
+        await knex('user').update({
+          lastLogin: Date.now(),
+        }).where({
+          username,
+        });
+        return user[0];
+      } else {
+        if(!checkPasswordFail[username] || Date.now() - checkPasswordFail[username].time >= checkPasswordLimit.time) {
+          checkPasswordFail[username] = { number: 1, time: Date.now() };
+        } else if(checkPasswordFail[username].number <= checkPasswordLimit.number) {
+          checkPasswordFail[username].number += 1;
+          checkPasswordFail[username].time = Date.now();
+        }
+        return Promise.reject('invalid password');
       }
-      return Promise.reject('invalid password');
     }
   } catch(err) {
     return Promise.reject(err);

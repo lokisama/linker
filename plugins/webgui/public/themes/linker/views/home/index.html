@@ -1,0 +1,551 @@
+<!--Mask-->
+<div class="view hm-black-strong layout-screen" >
+    <div class="full-bg-img flex-center justify-content-around">
+        
+            <ul class="flex-text d-flex flex-column">
+                <li>
+                    <h1 class="h1-responsive wow fadeInDown" data-wow-delay="0.2s">娱乐、办公从此无国界</h1>
+                </li>
+                <li>
+                    <p class="wow fadeInDown"> 快速、简单、安全、便利<br/>独创全局智能加速技术，国内外网速优化自动切换。</p>
+                    
+                </li>
+                <li>
+                    <a href="/home/login" class="btn info-color btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">登录</a>
+                    <a href="/home/signup" class="btn info-color-dark btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">注册</a>
+                </li>
+            </ul>
+            <div class="d-inline-flex p-2 hidden-xs-down">
+                <!--Form with header-->
+                <form name="userForm">
+                <div class="card" style="width:300px;">
+                    <div class="card-block">
+
+                        <!--Header-->
+                        <div class="form-header blue-gradient">
+                            <h3>免费体验</h3>
+                        </div>
+
+                        <!--Body-->
+                        <md-input-container class="md-block">
+                            <label>邮箱</label>
+                            <input type="email" required name="email" ng-model="user.email">
+                            <div ng-messages="userForm.email.$error">
+                                <div ng-message="required">邮箱不能为空</div>
+                                <div ng-message="email">必须填写一个有效邮箱地址</div>
+                            </div>
+                        </md-input-container>
+
+                        <md-input-container class="md-block">
+                            <label>密码</label>
+                            <input type="password" required name="password" ng-model="user.password">
+                            <div ng-messages="userForm.password.$error">
+                                <div ng-message="required">密码不能为空</div>
+                            </div>
+                        </md-input-container>
+
+                        <div layout="row">
+                            <md-input-container class="md-block" flex="65">
+                                <label>验证码</label>
+                                <input type="text" required name="code" ng-model="user.code">
+                                <div ng-messages="userForm.code.$error">
+                                    <div ng-message="required">验证码不能为空</div>
+                                </div>
+                            </md-input-container>
+                            <div flex layout="row" layout-align="space-between center">
+                                <div flex="5"></div>
+                                <div style="margin-bottom: 25px;">
+                                    <md-button class="btn btn-primary btn-sm" ng-disabled="sendCodeTime || !user.email" ng-click="sendCode()" aria-label="send code">
+                                        <span ng-if="sendCodeTime === 0">获取</span><span ng-if="sendCodeTime > 0">已发送({{sendCodeTime}})</span>
+                                    </md-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+
+                        <div class="text-center">
+                            <button class="btn btn-indigo " ng-disabled="!user.email || !user.code || !user.password" ng-click="signup()">点击注册，领取1G流量</button>
+                           
+                            
+                        </div>
+
+                    </div>
+                </div>
+                </form>
+                <!--/Form with header-->
+            </div>
+    </div>
+</div>
+<!--/.Mask-->
+
+<!-- Main container-->
+<div class="container">
+    <div class="divider-new">
+        <h2 class="h2-responsive wow fadeIn">软件下载</h2>
+    </div>
+
+    <!--Section: Contact-->
+    <section id="contact">
+            <div class="row d-flex flex-row social-section wow fadeIn" data-wow-delay="0.2s" style="visibility: visible; animation-name: fadeIn; animation-delay: 0.2s;">
+                <!--Elegant-->
+                <div class="col-lg-3 col-6">
+                    <a type="button" class="btn btn-block deep-orange darken-1 fa fa-apple waves-effect waves-light" 
+                        href="https://appsto.re/cn/pD8pgb.i"> <span class="hidden-sm-down">iPhone</span></a>
+                </div>
+                <!--Unique-->
+                <div class="col-lg-3 col-6">
+                <a type="button" class="btn btn-block yellow darken-2  fa fa-android "
+                    href="http://www.linkersocks.com:8888/linkersocks/shadowsocks-nightly-4.1.8.apk"> <span class="hidden-sm-down">Android</span></a>
+                </div>
+                <!--Pink-->
+                <div class="col-lg-3 col-6">
+                <a type="button" class="btn btn-block blue darken-1 fa fa-windows"
+                    href="http://www.linkersocks.com:8888/linkersocks/shadowsocks-windows.rar"><span class="hidden-sm-down"> Windows</span></a>
+                </div>
+                <!--Purple-->
+                <div class="col-lg-3 col-6">
+                <a type="button" class="btn btn-block teal darken-1 fa fa-desktop"
+                    href="http://www.linkersocks.com:8888/linkersocks/ShadowsocksX-2.6.3.dmg"><span class="hidden-sm-down"> Mac</span></a>
+                </div>
+            </div>
+    </section>
+    <!--Section: Contact-->
+
+    <div class="divider-new">
+        <h2 class="h2-responsive wow fadeIn">本周推荐</h2>
+    </div>
+
+    <p class="section-description">为了让每一位零卡用户都能体验到加速后的不同，零卡今后会不定期精选一些精品网站推荐给大家。也欢迎大家分享喜欢的网站给我们哦。</p>
+
+    <!--First row-->
+    <div class="row">
+
+        <!--First column-->
+        <div class="col-lg-3 col-md-6 mb-r">
+
+            <!--Card-->
+            <div class="card card-cascade narrower">
+
+                <!--Card image-->
+                <div class="view overlay hm-white-slight">
+                    <img src="http://opub24jup.bkt.clouddn.com/img%20(15).jpg" class="img-fluid" alt="">
+                    <a href="https://www.youtube.com/" target="_blank">
+                        <div class="mask waves-effect waves-light"></div>
+                    </a>
+                </div>
+                <!--/.Card image-->
+
+                <!--Card content-->
+                <div class="card-block text-center">
+                    <!--Category & Title-->
+                    <a href="https://www.youtube.com/" target="_blank" class="text-muted"><h5>视频网站</h5></a>
+                    <h4 class="card-title"><strong><a href="https://www.youtube.com/" target="_blank">Youtube</a></strong></h4>
+
+                    <!--Rating-->
+                    <ul class="rating">
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star-o"></i></li>
+                    </ul>
+
+                    <!--Description-->
+                    <p class="card-text">真心推荐，教什么的都有，无意中看到一个做蛋糕的，什么造型的蛋糕都做得出来，真心给跪；当然少不了教你化妆，穿衣服，总之很多知识。
+                    </p>
+
+
+                </div>
+                <!--/.Card content-->
+
+            </div>
+            <!--/.Card-->
+
+        </div>
+        <!--/First column-->
+
+        <!--Second column-->
+        <div class="col-lg-3 col-md-6 mb-r">
+
+            <!--Card-->
+            <div class="card card-cascade narrower">
+
+                <!--Card image-->
+                <div class="view overlay hm-white-slight">
+                    <img src="http://opub24jup.bkt.clouddn.com/img%20(6).jpg" class="img-fluid" alt="">
+                    <a href="https://www.google.com" target="_blank">
+                        <div class="mask waves-effect waves-light"></div>
+                    </a>
+                </div>
+                <!--/.Card image-->
+
+                <!--Card content-->
+                <div class="card-block text-center">
+                    <!--Category & Title-->
+                    <a href="https://www.google.com" target="_blank" class="text-muted"><h5>搜索网站</h5></a>
+                    <h4 class="card-title"><strong><a href="https://www.google.com" target="_blank">Google</a></strong></h4>
+
+                    <!--Rating-->
+                    <ul class="rating">
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                    </ul>
+
+                    <!--Description-->
+                    <p class="card-text">只要在Google主页中输入关键字，在不到一秒时间内显示出来。是为当今最受欢迎的搜索引擎，原因只有一个：它总是能找到大家想找的。
+                    </p>
+
+
+                </div>
+                <!--/.Card content-->
+
+            </div>
+            <!--/.Card-->
+
+        </div>
+        <!--/Second column-->
+
+        <!--Third column-->
+        <div class="col-lg-3 col-md-6 mb-r">
+
+            <!--Card-->
+            <div class="card card-cascade narrower">
+
+                <!--Card image-->
+                <div class="view overlay hm-white-slight">
+                    <img src="http://opub24jup.bkt.clouddn.com/img%20(11).jpg" class="img-fluid" alt="">
+                    <a href="https://stackoverflow.com/" target="_blank">
+                        <div class="mask waves-effect waves-light"></div>
+                    </a>
+                </div>
+                <!--/.Card image-->
+
+                <!--Card content-->
+                <div class="card-block text-center">
+                    <!--Category & Title-->
+                    <a href="https://stackoverflow.com/" target="_blank" class="text-muted"><h5>程序员网站</h5></a>
+                    <h4 class="card-title"><strong><a href="https://stackoverflow.com/" target="_blank">StackOverflow</a></strong></h4>
+
+                    <!--Rating-->
+                    <ul class="rating">
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star-half-o"></i></li>
+                    </ul>
+
+                    <!--Description-->
+                    <p class="card-text">还在束手无策眼前的error怎么解决？某度搜到的回答都没用？上stackoveflow搜一搜就全部搞定了，全世界的程序员帮你解决，顺便练练英语。
+                    </p>
+
+                </div>
+                <!--/.Card content-->
+
+            </div>
+            <!--/.Card-->
+
+        </div>
+        <!--/Third column-->
+
+        <!--Fourth column-->
+        <div class="col-lg-3 col-md-6 mb-r">
+
+            <!--Card-->
+            <div class="card card-cascade narrower">
+
+                <!--Card image-->
+                <div class="view overlay hm-white-slight">
+                    <img src="http://opub24jup.bkt.clouddn.com/img%20(16).jpg" class="img-fluid" alt="">
+                    <a href="https://www.facebook.com/" target="_blank">
+                        <div class="mask waves-effect waves-light"></div>
+                    </a>
+                </div>
+                <!--/.Card image-->
+
+                <!--Card content-->
+                <div class="card-block text-center">
+                    <!--Category & Title-->
+                    <a href="https://www.facebook.com/" target="_blank" class="text-muted"><h5>社交网站</h5></a>
+                    <h4 class="card-title"><strong><a href="https://www.facebook.com/" target="_blank">Facebook</a></strong></h4>
+
+                    <!--Rating-->
+                    <ul class="rating">
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star"></i></li>
+                        <li><i class="fa fa-star-o"></i></li>
+                    </ul>
+
+                    <!--Description-->
+                    <p class="card-text">是社交但不仅仅是社交，你可以搜到自己喜欢的好玩的东西，它还作为各种品牌，明星推广的媒介，连某些大国总统都喜欢在上面发声。
+                    </p>
+
+                </div>
+                <!--/.Card content-->
+
+            </div>
+            <!--/.Card-->
+
+        </div>
+        <!--/Fourth column column-->
+
+    </div>
+        
+    <!--Section: About-->
+
+    <div class="divider-new">
+        <h2 class="h2-responsive wow fadeIn">总有一款套餐适合你</h2>
+    </div>
+
+    <!--Section: Best features-->
+    <section id="best-features">
+
+        <div class="row">
+
+            <!--First columnn-->
+            <div class="col-lg-3 col-6 ">
+                <!--Card-->
+                <div class="card wow fadeIn">
+
+                    <!--Card image-->
+                    <div class="view overlay hm-white-slight">
+                        <img src="http://opub24jup.bkt.clouddn.com/img%20(25).jpg" class="img-fluid" alt="">
+                        <a>
+                            <div class="mask"></div>
+                        </a>
+                    </div>
+                    <!--/.Card image-->
+
+                    <!--Card content-->
+                    <div class="card-block text-center">
+                        <!--Title-->
+                        <h4 class="card-title">初心者</h4>
+                        <hr>
+                        <!--Text-->
+                        <p class="card-text">
+                            <span><s>¥18</s>  ¥12／月</span><br/>
+                            <span>5GB/月，适合刷图、追星、社交等</span>
+                            <ul class="check-list hidden-sm-down">
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>支持多设备</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>线路可用率 &gt; 95%</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>全平台支持</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>客户服务</span></li>
+                                <li class="check-item unchecked">
+                                    <span class="fa"></span>
+                                    <span>新功能试用</span></li>
+                                <li class="check-item unchecked">
+                                    <span class="fa"></span>
+                                    <span>远程协助</span></li>
+                            </ul>
+                        </p>
+                    </div>
+                    <!--/.Card content-->
+
+                </div>
+                <!--/.Card-->
+            </div>
+            <!--First columnn-->
+
+            <!--Second columnn-->
+            <div class="col-lg-3 col-6">
+                <!--Card-->
+                <div class="card wow fadeIn" data-wow-delay="0.2s">
+
+                    <!--Card image-->
+                    <div class="view overlay hm-white-slight">
+                        <img src="http://opub24jup.bkt.clouddn.com/img%20(14).jpg" class="img-fluid" alt="">
+                        <a>
+                            <div class="mask"></div>
+                        </a>
+                    </div>
+                    <!--/.Card image-->
+
+                    <!--Card content-->
+                    <div class="card-block text-center">
+                        <!--Title-->
+                        <h4 class="card-title">魔法师</h4>
+                        <hr>
+                        <!--Text-->
+                        <p class="card-text">
+                            <span><s>¥60</s>  ¥48／月</span><br/>
+                            <span>当月无限流量，适合追剧、打游戏等</span>
+                            <ul class="check-list hidden-sm-down">
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>支持多设备</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>线路可用率 &gt; 95%</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>全平台支持</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>客户服务</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>新功能试用</span></li>
+                                <li class="check-item unchecked">
+                                    <span class="fa"></span>
+                                    <span>远程协助</span></li>
+                            </ul>
+                        </p>
+                    </div>
+                    <!--/.Card content-->
+
+                </div>
+                <!--/.Card-->
+            </div>
+            <!--Second columnn-->
+
+            <!--Third columnn-->
+            <div class="col-lg-3 col-6">
+                <!--Card-->
+                <div class="card wow fadeIn" data-wow-delay="0.4s">
+
+                    <!--Card image-->
+                    <div class="view overlay hm-white-slight">
+                        <img src="http://opub24jup.bkt.clouddn.com/img%20(21).jpg" class="img-fluid" alt="">
+                        <a>
+                            <div class="mask"></div>
+                        </a>
+                    </div>
+                    <!--/.Card image-->
+
+                    <!--Card content-->
+                    <div class="card-block text-center">
+                        <!--Title-->
+                        <h4 class="card-title">巫师</h4>
+                        <hr>
+                        <!--Text-->
+                        <p class="card-text">
+                            <span><s>¥360</s>  ¥258/包年 </span><br/>
+                            <span>全年高达360GB，适合与家庭、朋友分享</span>
+                            <ul class="check-list hidden-sm-down">
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>支持多设备</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>线路可用率 &gt; 95%</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>全平台支持</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>客户服务</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>新功能试用</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>远程协助</span></li>
+                            </ul>
+                        </p>
+                    </div>
+                    <!--/.Card content-->
+
+                </div>
+                <!--/.Card-->
+            </div>
+            <!--Third columnn-->
+
+            <!--First columnn-->
+            <div class="col-lg-3 col-6">
+                <!--Card-->
+                <div class="card wow fadeIn" data-wow-delay="0.6s">
+
+                    <!--Card image-->
+                    <div class="view overlay hm-white-slight">
+                        <img src="http://opub24jup.bkt.clouddn.com/img%20(37).jpg" class="img-fluid" alt="">
+                        <a>
+                            <div class="mask"></div>
+                        </a>
+                    </div>
+                    <!--/.Card image-->
+
+                    <!--Card content-->
+                    <div class="card-block text-center">
+                        <!--Title-->
+                        <h4 class="card-title">超魔导士</h4>
+                        <hr>
+                        <!--Text-->
+                        <p class="card-text">
+                            <span>私人定制</span><br/>
+                            <span>可无限流量，满足个人和企业的需求</span>
+                            <ul class="check-list hidden-sm-down">
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>所有线路</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>线路可用率 &gt; 95%</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>全平台支持</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>客户服务</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>新功能试用</span></li>
+                                <li class="check-item">
+                                    <span class="fa"></span>
+                                    <span>远程协助</span></li>
+                            </ul>
+                        </p>
+                    </div>
+                    <!--/.Card content-->
+
+                </div>
+                <!--/.Card-->
+            </div>
+            <!--First columnn-->
+        </div>
+
+    </section>
+    <!--/Section: Best features-->
+
+    
+
+</div>
+<!--/ Main container-->
+
+<!--Footer-->
+    <footer class="page-footer center-on-small-only">
+
+        <!--Call to action-->
+        <div class="call-to-action">
+            
+            <ul>
+                <li>
+                    <h5>使用零卡加速，开启新的体验！</h5></li>
+            </ul>
+        </div>
+        <!--/.Call to action-->
+
+        <!--Copyright-->
+        <div class="footer-copyright">
+            <div class="container-fluid">
+                © 2017 Copyright <a href="http://www.linkersocks.com"> Linkersocks.com </a>
+
+            </div>
+        </div>
+        <!--/.Copyright-->
+
+    </footer>
+    <!--/.Footer-->

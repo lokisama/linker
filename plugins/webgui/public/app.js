@@ -1,17 +1,17 @@
 require('./index');
 
-require('./controllers/main');
-require('./controllers/home');
-require('./controllers/user');
-require('./controllers/admin');
-require('./controllers/adminAccount');
-require('./controllers/adminServer');
-require('./controllers/adminUser');
-require('./controllers/adminNotice');
+require('./themes/linker/controllers/main');
+require('./themes/linker/controllers/home');
+require('./themes/linker/controllers/user');
+require('./themes/linker/controllers/admin');
+require('./themes/linker/controllers/adminAccount');
+require('./themes/linker/controllers/adminServer');
+require('./themes/linker/controllers/adminUser');
+require('./themes/linker/controllers/adminNotice');
 
-require('./routes/home');
-require('./routes/user');
-require('./routes/admin');
+require('./themes/linker/routes/home');
+require('./themes/linker/routes/user');
+require('./themes/linker/routes/admin');
 
 require('./filters/flow');
 require('./filters/time');
@@ -25,4 +25,6 @@ require('./services/adminService.js');
 require('./services/homeService.js');
 require('./services/userService.js');
 require('./services/dialogService.js');
-// require('./services/websocketService.js');
+
+require('./services/websocketService.js');
+

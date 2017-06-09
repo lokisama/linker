@@ -1,0 +1,132 @@
+<!-- Template styles -->
+    
+    
+    <style>
+        /* TEMPLATE STYLES */
+        
+        html,
+        body,
+        .view {
+            height: 100%;
+        }
+        /* Navigation*/
+        
+        .navbar {
+            background-color: transparent;
+        }
+        
+        .scrolling-navbar {
+            -webkit-transition: background .5s ease-in-out, padding .5s ease-in-out;
+            -moz-transition: background .5s ease-in-out, padding .5s ease-in-out;
+            transition: background .5s ease-in-out, padding .5s ease-in-out;
+        }
+        
+        .top-nav-collapse {
+            background-color: #3E4551;
+        }
+        
+        footer.page-footer {
+            background-color: #3E4551;
+            margin-top: 2rem;
+        }
+        
+        @media only screen and (max-width: 768px) {
+            .navbar {
+                background-color: #1C2331;
+            }
+        }
+        /*Call to action*/
+        
+        .flex-center .flex-text{
+            color: #fff;
+        }
+        
+        .view {
+            background: url("http://opub24jup.bkt.clouddn.com/img%20(2).jpg")no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
+        /*Contact section*/
+        
+        #contact .fa {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1C2331;
+        }
+        .check-list {
+            margin: 0 auto;
+            padding: 0;
+            text-align: left;
+        }
+        .check-item {
+            position: relative;
+            line-height: 250%;
+            padding-left: 10px;
+        }
+        .check-item.unchecked {
+            color:#ddd;
+        }
+
+        .check-item .fa:before{
+            content: "\f00c";
+        }
+
+        .check-item.unchecked .fa:before{
+            content: "\f00d";
+        }
+
+        .btn{
+            text-transform: inherit;
+        }
+        .layout-screen{
+            height:100%;
+        }
+    </style>
+<!--Navbar-->
+    <nav class="navbar navbar-toggleable-md navbar-dark fixed-top scrolling-navbar"  ng-controller="HomeController" layout="column" ng-cloak>
+        <div class="container">
+            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNav1" aria-controls="navbarNav1" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="./index.html">
+                <strong>零卡</strong> 
+            </a>
+            <div class="collapse navbar-collapse" id="navbarNav1">
+                <ul class="navbar-nav mr-auto">
+                    
+                    <li class="nav-item dropdown btn-group">
+                        <a class="nav-link dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">使用教程</a>
+                        <div class="dropdown-menu dropdown" aria-labelledby="dropdownMenu1">
+                            <a class="dropdown-item">iPhone/iPad</a>
+                            <a class="dropdown-item">Android</a>
+                            <a class="dropdown-item">Windows</a>
+                            <a class="dropdown-item">Mac</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">关于我们</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://wpa.qq.com/msgrd?v=3&uin=249722824&site=qq&menu=yes" target="_blank">合作联系</a>
+                    </li>
+                </ul>
+               <!--  <form class="form-inline waves-effect waves-light">
+                    <input class="form-control" type="text" placeholder="Search">
+                </form> -->
+            </div>
+        </div>
+    </nav>
+    <!--/.Navbar-->
+    
+    <div class="layout-screen" ui-view >
+
+    </div>
+
+    
+
+    <!-- Animations init-->
+    <script>
+        new WOW().init();
+    </script>
