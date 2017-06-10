@@ -177,11 +177,14 @@ app
       return 'ss://' + base64Encode(method + ':' + password + '@' + host + ':' + port) + '#' + checkAscii(serverName);
     };
 
-    $scope.getServerPortData = (account, serverId, port) => {
+    $scope.getServerPortData = (account, serverId, scale, port) => {
       account.currentServerId = serverId;
+      if(!account.isFlowOutOfLimit) { account.isFlowOutOfLimit = {}; }
       userApi.getServerPortData(account, serverId, port).then(success => {
         account.lastConnect = success.lastConnect;
         account.serverPortFlow = success.flow;
+        const maxFlow = account.data.flow * ($scope.isMultiServerFlow ? 1 : scale);
+        account.isFlowOutOfLimit[serverId] = account.serverPortFlow >= maxFlow;
       });
     };
 
@@ -189,7 +192,7 @@ app
       if(status === 'visible') {
         if($localStorage.user.accountInfo && Date.now() - $localStorage.user.accountInfo.time >= 10 * 1000) {
           $scope.account.forEach(a => {
-            $scope.getServerPortData(a, a.currentServerId, a.port);
+            $scope.getServerPortData(a, a.currentServerId, scale, a.port);
           });
         }
       }
