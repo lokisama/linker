@@ -32,7 +32,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       icon: 'people',
       click: 'admin.user',
     }, {
-      name: '账号',
+      name: '端口',
       icon: 'account_circle',
       click: 'admin.account',
     }, {
@@ -160,12 +160,13 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     });
   }
 ])
-.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval',
-  ($scope, $state, adminApi, $localStorage, $interval) => {
+.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog',
+  ($scope, $state, adminApi, $localStorage, $interval, orderDialog) => {
     $scope.setTitle('首页');
     if($localStorage.admin.indexInfo) {
       $scope.signupUsers = $localStorage.admin.indexInfo.data.signup;
       $scope.loginUsers = $localStorage.admin.indexInfo.data.login;
+      $scope.orders = $localStorage.admin.indexInfo.data.order;
     }
     $scope.toUser = id => {
       $state.go('admin.userPage', { userId: id });
@@ -178,6 +179,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         };
         $scope.signupUsers = success.signup;
         $scope.loginUsers = success.login;
+        $scope.orders = success.order;
       });
     };
     updateIndexInfo();
@@ -193,6 +195,9 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         updateIndexInfo();
       }
     }, 15 * 1000));
+    $scope.showOrderInfo = order => {
+      orderDialog.show(order);
+    };
   }
 ])
 .controller('AdminPayController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',

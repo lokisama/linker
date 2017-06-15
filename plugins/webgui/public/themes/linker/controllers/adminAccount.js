@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$http', 'accountSortDialog','$interval', 'adminApi', '$localStorage', 'accountSortTool',
   ($scope, $state, $stateParams, $http, accountSortDialog, $interval, adminApi, $localStorage, accountSortTool) => {
-    $scope.setTitle('账号');
+    $scope.setTitle('端口');
     $scope.setMenuRightButton('sort_by_alpha');
     $scope.setMenuSearchButton('search');
     if(!$localStorage.admin.accountFilterSettings) {
@@ -89,7 +89,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         return {
           background: 'blue-50', 'border-color': 'blue-300',
         };
-      } else if(account.data && account.data.expire <= Date.now()) {
+      } else if(account.data && account.data.expire -2*24*3600*1000 <= Date.now()) {
         return {
           background: 'red-50', 'border-color': 'red-300',
         };
@@ -98,12 +98,12 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     };
   }
 ])
-.controller('AdminAccountPageController', ['$scope', '$state', '$stateParams', '$http', '$mdMedia', '$q', 'adminApi', '$timeout', '$interval',
-  ($scope, $state, $stateParams, $http, $mdMedia, $q, adminApi, $timeout, $interval) => {
-    $scope.setTitle('账号');
+.controller('AdminAccountPageController', ['$scope', '$state', '$stateParams', '$http', '$mdMedia', '$q', 'adminApi', '$timeout', '$interval', 'qrcodeDialog',
+  ($scope, $state, $stateParams, $http, $mdMedia, $q, adminApi, $timeout, $interval, qrcodeDialog) => {
+    $scope.setTitle('端口');
     $scope.setMenuButton('arrow_back', 'admin.account');
     $q.all([
-      $http.get('/api/admin/account/' + $stateParams.accountId),
+      $http.get(`/api/admin/account/${ $stateParams.accountId }`),
       $http.get('/api/admin/server'),
       $http.get('/api/admin/setting'),
     ]).then(success => {
@@ -114,23 +114,28 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         }
         return server;
       });
-      $scope.getServerPortData($scope.servers[0].id, $scope.account.port);
+      $scope.getServerPortData($scope.servers[0], $scope.account.port);
       $scope.isMultiServerFlow = success[2].data.value.multiServerFlow;
+    }).catch(err => {
+      $state.go('admin.account');
     });
     let currentServerId;
-    $scope.getServerPortData = (serverId, port) => {
+    $scope.getServerPortData = (server, port) => {
+      const serverId = server.id;
       currentServerId = serverId;
       $scope.serverPortFlow = 0;
       $scope.lastConnect = 0;
       adminApi.getServerPortData(serverId, port).then(success => {
         $scope.serverPortFlow = success.serverPortFlow;
         $scope.lastConnect = success.lastConnect;
+        const maxFlow = $scope.account.data.flow * ($scope.isMultiServerFlow ? 1 : server.scale);
+        server.isFlowOutOfLimit = $scope.serverPortFlow >= maxFlow;
       });
       $scope.getChartData(serverId);
       $scope.servers.forEach((server, index) => {
         if(server.id === serverId) { return; }
         $timeout(() => {
-          adminApi.getServerPortData(server.id, port);
+          adminApi.getServerPortData(serverId, port);
         }, index * 1000);
       });
     };
@@ -148,12 +153,11 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       }));
     };
     $scope.createQrCode = (method, password, host, port, serverName) => {
-      const checkAscii = str => {
-        return str.split('').filter(f => {
-          return f.charCodeAt() >= 31 && f.charCodeAt() <= 127 ;
-        }).join('');
-      };
-      return 'ss://' + base64Encode(method + ':' + password + '@' + host + ':' + port) + '#' + checkAscii(serverName);
+      return 'ss://' + base64Encode(method + ':' + password + '@' + host + ':' + port);
+    };
+    $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
+      const ssAddress = $scope.createQrCode(method, password, host, port, serverName);
+      qrcodeDialog.show(serverName, ssAddress);
     };
     $scope.editAccount = id => {
       $state.go('admin.editAccount', { accountId: id });
@@ -317,7 +321,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
 ])
 .controller('AdminAddAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'alertDialog',
   ($scope, $state, $stateParams, $http, $mdBottomSheet, alertDialog) => {
-    $scope.setTitle('添加账号');
+    $scope.setTitle('添加端口');
     $scope.setMenuButton('arrow_back', 'admin.account');
     $scope.typeList = [
       {key: '不限量', value: 1},
@@ -352,10 +356,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         flow: +$scope.account.flow * 1000 * 1000,
         autoRemove: $scope.account.autoRemove ? 1 : 0,
       }).then(success => {
-        alertDialog.show('添加账号成功', '确定');
+        alertDialog.show('添加端口成功', '确定');
         $state.go('admin.account');
       }).catch(() => {
-        alertDialog.show('添加账号失败', '确定');
+        alertDialog.show('添加端口失败', '确定');
       });
     };
     $scope.pickTime = () => {
@@ -378,7 +382,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
 ])
 .controller('AdminEditAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'confirmDialog', 'alertDialog',
   ($scope, $state, $stateParams, $http, $mdBottomSheet, confirmDialog, alertDialog) => {
-    $scope.setTitle('编辑账号');
+    $scope.setTitle('编辑端口');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.accountPage', { accountId: $stateParams.accountId });
     });
@@ -450,10 +454,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         autoRemove: $scope.account.autoRemove ? 1 : 0,
         server: $scope.accountServer ? server : null,
       }).then(success => {
-        alertDialog.show('修改账号成功', '确定');
+        alertDialog.show('修改端口成功', '确定');
         $state.go('admin.accountPage', { accountId: $stateParams.accountId });
       }).catch(() => {
-        alertDialog.show('修改账号失败', '确定');
+        alertDialog.show('修改端口失败', '确定');
       });
     };
     $scope.pickTime = () => {
@@ -474,10 +478,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     };
     $scope.deleteAccount = () => {
       confirmDialog.show({
-        text: '真的要删除账号吗？',
+        text: '真的要删除端口吗？',
         cancel: '取消',
         confirm: '删除',
-        error: '删除账号失败',
+        error: '删除端口失败',
         fn: function () { return $http.delete('/api/admin/account/' + accountId); },
       }).then(() => {
         $state.go('admin.account');
