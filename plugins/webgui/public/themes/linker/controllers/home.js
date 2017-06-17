@@ -39,8 +39,8 @@ app
       };
     }
   ])
-  .controller('HomeIndexController', ['$scope', '$state',
-    ($scope, $state) => {
+  .controller('HomeIndexController', ['$scope', '$state', 'homeApi', 'alertDialog', '$localStorage',
+    ($scope, $state, homeApi, alertDialog, $localStorage) => {
 
       $scope.login = () => { $state.go('home.login'); };
       $scope.signup = () => { $state.go('home.signup'); };
