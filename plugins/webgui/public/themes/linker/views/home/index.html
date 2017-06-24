@@ -1,23 +1,128 @@
-<!--Mask-->
+
+<!--Modal: Login / Register Form-->
+<div class="modal fade" id="modalLRForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog cascading-modal" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Modal cascading tabs-->
+            <div class="modal-c-tabs">
+
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs tabs-2 light-blue darken-3" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#login" role="tab"><i class="fa fa-user mr-1"></i> 登录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#register" role="tab"><i class="fa fa-user-plus mr-1"></i> 注册</a>
+                    </li>
+                </ul>
+
+                <!-- Tab panels -->
+                <div class="tab-content">
+                    <!--Panel 7-->
+                    <div class="tab-pane fade in show active" id="login" role="tabpanel">
+
+                        <!--Body-->
+                        <div class="modal-body mb-1">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix"></i>
+                                <input type="text" id="form22" class="form-control">
+                                <label for="form22">邮箱</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-lock prefix"></i>
+                                <input type="password" id="form23" class="form-control">
+                                <label for="form23">密码</label>
+                            </div>
+                            <div class="text-center mt-2">
+                                <button class="btn btn-info">登录 <i class="fa fa-sign-in ml-1"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <!--/.Panel 7-->
+
+                    <!--Panel 8-->
+                    <div class="tab-pane fade" id="register" role="tabpanel">
+                        <form name="userForm" novalidate>
+                        <!--Body-->
+                        <div class="modal-body">
+                            <div class="md-form form-sm vi">
+                                    <i class="fa fa-envelope prefix"></i>
+                                    <input type="email" name="email" class="form-control" ng-model="user.email" required>
+                                    <label for="email">邮箱</label>
+                                    <div class="help-block" ng-messages="userForm.email.$error" ng-if="userForm.email.$touched">
+                                        <div ng-message="required">邮箱不能为空</div>
+                                        <div ng-message="email">必须填写一个有效邮箱地址</div>
+                                    </div>
+                                </div>
+
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-lock prefix"></i>
+                                    <input type="password" name="password" class="form-control" ng-model="user.password" required>
+                                    <label for="password">密码</label>
+                                    <div class="help-block" ng-messages="userForm.password.$error" ng-if="userForm.password.$touched">
+                                        <div ng-message="required">密码不能为空</div>
+                                    </div>
+                                </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="md-form form-sm">
+                                        <i class="fa fa-mobile prefix"></i>
+                                        <input type="text" id="code" class="form-control" ng-model="user.code" required>
+                                        <label for="code" class="">验证码</label>
+                                        <div class="help-block" ng-messages="userForm.code.$error" ng-if="userForm.code.$touched">
+                                            <div ng-message="required">验证码不能为空</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <button href="javascript:;" class="btn btn-info" ng-disabled="sendCodeTime || !user.email" ng-click="sendCode()">
+                                        <span ng-if="sendCodeTime === 0">获取验证码</span><span ng-if="sendCodeTime > 0">已发送({{sendCodeTime}})</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center form-sm mt-2">
+                                <button class="btn btn-info" ng-disabled="!user.email || !user.code || !user.password" ng-click="signup()">立刻注册，领取1G流量</button>
+                            </div>
+
+                        </div>
+                        </form>
+                    </div>
+                    <!--/.Panel 8-->
+                </div>
+
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+<!--Modal: Login / Register Form-->
 <div class="view hm-black-strong layout-screen" >
     <div class="full-bg-img flex-center justify-content-around">
         
             <ul class="flex-text d-flex flex-column">
                 <li>
-                    <h1 class="h1-responsive wow fadeInDown" data-wow-delay="0.2s">娱乐、办公从此无国界</h1>
+                    <h1 class="h1-responsive wow animated fadeInDown" data-wow-delay="0.2s">娱乐、办公从此无国界</h1>
                 </li>
                 <li>
-                    <p class="wow fadeInDown"> 快速、简单、安全、便利<br/>独创全局智能加速技术，国内外网速优化自动切换。</p>
+                    <p class="wow animated fadeInDown"> 快速、简单、安全、便利<br/>独创全局智能加速技术，国内外网速优化自动切换。</p>
                     
                 </li>
                 <li>
-                    <a href="/home/login" class="btn info-color btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">登录</a>
-                    <a href="/home/signup" class="btn info-color-dark btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">注册</a>
+                    <!-- Button trigger modal -->
+                    <!-- <button type="button" class="btn info-color-dark btn-lg" data-toggle="modal" data-target="#modalLRForm">
+                        登录/注册
+                    </button> -->
+                    <a href="/home/login" class="btn info-color btn-lg wow animated fadeInDown" data-wow-delay="1s" rel="nofollow">登录</a>
+                    <a href="/home/signup" class="btn info-color-dark btn-lg wow animated fadeInDown" data-wow-delay="1.2s" rel="nofollow">注册</a>
                 </li>
             </ul>
             <div class="d-inline-flex p-2 hidden-xs-down">
                 <!--Form with header-->
-                <form name="userForm">
+                <form name="userForm1">
                 <div class="card" style="width:300px;">
                     <div class="card-block">
 
@@ -76,6 +181,8 @@
                 <!--/Form with header-->
             </div>
     </div>
+
+        <div class="arrow-down animated fadeIn"></div>
 </div>
 <!--/.Mask-->
 
@@ -526,26 +633,27 @@
 <!--/ Main container-->
 
 <!--Footer-->
-    <footer class="page-footer center-on-small-only">
+<footer class="page-footer center-on-small-only">
 
-        <!--Call to action-->
-        <div class="call-to-action">
-            
-            <ul>
-                <li>
-                    <h5>使用零卡加速，开启新的体验！</h5></li>
-            </ul>
+    <!--Call to action-->
+    <div class="call-to-action">
+        
+        <ul>
+            <li>
+                <h5>使用零卡加速，开启新的体验！</h5></li>
+        </ul>
+    </div>
+    <!--/.Call to action-->
+
+    <!--Copyright-->
+    <div class="footer-copyright">
+        <div class="container-fluid">
+            © 2017 Copyright <a href="http://www.linkersocks.com"> Linkersocks.com </a>
+
         </div>
-        <!--/.Call to action-->
+    </div>
+    <!--/.Copyright-->
 
-        <!--Copyright-->
-        <div class="footer-copyright">
-            <div class="container-fluid">
-                © 2017 Copyright <a href="http://www.linkersocks.com"> Linkersocks.com </a>
+</footer>
+<!--/.Footer-->
 
-            </div>
-        </div>
-        <!--/.Copyright-->
-
-    </footer>
-    <!--/.Footer-->

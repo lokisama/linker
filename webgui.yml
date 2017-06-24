@@ -1,0 +1,83 @@
+type: m
+empty: false
+
+manager:
+    address: www.linkersocks.com:3001
+    password: 'wx11530600'
+
+plugins:
+    flowSaver:
+        use: true
+    user:
+        use: true
+    account:
+        use: true
+        pay:
+            hour:
+                price: 1
+                flow: 1000000
+            day:
+                price: 12
+                flow: 5000000
+            week:
+                price: 25
+                flow: 25000000
+            month:
+                price: 48
+                flow: 10000000
+            season:
+                price: 98
+                flow: 9000000
+            year:
+                price: 258
+                flow: 360000000
+    email:
+        use: true
+        username: 'no-reply@linkersocks.com'
+        password: 'lfdvskilaqoyebbb'
+        host: 'smtp.qq.com'
+    webgui:
+        use: true
+        host: '127.0.0.1'
+        port: '8088'
+        site: 'http://localhost'
+        gcmSenderId: '456102641793'
+        gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
+    alipay:
+        use: true
+        appid: 2017052407326042
+        notifyUrl: 'http://www.linkersocks.com/api/call'
+        merchantPrivateKey: 'MIIEpAIBAAKCAQEAxuDx5VgyXjJ+we5hWNxYYmhas+oFnuxzy8iy4JD4a6GW/C4x
+QrsbCnao2Vp726KvJEzeGbHDDurzp5Eb85d5y+e934cEgj2RX0972SBTHF2Ws3gG
++XadM1xUtW8i+fghEbi5dYkUCUuC+HFN4f4HiZlE4nRyqKPFU9hhAHArwcR300rS
+3Ka6NhHdIZaQuCOz45zTTELEMpivjEatOMSxksc2PvAOyZ30EsUI8SHZOdZK5gaH
+pxfQvoOZ9WFtupkeByXaolo5cxXKmBFQYLjPMUAmi4KYAqJs4bJpLYwDUOH8tt0k
+mYkqUaHy2Sb1jhVgzMCnlFgQ0UDBpAw8+lVYyQIDAQABAoIBAQCPDRZxxTLVlrSe
+gfz7keLxReaYKujIG4RfPImOBjjqEl0sH33HZhZZPGjPjsowfaBFGBVZngeUH2QL
+T9EvMfGlvZdRxSh1FhwO1nlbAGlHqfnQNbGulqcUXoF/z+T0sIn42UptRKBo3yvh
+0H4Y5EQ/sUNfMCuZKdOyL532Vrjisk1B++w7B3JFfcYuBKGqctUENS3NffFtyDlg
+FV0vAMdnj2NDtfBo/DtDBzzsvyDhyrr/D7HmOXS6iI2f6RnCIJ++3leEaBGI1C1r
+0j4b//caKsJ2N4mrSZgq/9K5HqLI1LgQpR/Yu9AxMd2iASIEuFR7ZsYMFhbfnNN8
+hCB8bRzRAoGBAPXYfufBglfqlRIodWhyd95wtBi3LeOBUF+MTI3msNcMkeSE6laD
+nM7Ylfh6DvVUc5MFHH7fNbx0TU6o5BS1BOlduDJBf7ssJkE8rkqsFrNX9e89fcn1
+CF4jHI7LzHupcAJuXP3pHc6JU3wfImWh2YxLwENNCDh0pCIVBzekFH2fAoGBAM8X
+1UpdcOfGU//vDoVm0S1+2DVzwrUNrl6YhPzSwEuyYHHhgeKYQ6MBNruNRh/0Lkab
+ih/GR3bHpxkusXkF9P26co3XF2oXjK/T3J1REU+wWsPjPd7fbHcH9tAlOMkbYYzy
+QXUNzm4RPVTA2GwBYPKGobeRpUkXqofUk8ae+MCXAoGAR67BigfFXqcaojnDyhme
+U/CewpoeujhJXCLHa5S5OWsD2xLaVTF49mL2j4XfeK8QJ+0UmvWwcGuk4uuh3VvO
+u9DE1Xp9qPC9ksYDt+gnklFydziBxfI5Z2FrgUNxMxl7fGn7mVlwhHlMK2PUnrer
+fBnWTIlYfUWdWgaxnQqtotcCgYAHnyzua7n4DciRps62Ai64qe5zKSuFVleQi7R5
+SZhiMNJz3oTVPh1fJnBJPs3R5z68woS23qlKqdZwitNlTN7TZ8VHix8FfJBk+Dsq
+Xw1wDWGJzBc+2KI5T0W6K2SHokZY1aGrGTL7wg6ry90rPHHA+0uAYg/fPMu97Aj0
+Sm2FSQKBgQC0o3kMorX8a+30MDMb94NfEkzg9Fpa/527BaZJ7ykIs73iz3TxewD4
+o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
+8S7n9PZtxJOhBo3exT2mhxPojPg1DoR+zeDDbn1+WqVVsQdDg3jFIw=='
+        alipayPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnXOh41+dRp+twKqxl2pde6MByMKt9q9VxDfsyusEYc3l8Kov+TUns5d29vDaKKr699ezxQuosOV2Cct7EWSTmhGxb0W0AgKer4WwsOdJODRmSPiZVT0KDG19Qp0HvDmehXUx0XP8gYHMCegZwU7BVOkLAmJ1Mvml/wF9o8eSt0EG3rjB6YChGxuT42jyLteq0yGJzedL7h4jh2IEaaVfo/11HjpPAPwx4ipgtE2lUUB8wKwMp9cvf8jRhlfRi03sNvdh8tBGl+d3VKYV/db/E3tzLWIv0WldXhvi3Lj2CeFO+eSwzI5eyHyWW9BuDJUJxU6G8+a1a/vVoBUZhCEErwIDAQAB'
+        gatewayUrl: 'https://openapi.alipay.com/gateway.do'
+#db: 'sqlite'
+db:
+  host: 'jp.linkersocks.com'
+  port: 3306
+  user: 'root'
+  password: 'wx11530600'
+  database: 'ssmgr_webgui'

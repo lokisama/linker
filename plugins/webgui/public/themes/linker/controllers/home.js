@@ -12,35 +12,35 @@ app
         $localStorage.user = {};
         $scope.setMainLoading(false);
       }
-      $scope.innerSideNav = true;
-      $scope.menuButton = function() {
-        if ($mdMedia('gt-sm')) {
-          $scope.innerSideNav = !$scope.innerSideNav;
-        } else {
-          $mdSidenav('left').toggle();
-        }
-      };
-      $scope.menus = [{
-        name: '首页',
-        icon: 'home',
-        click: 'home.index'
-      }, {
-        name: '登录',
-        icon: 'cloud',
-        click: 'home.login'
-      }, {
-        name: '注册',
-        icon: 'face',
-        click: 'home.signup'
-      }];
-      $scope.menuClick = (index) => {
-        $mdSidenav('left').close();
-        $state.go($scope.menus[index].click);
-      };
+      // $scope.innerSideNav = true;
+      // $scope.menuButton = function() {
+      //   if ($mdMedia('gt-sm')) {
+      //     $scope.innerSideNav = !$scope.innerSideNav;
+      //   } else {
+      //     $mdSidenav('left').toggle();
+      //   }
+      // };
+      // $scope.menus = [{
+      //   name: '首页',
+      //   icon: 'home',
+      //   click: 'home.index'
+      // }, {
+      //   name: '登录',
+      //   icon: 'cloud',
+      //   click: 'home.login'
+      // }, {
+      //   name: '注册',
+      //   icon: 'face',
+      //   click: 'home.signup'
+      // }];
+      // $scope.menuClick = (index) => {
+      //   $mdSidenav('left').close();
+      //   $state.go($scope.menus[index].click);
+      // };
     }
   ])
-  .controller('HomeIndexController', ['$scope', '$state', 'homeApi', 'alertDialog', '$localStorage',
-    ($scope, $state, homeApi, alertDialog, $localStorage) => {
+  .controller('HomeIndexController', ['$scope', '$state', '$interval', '$timeout', 'homeApi', 'alertDialog', '$localStorage',
+    ($scope, $state, $interval, $timeout, homeApi, alertDialog,$localStorage) => {
 
       $scope.login = () => { $state.go('home.login'); };
       $scope.signup = () => { $state.go('home.signup'); };
@@ -74,6 +74,38 @@ app
         }).catch(err => {
           alertDialog.show(err, '确定');
         });
+      };
+      $scope.login = () => {
+        alertDialog.loading();
+        homeApi.userLogin($scope.user.email, $scope.user.password)
+        .then(success => {
+          $localStorage.home.status = success;
+          return alertDialog.close().then(() => {
+            return success;
+          });
+        }).then(success => {
+          if (success === 'normal') {
+            $state.go('user.index');
+          } else if (success === 'admin') {
+            $scope.sendPushSubscribe();
+            $state.go('admin.index');
+          }
+        }).catch(err => {
+          alertDialog.show(err, '确定');
+        });
+      };
+      $scope.findPassword = () => {
+        alertDialog.loading();
+        homeApi.findPassword($scope.user.email).then(success => {
+          alertDialog.show(success, '确定');
+        }).catch(err => {
+          alertDialog.show(err, '确定');
+        });
+      };
+      $scope.enterKey = key => {
+        if(key.keyCode === 13) {
+          $scope.login();
+        }
       };
 
     }

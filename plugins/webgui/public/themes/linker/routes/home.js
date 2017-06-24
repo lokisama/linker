@@ -21,8 +21,10 @@ app.config(['$stateProvider', $stateProvider => {
                     name: 'app',
                     insertBefore: '#ng_load_plugins_before', // load the above css files before a LINK element with this ID. Dynamic CSS files must be loaded between core and theme css files
                     files: [
-                        'http://opub24jup.bkt.clouddn.com/compiled.min.css?ver=4.3.2',
-                        'http://opub24jup.bkt.clouddn.com/compiled.min.js?ver=4.3.2'
+                        // 'http://opub24jup.bkt.clouddn.com/compiled.min.css?ver=4.3.3',
+                        'http://opub24jup.bkt.clouddn.com/compiled.min.js?ver=4.3.3',
+                        '/public/themes/linker/css/compiled.min.css?ver=4.3.3',
+                        // '/public/themes/linker/css/compiled.min.js?ver=4.3.3'
                     ] 
                 })
             }]  
