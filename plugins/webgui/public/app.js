@@ -13,7 +13,7 @@ require('./controllers/adminUser');
 require('./controllers/adminNotice');
 
 require('.'+ themePath +'/routes/home');
-require('.'+ themePath +'/routes/user');
+require('./routes/user');
 require('./routes/admin');
 
 require('./filters/flow');
