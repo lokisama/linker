@@ -14,7 +14,7 @@ require('./controllers/adminNotice');
 
 require('.'+ themePath +'/routes/home');
 require('.'+ themePath +'/routes/user');
-require('.'+ themePath +'/routes/admin');
+require('./routes/admin');
 
 require('./filters/flow');
 require('./filters/time');
