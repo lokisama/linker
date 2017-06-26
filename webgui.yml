@@ -39,7 +39,7 @@ plugins:
     webgui:
         use: true
         host: '127.0.0.1'
-        port: '8088'
+        port: '8089'
         site: 'http://localhost'
         gcmSenderId: '456102641793'
         gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
