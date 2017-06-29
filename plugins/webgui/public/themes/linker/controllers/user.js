@@ -32,7 +32,7 @@ app
       icon: 'home',
       click: 'user.index'
     }, {
-      name: '我的配置',
+      name: '我的节点',
       icon: 'account_circle',
       click: 'user.account'
     }, {
@@ -81,7 +81,6 @@ app
       });
     };
 
-    $scope.oldUser = true;
     $scope.alipayStatus = false;
     userApi.getAlipayStatus().then(success => {
       $scope.alipayStatus = success.status;
@@ -105,7 +104,7 @@ app
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog',
   ($scope, $http, $mdMedia, userApi, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog) => {
-    $scope.setTitle('我的配置');
+    $scope.setTitle('我的节点');
     $scope.flexGtSm = 100;
     if(!$localStorage.user.serverInfo) {
       $localStorage.user.serverInfo = {
