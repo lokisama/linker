@@ -5,7 +5,7 @@ var themePath = '/themes/linker';
 
 require('./controllers/main');
 require('.'+ themePath +'/controllers/home');
-require('.'+ themePath +'/controllers/user');
+require('./controllers/user');
 require('./controllers/admin');
 require('./controllers/adminAccount');
 require('./controllers/adminServer');
@@ -13,7 +13,7 @@ require('./controllers/adminUser');
 require('./controllers/adminNotice');
 
 require('.'+ themePath +'/routes/home');
-require('.'+ themePath +'/routes/user');
+require('./routes/user');
 require('./routes/admin');
 
 require('./filters/flow');

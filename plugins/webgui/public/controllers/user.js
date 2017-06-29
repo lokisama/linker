@@ -32,7 +32,7 @@ app
       icon: 'home',
       click: 'user.index'
     }, {
-      name: '我的配置',
+      name: '我的节点',
       icon: 'account_circle',
       click: 'user.account'
     }, {
