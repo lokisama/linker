@@ -23,10 +23,10 @@ plugins:
                 price: 25
                 flow: 25000000
             month:
-                price: 48
+                price: 26
                 flow: 10000000
             season:
-                price: 98
+                price: 78
                 flow: 9000000
             year:
                 price: 258
