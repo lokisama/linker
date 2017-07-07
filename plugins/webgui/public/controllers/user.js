@@ -81,15 +81,14 @@ app
       });
     };
 
-    $scope.oldUser = true;
     $scope.alipayStatus = false;
     userApi.getAlipayStatus().then(success => {
       $scope.alipayStatus = success.status;
     });
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog',
-  ($scope, $state, userApi, markdownDialog) => {
+.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog',
+  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog) => {
     $scope.setTitle('首页');
     $scope.notices = [];
     userApi.getNotice().then(success => {
@@ -101,11 +100,54 @@ app
     $scope.showNotice = notice => {
       markdownDialog.show(notice.title, notice.content);
     };
+
+    $scope.getUserAccountInfo = () => {
+      userApi.getUserAccount().then(success => {
+        $scope.account = success.account;
+        $scope.cIndex = 0;
+        success.servers.forEach((a, index) => {
+          const account = success.account[0];
+          a.password = account.password;
+          a.port = account.port;
+          a.type = account.type;
+          a.data = account.data;
+          a.qrCode = $scope.createQrCode(a.method, account.password, a.host, account.port, a.name);
+        });
+        
+        $scope.servers = success.servers;
+        console.log(success);
+      });
+    };
+    $scope.getUserAccountInfo();
+
+    $scope.base64Encode = (str) => {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+      }));
+    };
+    $scope.createQrCode = (method, password, host, port, serverName) => {
+      return 'ss://' + $scope.base64Encode(method + ':' + password + '@' + host + ':' + port);
+    };
+
+    $scope.prev = () => {
+      if($scope.cIndex <= 0) return;
+      $scope.cIndex --;
+    }
+
+    $scope.next = () => {
+      if($scope.cIndex >=$scope.servers.length-1) return;
+      $scope.cIndex ++;
+    }
+
+    $scope.createOrder = (accountId) => {
+      payDialog.chooseOrderType(accountId);
+    };
+
   }
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog',
   ($scope, $http, $mdMedia, userApi, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog) => {
-    $scope.setTitle('我的配置');
+    $scope.setTitle('我的节点');
     $scope.flexGtSm = 100;
     if(!$localStorage.user.serverInfo) {
       $localStorage.user.serverInfo = {

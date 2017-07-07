@@ -12,6 +12,7 @@ app
         $localStorage.user = {};
         $scope.setMainLoading(false);
       }
+
       // $scope.innerSideNav = true;
       // $scope.menuButton = function() {
       //   if ($mdMedia('gt-sm')) {

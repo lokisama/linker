@@ -1,4 +1,4 @@
-<div ng-controller="UserController" layout="column" ng-cloak layout-fill>
+<div ng-controller="UserController" layout="column" ng-cloak layout-fill md-theme="{{ dynamicTheme }}" md-theme-watch>
     <section layout="row" flex>
     <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="false" layout="column" layout-align="space-between stretch">
         <md-content>
@@ -37,6 +37,13 @@
                     </md-button>
                     <div>{{title}}</div>
                     <span flex></span>
+
+                    <a class="md-icon-button" ng-if="dynamicTheme!='pink'" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=249722824&site=qq&menu=yes">客服GG</a>
+                    <a class="md-icon-button" ng-if="dynamicTheme=='pink'" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=248769011&site=qq&menu=yes">客服MM</a>
+                    <md-button class="md-icon-button md-ink-ripple" aria-label="face"
+                     ng-click="dynamicTheme = dynamicTheme && dynamicTheme != 'default'?'default':'pink';">
+                        <i class="material-icons">face </i>
+                    </md-button>
                 </div>
             </md-toolbar>
         </div>

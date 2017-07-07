@@ -1,7 +1,105 @@
+<div layout="row" layout-xs="column">
+<div flex="50" flex-xs="100">
+
+    <md-card>
+    <md-card-title>
+      <md-card-title-text>
+        <span class="md-headline">{{servers[cIndex].name}}</span>
+        <span class="md-subhead">地址:{{servers[cIndex].host}}</span>
+        <span class="md-subhead">端口:{{servers[cIndex].port}}</span>
+        <span class="md-subhead">密码:{{servers[cIndex].password}}</span>
+        <span class="md-subhead">加密:{{servers[cIndex].method}}</span>
+
+      </md-card-title-text>
+      <md-card-title-media>
+
+        <a class="md-media-lg card-media" style="display: block;"
+        ng-href="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)">
+
+            <qr size="120" layout-margin text="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)" image="true"></qr>
+        </a>
+
+      </md-card-title-media>
+
+    </md-card-title>
+    <md-card-actions layout="row" layout-align="end center">
+      <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
+      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">上一个</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= servers.length-1">下一个</md-button>
+    </md-card-actions>
+    </md-card>
+
+    <md-card>
+        <md-card-title>
+            <md-card-title-text><span class="md-headline">软件下载</span></md-card-title-text>
+        </md-card-title>
+        <md-card-content>
+            <div layout="row">
+                <div flex layout-align="center center" style="text-align: center;">
+                  <a class="md-primary" href="https://itunes.apple.com/cn/app/wingy-http-s-socks5-proxy-utility/id1178584911?l=en&mt=8" target="_blank">
+                    <i class="material-icons" style="font-size:48px;">phone_iphone</i>
+                  </a>
+                </div>
+
+                <div flex layout-align="center center" style="text-align: center;">
+                  <a class="md-primary primary-800" md-colors="primary-800" href="http://www.linkersocks.com:8888/linkersocks/ShadowsocksR-dotnet4.0.exe" target="_blank">
+                    <i class="material-icons" style="font-size:48px;">desktop_windows</i>
+                  </a>
+                </div>
+
+                <div flex layout-align="center center" style="text-align: center;">
+                  <a class="md-primary primary-700" md-colors="primary-700" href="http://www.linkersocks.com:8888/linkersocks/shadowsocks-nightly-4.1.8.apk" target="_blank">
+                    <i class="material-icons" style="font-size:48px;">android</i>
+                  </a>
+                </div>
+
+                <div flex layout-align="center center" style="text-align: center;">
+                  <a class="md-primary primary-500" md-colors="primary-500" href="http://www.linkersocks.com:8888/linkersocks/ShadowsocksX-2.6.3.dmg" target="_blank">
+                    <i class="material-icons" style="font-size:48px;">desktop_mac</i>
+                  </a>
+                </div>
+            </div>
+        </md-card-content>
+    </md-card>   
+    <md-card>
+        <md-card-title>
+            <md-card-title-text>
+                <span class="md-headline">我的套餐</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit == 12">无限/包年</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit == 3">无限/包季</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit < 3">无限/包月</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type == 4 && servers[cIndex].data.limit >= 30">无限/包月</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type == 4 && servers[cIndex].data.limit < 30">试用套餐</span>
+                <span class="md-subhead" ng-if="servers[cIndex].type >=2 && servers[cIndex].type <= 5">
+                      <span style="font-size: 0.9em;">到期:{{servers[cIndex].data.expire | date : 'yyyy-MM-dd HH:mm'}}</span><br>
+                      <span style="font-size: 0.9em;">剩余:{{ servers[cIndex].data.expire | timeago }}</span>
+                  </span>
+            </md-card-title-text>
+        </md-card-title>
+        <md-card-content>
+            <div style="text-align: right;">
+                <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
+                <md-button ng-show="alipayStatus" class="md-primary md-raised" 
+                ng-if="servers[cIndex].type >= 2 && servers[cIndex].type <= 5" ng-click="createOrder(servers[cIndex].id)">购买套餐</md-button>
+            </div>
+        </md-card-content>
+    </md-card>
+</div>
+
+<div flex="50" flex-xs="100">
 <md-card>
     <md-card-title>
-        <md-card-title-text><span class="md-headline">公告</span></md-card-title-text>
+        <md-card-title-text><span class="md-headline" ng-bind="notices[0].title">最新公告</span></md-card-title-text>
     </md-card-title>
+    <md-card-content>
+        <div marked="notices[0].content"></div>
+    </md-card-content>
+</md-card>
+
+<md-card>
+    <!-- <md-card-title>
+        <md-card-title-text><span class="md-headline">所有公告</span></md-card-title-text>
+    </md-card-title> -->
     <md-card-content>
         <div ng-hide="notices.length">暂无公告</div>
         <md-list>
@@ -15,13 +113,8 @@
         </md-list>
     </md-card-content>
 </md-card>
-<md-card ng-click="toMyAccount()">
-    <md-card-title>
-        <md-card-title-text><span class="md-headline">我的节点</span></md-card-title-text>
-    </md-card-title>
-    <md-card-content>
-        <div style="text-align: right;">
-            <md-button class="md-primary">点击进入我的节点&gt;&gt;</md-button>
-        </div>
-    </md-card-content>
-</md-card>
+
+</div>
+
+
+</div>
