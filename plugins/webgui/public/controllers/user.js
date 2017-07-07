@@ -87,8 +87,8 @@ app
     });
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog',
-  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog) => {
+.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog','qrcodeDialog',
+  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog, qrcodeDialog) => {
     $scope.setTitle('首页');
     $scope.notices = [];
     userApi.getNotice().then(success => {
@@ -141,6 +141,11 @@ app
 
     $scope.createOrder = (accountId) => {
       payDialog.chooseOrderType(accountId);
+    };
+
+    $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
+      const ssAddress = $scope.createQrCode(method, password, host, port, serverName);
+      qrcodeDialog.show(serverName, ssAddress);
     };
 
   }

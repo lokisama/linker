@@ -13,11 +13,12 @@
       </md-card-title-text>
       <md-card-title-media>
 
-        <a class="md-media-lg card-media" style="display: block;"
-        ng-href="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)">
+        <div class="md-media-lg card-media" style="display: block;" 
+        ng-click="showQrcodeDialog(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)">
 
-            <qr size="120" layout-margin text="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)" image="true"></qr>
-        </a>
+            <qr size="120" layout-margin 
+            text="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)" image="true"></qr>
+        </div>
 
       </md-card-title-media>
 
