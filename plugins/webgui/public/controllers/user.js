@@ -182,9 +182,10 @@ app
         };
         $scope.initUserIndex();
       });
-
       
-    };
+    }else{
+      $scope.initUserIndex();
+    }
 
   }
 ])
