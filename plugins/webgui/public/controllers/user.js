@@ -67,19 +67,7 @@ app
       $scope.interval && $interval.cancel($scope.interval);
     });
 
-    if(!$localStorage.user.serverInfo && !$localStorage.user.accountInfo) {
-      userApi.getUserAccount().then(success => {
-        $localStorage.user.serverInfo = {
-          data: success.servers,
-          time: Date.now(),
-        };
-        $localStorage.user.accountInfo = {
-          data: success.account,
-          time: Date.now(),
-        };
-
-      });
-    };
+    
 
     $scope.alipayStatus = false;
     userApi.getAlipayStatus().then(success => {
@@ -101,36 +89,22 @@ app
       markdownDialog.show(notice.title, notice.content);
     };
 
-    if(!$localStorage.user.serverInfo) {
-      $localStorage.user.serverInfo = {
-        time: Date.now(),
-        data: [],
-      };
-    }
-    $scope.servers = $localStorage.user.serverInfo.data;
-    if(!$localStorage.user.accountInfo) {
-      $localStorage.user.accountInfo = {
-        time: Date.now(),
-        data: [],
-      };
-    }
-    $scope.account = $localStorage.user.accountInfo.data;
-
     const setAccountServerList = (account, server) => {
       account.forEach(a => {
-        a.serverList = $scope.servers.filter(f => {
+        a.serverList = server.filter(f => {
           return !a.server || a.server.indexOf(f.id) >= 0;
         });
       });
     };
-    setAccountServerList($scope.account, $scope.servers);
+    
 
     const getUserAccountInfo = () => {
       userApi.getUserAccount().then(success => {
         $scope.servers = success.servers;
         if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
           success.account.forEach((a, index) => {
-            
+            console.log('success.account -> a');
+            console.log(a);
           });
         } else {
           $scope.account = success.account;
@@ -146,16 +120,6 @@ app
         }
       });
     };
-    getUserAccountInfo();
-
-    $scope.account[0].serverList.forEach((a,index)=>{
-      console.log(a);
-      // a.qrcode = $scope.createQrCode(a.method, $scope.account[0].password, a.host, $scope.account[0].port, a.name);
-    })
-
-    $scope.cIndex = 0;
-    $scope.userServers = $scope.account[0].serverList;
-    console.log($scope.servers);
 
 
     $scope.base64Encode = (str) => {
@@ -184,6 +148,43 @@ app
     $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
       const ssAddress = $scope.createQrCode(method, password, host, port, serverName);
       qrcodeDialog.show(serverName, ssAddress);
+    };
+
+
+
+    $scope.initUserIndex = () =>{
+      $scope.account = $localStorage.user.accountInfo.data || [];
+      $scope.servers = $localStorage.user.serverInfo.data || [];
+      setAccountServerList($scope.account, $scope.servers);
+      getUserAccountInfo();
+
+      $scope.account[0].serverList.forEach((a,index)=>{
+        console.log(a);
+        a.password = $scope.account[0].password;
+        a.host = $scope.account[0].host;
+        a.port = $scope.account[0].port;
+        // a.qrcode = $scope.createQrCode(a.method, $scope.account[0].password, a.host, $scope.account[0].port, a.name);
+      })
+
+      $scope.cIndex = 0;
+      $scope.userServers = $scope.account[0].serverList;
+    }
+
+
+    if(!$localStorage.user.serverInfo && !$localStorage.user.accountInfo) {
+      userApi.getUserAccount().then(success => {
+        $localStorage.user.serverInfo = {
+          data: success.servers,
+          time: Date.now(),
+        };
+        $localStorage.user.accountInfo = {
+          data: success.account,
+          time: Date.now(),
+        };
+        $scope.initUserIndex();
+      });
+
+      
     };
 
   }
