@@ -4,20 +4,20 @@
     <md-card>
     <md-card-title>
       <md-card-title-text>
-        <span class="md-headline">{{servers[cIndex].name}}</span>
-        <span class="md-subhead">地址:{{servers[cIndex].host}}</span>
-        <span class="md-subhead">端口:{{servers[cIndex].port}}</span>
-        <span class="md-subhead">密码:{{servers[cIndex].password}}</span>
-        <span class="md-subhead">加密:{{servers[cIndex].method}}</span>
+        <span class="md-headline">{{userServers[cIndex].name}}</span>
+        <span class="md-subhead">地址:{{userServers[cIndex].host}}</span>
+        <span class="md-subhead">端口:{{userServers[cIndex].port}}</span>
+        <span class="md-subhead">密码:{{userServers[cIndex].password}}</span>
+        <span class="md-subhead">加密:{{userServers[cIndex].method}}</span>
 
       </md-card-title-text>
       <md-card-title-media>
 
         <div class="md-media-lg card-media" style="display: block;" 
-        ng-click="showQrcodeDialog(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)">
+        ng-click="showQrcodeDialog(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)">
 
             <qr size="120" layout-margin 
-            text="createQrCode(servers[cIndex].method, servers[cIndex].password , servers[cIndex].host, servers[cIndex].port, servers[cIndex].name)" image="true"></qr>
+            text="createQrCode(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)" image="true"></qr>
         </div>
 
       </md-card-title-media>
@@ -26,7 +26,7 @@
     <md-card-actions layout="row" layout-align="end center">
       <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
       <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">上一个</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= servers.length-1">下一个</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">下一个</md-button>
     </md-card-actions>
     </md-card>
 
@@ -66,14 +66,14 @@
         <md-card-title>
             <md-card-title-text>
                 <span class="md-headline">我的套餐</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit == 12">无限/包年</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit == 3">无限/包季</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type == 3 && servers[cIndex].data.limit < 3">无限/包月</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type == 4 && servers[cIndex].data.limit >= 30">无限/包月</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type == 4 && servers[cIndex].data.limit < 30">试用套餐</span>
-                <span class="md-subhead" ng-if="servers[cIndex].type >=2 && servers[cIndex].type <= 5">
-                      <span style="font-size: 0.9em;">到期:{{servers[cIndex].data.expire | date : 'yyyy-MM-dd HH:mm'}}</span><br>
-                      <span style="font-size: 0.9em;">剩余:{{ servers[cIndex].data.expire | timeago }}</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit == 12">无限/包年</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit == 3">无限/包季</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit < 3">无限/包月</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type == 4 && userServers[cIndex].data.limit >= 30">无限/包月</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type == 4 && userServers[cIndex].data.limit < 30">试用套餐</span>
+                <span class="md-subhead" ng-if="userServers[cIndex].type >=2 && userServers[cIndex].type <= 5">
+                      <span style="font-size: 0.9em;">到期:{{userServers[cIndex].data.expire | date : 'yyyy-MM-dd HH:mm'}}</span><br>
+                      <span style="font-size: 0.9em;">剩余:{{ userServers[cIndex].data.expire | timeago }}</span>
                   </span>
             </md-card-title-text>
         </md-card-title>
@@ -81,7 +81,7 @@
             <div style="text-align: right;">
                 <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
                 <md-button ng-show="alipayStatus" class="md-primary md-raised" 
-                ng-if="servers[cIndex].type >= 2 && servers[cIndex].type <= 5" ng-click="createOrder(servers[cIndex].id)">购买套餐</md-button>
+                ng-if="userServers[cIndex].type >= 2 && userServers[cIndex].type <= 5" ng-click="createOrder(userServers[cIndex].id)">购买套餐</md-button>
             </div>
         </md-card-content>
     </md-card>
