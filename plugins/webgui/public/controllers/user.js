@@ -161,7 +161,6 @@ app
       $scope.account[0].serverList.forEach((a,index)=>{
         console.log(a);
         a.password = $scope.account[0].password;
-        a.host = $scope.account[0].host;
         a.port = $scope.account[0].port;
         // a.qrcode = $scope.createQrCode(a.method, $scope.account[0].password, a.host, $scope.account[0].port, a.name);
       })
