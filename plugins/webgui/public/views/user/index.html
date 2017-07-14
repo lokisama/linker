@@ -65,15 +65,14 @@
     <md-card>
         <md-card-title>
             <md-card-title-text>
-                <span class="md-headline">我的套餐</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit == 12">无限/包年</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit == 3">无限/包季</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type == 3 && userServers[cIndex].data.limit < 3">无限/包月</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type == 4 && userServers[cIndex].data.limit >= 30">无限/包月</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type == 4 && userServers[cIndex].data.limit < 30">试用套餐</span>
-                <span class="md-subhead" ng-if="userServers[cIndex].type >=2 && userServers[cIndex].type <= 5">
-                      <span style="font-size: 0.9em;">到期:{{userServers[cIndex].data.expire | date : 'yyyy-MM-dd HH:mm'}}</span><br>
-                      <span style="font-size: 0.9em;">剩余:{{ userServers[cIndex].data.expire | timeago }}</span>
+                <span class="md-headline">当前套餐</span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">无限/包年</span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">无限/包季</span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit < 3">无限/包月</span>
+                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit >= 30">无限/包月</span>
+                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit < 30">试用套餐</span>
+                <span class="md-subhead" ng-if="account[0].type >= 2 && account[0].type <= 5">
+                      <span style="font-size: 0.9em;">到期:{{account[0].data.expire | date : 'yyyy-MM-dd HH:mm'}}({{ account[0].data.expire | timeago }})</span><br>
                   </span>
             </md-card-title-text>
         </md-card-title>
@@ -81,7 +80,7 @@
             <div style="text-align: right;">
                 <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
                 <md-button ng-show="alipayStatus" class="md-primary md-raised" 
-                ng-if="userServers[cIndex].type >= 2 && userServers[cIndex].type <= 5" ng-click="createOrder(userServers[cIndex].id)">购买套餐</md-button>
+                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)">购买套餐</md-button>
             </div>
         </md-card-content>
     </md-card>

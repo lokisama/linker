@@ -157,36 +157,6 @@ app
     $scope.userServers = $scope.account[0].serverList;
     console.log($scope.servers);
 
-    
-    // $scope.getUserAccountInfo = () => {
-    //   userApi.getUserAccount().then(success => {
-    //     $scope.cIndex = 0;
-    //     // $scope.account = success.account;
-
-    //     if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
-    //       success.account.forEach((a, index) => {
-    //         $scope.account[index].data = a.data;
-    //         $scope.account[index].password = a.password;
-    //         $scope.account[index].port = a.port;
-    //         $scope.account[index].type = a.type;
-    //       });
-    //     }else{
-    //       $scope.account = success.account;
-    //     }
-    //     success.servers.forEach((a, index) => {
-    //       const account = success.account[0];
-    //       a.password = account.password;
-    //       a.port = account.port;
-    //       a.type = account.type;
-    //       a.data = account.data;
-    //       a.qrCode = $scope.createQrCode(a.method, account.password, a.host, account.port, a.name);
-    //     });
-        
-    //     $scope.servers = success.servers;
-    //     console.log(success);
-    //   });
-    // };
-    // $scope.getUserAccountInfo();
 
     $scope.base64Encode = (str) => {
       return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
