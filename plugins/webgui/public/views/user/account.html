@@ -53,7 +53,7 @@
                                             <div flex="40">流量：</div>
                                             <div flex="60" style="text-align:right">
                                                 <span ng-if="a.type === 1">不限量</span>
-                                                <span ng-if="a.type >=3 && a.type <= 5"><span ng-style="a.isFlowOutOfLimit[server.id] ? {color: '#a33'} : {color: '#333'}">{{a.serverPortFlow | flow}}</span> / 无限流量</span>
+                                                <span ng-if="a.type >=3 && a.type <= 5"><span ng-style="a.isFlowOutOfLimit[server.id] ? {color: '#a33'} : {color: '#333'}">{{a.serverPortFlow | flow}}</span> / {{a.data.flow * (isMultiServerFlow ? 1 : server.scale) | flow}}</span>
                                                 <!-- <span ng-if="a.type === 3"><span ng-style="a.isFlowOutOfLimit[server.id] ? {color: '#a33'} : {color: '#333'}">{{a.serverPortFlow | flow}}</span> / {{a.data.flow * (isMultiServerFlow ? 1 : server.scale) | flow}}</span> -->
                                             </div>
                                         </div>
