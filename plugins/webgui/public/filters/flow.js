@@ -31,10 +31,7 @@ app.filter('flowServer', function() {
   const T = 1000 * 1000 * 1000 * 1000;
   const P = 1000 * 1000 * 1000 * 1000 * 1000;
   return function(input) {
-    return '无限流量';
-
     
-
     if (input < K) {
       return input + ' B';
     } else if (input < M) {
@@ -43,7 +40,7 @@ app.filter('flowServer', function() {
       return (input / M).toFixed(1) + ' MB';
     } else if (input < T) {
       if((input / G) < 50){
-        return (input / G).toFixed(2) + ' 无限流量';
+        return (input / G).toFixed(2) + ' GB';
       }else{
         return '无限流量';
       }
