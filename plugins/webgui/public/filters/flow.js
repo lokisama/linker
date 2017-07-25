@@ -14,7 +14,7 @@ app.filter('flow', function() {
     } else if (input < G) {
       return (input / M).toFixed(1) + ' MB';
     } else if (input < T) {
-      if(input<50){
+      if((input / G).toFixed(2) < 50){
         return (input / G).toFixed(2) + ' GB';
       }else{
         return '无限流量';
