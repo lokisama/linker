@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Shadowsocks-Manager">
+    <meta name="apple-mobile-web-app-title" content="零卡">
     <link rel="apple-touch-startup-image" href="<%= cdn%>/libs/favicon.png">
     <link rel="apple-touch-icon" href="<%= cdn%>/libs/favicon.png">
     <meta name="msapplication-TileImage" content="<%= cdn%>/libs/favicon.png">
@@ -15,7 +14,8 @@
     <link rel="stylesheet" href="<%= cdn%>/libs/angular-material.min.css">
     <link rel="shortcut icon" href="<%= cdn%>/libs/favicon.png">
     <link rel="manifest" href="/manifest.json">
-    <title>Shadowsocks-Manager</title>
+    <link rel="stylesheet" id="ng_load_plugins_before">
+    <title>零卡加速</title>
     <base href="/">
 </head>
 
@@ -27,6 +27,7 @@
     <script src="<%= cdn%>/libs/angular-messages.min.js"></script>
     <script src="<%= cdn%>/libs/angular-material.min.js"></script>
     <script src="<%= cdn%>/libs/angular-ui-router.min.js"></script>
+    <script src="<%= cdn%>/libs/ocLazyLoad.min.js"></script>
     <script src="<%= cdn%>/libs/angular-translate.min.js"></script>
     <script src="<%= cdn%>/libs/qrcode.min.js"></script>
     <script src="<%= cdn%>/libs/angular-qr.min.js"></script>
@@ -45,17 +46,17 @@
         window.ssmgrConfig = '<%- JSON.stringify(config)%>'
     </script>
     <script src="/libs/bundle.js"></script>
-    <div ng-controller="MainController" layout-fill>
+    <div class="layout-screen" ng-controller="MainController" layout-fill>
         <div layout-fill layout="row" layout-align="center center" ng-show="mainLoading">
             <div layout="column" layout-align="center center">
                 <md-progress-circular md-mode="indeterminate" class="md-accent"></md-progress-circular>
             </div>
         </div>
-        <div ng-hide="mainLoading" ui-view layout-fill></div>
+        <div class="layout-screen" ng-hide="mainLoading" ui-view layout-fill></div>
         <style>
             .fabToolbardemoBasicUsage md-fab-toolbar.md-right md-fab-trigger.align-with-text {left: 7px; }
             md-fab-toolbar md-fab-trigger .md-fab-toolbar-background{left:0;}
-            md-fab-toolbar{ position: fixed; bottom: 0; right: 10px; width: 100%;}
+            md-fab-toolbar{ position: fixed; bottom: 0px; right: 0px; width: 100%;}
         </style>
          <md-fab-toolbar md-open="demo.isOpen" count="demo.count"
                   md-direction="left">

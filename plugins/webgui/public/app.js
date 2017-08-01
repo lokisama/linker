@@ -1,7 +1,10 @@
 require('./index');
+var themePath = '/themes/linker';
+
+// var themePath = '';
 
 require('./controllers/main');
-require('./controllers/home');
+require('.'+ themePath +'/controllers/home');
 require('./controllers/user');
 require('./controllers/admin');
 require('./controllers/adminAccount');
@@ -10,7 +13,7 @@ require('./controllers/adminUser');
 require('./controllers/adminNotice');
 require('./controllers/adminSetting');
 
-require('./routes/home');
+require('.'+ themePath +'/routes/home');
 require('./routes/user');
 require('./routes/admin');
 
@@ -26,4 +29,6 @@ require('./services/adminService.js');
 require('./services/homeService.js');
 require('./services/userService.js');
 require('./services/dialogService.js');
-// require('./services/websocketService.js');
+
+require('./services/websocketService.js');
+

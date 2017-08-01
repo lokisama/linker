@@ -1,0 +1,62 @@
+<!--Mask-->
+<div class="view hm-black-strong layout-screen">
+    <div class="full-bg-img flex-center justify-content-around">
+        
+            <ul class="flex-text d-flex flex-column hidden-xs-down">
+                <li>
+                    <h1 class="h1-responsive wow fadeInDown" data-wow-delay="0.2s">娱乐、办公从此无国界</h1></li>
+                <li>
+                    <p class="wow fadeInDown"> 快速、简单、安全、便利</p>
+                    <p class="wow fadeInDown">独创全局智能加速技术，国内外网速优化自动切换。</p>
+                </li>
+                <li>
+                    <a href="/home/signup" class="btn info-color btn-lg wow fadeInRight" data-wow-delay="0.2s" rel="nofollow">立刻注册</a>
+                </li>
+            </ul>
+            <div class="d-inline-flex p-2">
+                <!--Form with header-->
+                <form name="userForm">
+                <div class="card" style="width:300px;">
+                    <div class="card-block">
+
+                        <!--Header-->
+                        <div class="form-header blue-gradient">
+                            <h3>登录</h3>
+                        </div>
+
+                        <!--Body-->
+                        <md-input-container class="md-block">
+                            <label>邮箱</label>
+                            <input type="email" required name="email" ng-model="user.email">
+                            <div ng-messages="userForm.email.$error">
+                                <div ng-message="required">邮箱不能为空</div>
+                                <div ng-message="email">必须填写一个有效邮箱地址</div>
+                            </div>
+                        </md-input-container>
+
+                        <md-input-container class="md-block">
+                            <label>密码</label>
+                            <input type="password" required name="password" ng-model="user.password">
+                            <div ng-messages="userForm.password.$error">
+                                <div ng-message="required">密码不能为空</div>
+                            </div>
+                        </md-input-container>
+
+                        
+
+                        <div class="text-center">
+                            <button class="btn btn-indigo " ng-click="login()" ng-disabled="!user.email || !user.password">点击登录</button>
+                            <a style="font-size:12px;" href="/home/signup">立刻注册</a> &nbsp;
+                            <a style="font-size:12px;" href="javascript:;" ng-click="findPassword()">重置密码</a>
+                           
+                            
+                        </div>
+
+                    </div>
+                </div>
+                </form>
+                <!--/Form with header-->
+            </div>
+    </div>
+</div>
+<!--/.Mask-->
