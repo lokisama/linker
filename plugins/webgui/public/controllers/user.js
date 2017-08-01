@@ -80,10 +80,10 @@ app
       });
     };
 
-    $scope.alipayStatus = false;
-    userApi.getAlipayStatus().then(success => {
-      $scope.alipayStatus = success.status;
-    });
+    // $scope.alipayStatus = false;
+    // userApi.getAlipayStatus().then(success => {
+    //   $scope.alipayStatus = success.status;
+    // });
   }
 ])
 .controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog','qrcodeDialog',
