@@ -21,8 +21,8 @@ plugins:
   webgui:
     use: true
     host: '127.0.0.1'
-    port: '8089'
-    site: 'http://localhost'
+    port: '80'
+    site: 'http://www.linkersocks.com'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
     gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
@@ -70,4 +70,4 @@ db:
   port: 3306
   user: 'root'
   password: 'wx11530600'
-  database: 'ssmgr_webgui2'
+  database: 'ssmgr_webgui'
