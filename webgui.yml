@@ -70,4 +70,4 @@ db:
   port: 3306
   user: 'root'
   password: 'wx11530600'
-  database: 'ssmgr_webgui2'
+  database: 'ssmgr_webgui'
