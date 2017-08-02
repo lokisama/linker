@@ -62,8 +62,8 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
     # 如果不使用paypal，这段可以去掉
     use: true
     mode: 'live' # sandbox or live
-    client_id: 'At9xcGd1t5L6OrICKNnp2g9'
-    client_secret: 'EP40s6pQAZmqp_G_nrU9kKY4XaZph'
+    client_id: '9VSLBFL55PWDGXD4'
+    client_secret: 'AFcWxV21C7fd0v3bYYYRCpSSRl31ABxT.s1nd2A4SeduDj.P8uwVX4jk'
 
 db:
   host: 'jp.linkersocks.com'
