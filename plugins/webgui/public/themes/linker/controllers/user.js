@@ -81,7 +81,7 @@ app
       });
     };
 
-    $scope.alipayStatus = false;
+    $scope.alipayStatus = true;
     userApi.getAlipayStatus().then(success => {
       $scope.alipayStatus = success.status;
     });
