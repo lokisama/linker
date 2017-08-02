@@ -21,15 +21,15 @@
 
                     <md-radio-button ng-repeat="t in publicInfo.time" value="{{t.type}}" ng-show="publicInfo.alipay[t.type] || publicInfo.paypal[t.type]">
                         <span layout="row" layout-align="space-between center" style="min-width: 280px; max-width: 380px;">
-                            <span flex="10"></span>
-                            <span flex="40">{{ t.name }}</span>
                             <span flex="5"></span>
-                            <span flex="35" style="text-align:right; color: #888">
+                            <span flex="45">{{ t.name }}</span>
+                            <span flex="0"></span>
+                            <span flex="45" style="text-align:right; color: #888">
                                 <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay">¥{{publicInfo.alipay[t.type]}}</span>
                                 <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay && publicInfo.paypal[t.type] && publicInfo.config.paypal">&nbsp;/&nbsp;</span>
                                 <span ng-show="publicInfo.paypal[t.type] && publicInfo.config.paypal">${{publicInfo.paypal[t.type]}}</span>
                             </span>
-                            <span flex="10"></span>
+                            <span flex="5"></span>
                         </span>
 
                     </md-radio-button>
