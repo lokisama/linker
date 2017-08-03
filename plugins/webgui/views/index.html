@@ -39,6 +39,7 @@
     <script src="<%= cdn%>/libs/angular-websocket.min.js"></script>
     <script src="<%= cdn%>/libs/marked.min.js"></script>
     <script src="<%= cdn%>/libs/angular-marked.min.js"></script>
+    <script src="<%= cdn%>/libs/angular-translate.min.js"></script>
     <script src="https://www.paypalobjects.com/api/checkout.js"></script> 
     <script>
         window.ssmgrVersion = '<%= version%>'
@@ -52,11 +53,11 @@
                 <md-progress-circular md-mode="indeterminate" class="md-accent"></md-progress-circular>
             </div>
         </div>
-        <div class="layout-screen" ng-hide="mainLoading" ui-view layout-fill></div>
+<div class="layout-screen" ng-hide="mainLoading" ui-view layout-fill></div>
 
 
 <style>
-    #lang{ position:fixed;right:10px;top:30px;z-index: 101; }
+    #lang{ position:fixed;left:10px;bottom:30px;z-index: 101; }
     .fabSpeedDialdemoBasicUsage .text-capitalize {
       text-transform: capitalize; }
 
@@ -73,22 +74,20 @@
       height: 300px;
       margin-left: auto;
       margin-right: auto; }
-    @media (max-width: 959px) and (min-width: 0) and (orientation: portrait){
-        #lang{ position:fixed;right:10px;top:20px; }
-    }
+    
 </style>
-<md-fab-speed-dial id="lang" md-open="isOpen" md-direction="down" class="md-fling">
+<md-fab-speed-dial id="lang" md-open="isOpen" md-direction="up" class="md-fling">
   <md-fab-trigger>
-    <md-button aria-label="Twitter" class="md-fab md-error">
-      <md-icon>menu</md-icon>
+    <md-button aria-label="language menu" class="md-fab md-error">
+      <md-icon class="material-icons">language</md-icon>
     </md-button>
   </md-fab-trigger>
 
   <md-fab-actions>
-    <md-button aria-label="Twitter" class="md-fab md-raised md-mini" ng-click="changeLanguage('zh-cn')">
+    <md-button aria-label="China" class="md-fab md-raised md-mini" ng-click="useLanguage('zh-CN')">
       <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_the_China.svg"></md-icon>
     </md-button>
-    <md-button aria-label="Twitter" class="md-fab md-raised md-mini" ng-click="changeLanguage('jp')">
+    <md-button aria-label="Japan" class="md-fab md-raised md-mini" ng-click="useLanguage('ja')">
       <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_Japan.svg"></md-icon>
     </md-button>
   </md-fab-actions>
