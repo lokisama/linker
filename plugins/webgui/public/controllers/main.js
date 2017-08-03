@@ -10,11 +10,6 @@ app.controller('MainController', ['$scope', '$localStorage', '$location', '$http
       home: {},
       user: {},
     });
-    $scope.isOpen = true;
-    $scope.useLanguage = (lang) => {
-        $translate.use(lang);
-    };
-
     $scope.mainLoading = true;
     $scope.setMainLoading = status => {
       $scope.mainLoading = status;
@@ -61,6 +56,11 @@ app.controller('MainController', ['$scope', '$localStorage', '$location', '$http
     }
     $scope.chooseLanguage = () => {
       languageDialog.show();
+    };
+    $scope.isOpen = true;
+    $scope.useLanguage = (lang) => {
+        $translate.use(lang);
+        $localStorage.language = lang;
     };
     $translate.use($localStorage.language || navigator.language || 'zh-CN');
   }
