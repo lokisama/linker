@@ -40,7 +40,7 @@ app.controller('MainController', ['$scope', '$localStorage', '$location', '$http
   ($scope, $localStorage, $location, $http, $translate) => {
 
     $scope.userState = ('zh jp').split(' ');//.map((state) => { return state; });
-
+    $scope.isOpen = true;
     $scope.changeLanguage = function (key) {
       console.log(key);
       $translate.use(key);
