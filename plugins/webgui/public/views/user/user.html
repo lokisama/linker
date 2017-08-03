@@ -17,7 +17,7 @@
                             <div class="inset">
                                 <md-icon class="material-icons">{{menu.icon}}</md-icon>
                             </div>
-                            <div class="inset">
+                            <div class="inset" translate>
                                 {{menu.name}}
                             </div>
                         </md-item-content>
@@ -35,9 +35,8 @@
                     <md-button class="md-icon-button" aria-label="menu" ng-click="menuButton()">
                         <i class="material-icons">menu</i>
                     </md-button>
-                    <div>{{title}}</div>
+                    <div translate>{{title}}</div>
                     <span flex></span>
-
                     <a class="md-icon-button" ng-if="dynamicTheme!='pink'" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=249722824&site=qq&menu=yes">客服GG</a>
                     <a class="md-icon-button" ng-if="dynamicTheme=='pink'" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=248769011&site=qq&menu=yes">客服MM</a>
                     <md-button class="md-icon-button md-ink-ripple" aria-label="face"
@@ -57,7 +56,7 @@
                                     <div style="padding-left: 0px;" class="inset">
                                         <md-icon class="material-icons">{{menu.icon}}</md-icon>
                                     </div>
-                                    <div class="inset" ng-show="innerSideNav">
+                                    <div class="inset" ng-show="innerSideNav" translate>
                                         {{menu.name}}
                                     </div>
                                 </md-item-content>

@@ -167,7 +167,8 @@
                                 <div flex="5"></div>
                                 <div style="margin-bottom: 25px;">
                                     <md-button class="btn btn-primary btn-sm" ng-disabled="sendCodeTime || !user.email" ng-click="sendCode()" aria-label="send code">
-                                        <span ng-if="sendCodeTime === 0" translate>获取</span><span ng-if="sendCodeTime > 0">已发送({{sendCodeTime}})</span>
+                                        <span ng-if="sendCodeTime === 0" translate>获取</span>
+                                        <span ng-if="sendCodeTime > 0">已发送({{sendCodeTime}})</span>
                                     </md-button>
                                 </div>
                             </div>

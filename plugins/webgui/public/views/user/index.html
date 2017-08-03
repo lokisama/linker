@@ -10,10 +10,10 @@
     <md-card-title>
       <md-card-title-text>
         <span class="md-headline">{{userServers[cIndex].name}}</span>
-        <span class="md-subhead">地址:{{userServers[cIndex].host}}</span>
-        <span class="md-subhead">端口:{{userServers[cIndex].port}}</span>
-        <span class="md-subhead">密码:{{userServers[cIndex].password}}</span>
-        <span class="md-subhead">加密:{{userServers[cIndex].method}}</span>
+        <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
+        <span class="md-subhead"><span translate>端口</span>:{{userServers[cIndex].port}}</span>
+        <span class="md-subhead"><span translate>密码</span>:{{userServers[cIndex].password}}</span>
+        <span class="md-subhead"><span translate>加密</span>:{{userServers[cIndex].method}}</span>
 
       </md-card-title-text>
       <md-card-title-media>
@@ -29,15 +29,15 @@
 
     </md-card-title>
     <md-card-actions layout="row" layout-align="end center">
-      <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
-      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">上一个</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">下一个</md-button>
+      <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
+      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0" translate>上一页</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1" translate>上一页</md-button>
     </md-card-actions>
     </md-card>
 
     <md-card>
         <md-card-title>
-            <md-card-title-text><span class="md-headline">下载</span></md-card-title-text>
+            <md-card-title-text><span class="md-headline" translate>下载</span></md-card-title-text>
         </md-card-title>
         <md-card-content>
             <div layout="row">
@@ -73,8 +73,8 @@
     </md-card>   
     <md-card>
         <md-card-title>
-            <md-card-title-text>
-                <span class="md-headline">套餐</span>
+            <md-card-title-text style="text-align: right">
+                <span class="md-headline" translate>套餐</span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">
                     {{account[0].data.flow  | flowServer}}/月 包年套餐</span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">
@@ -92,9 +92,9 @@
         </md-card-title>
         <md-card-content>
             <div style="text-align: right;">
-                <md-button class="md-primary" ng-click="toMyAccount()">查看</md-button>
+                <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
                 <md-button ng-show="alipayStatus" class="md-primary md-raised" 
-                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)">购买套餐</md-button>
+                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)" translate>购买套餐</md-button>
             </div>
         </md-card-content>
     </md-card>
