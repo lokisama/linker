@@ -81,9 +81,9 @@
 
     </md-card-title>
     <md-card-actions layout="row" layout-align="end center">
-      <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
-      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0" translate>上一页</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1" translate>上一页</md-button>
+      <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">{{ '上一页' | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">{{ '上一页' | translate}}</md-button>
     </md-card-actions>
     </md-card>
 
@@ -111,9 +111,9 @@
         </md-card-title>
         <md-card-content>
             <div style="text-align: right;">
-                <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
-                <md-button ng-show="alipayStatus" class="md-primary md-raised" 
-                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)" translate>购买套餐</md-button>
+                <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
+                <md-button class="md-primary md-raised" 
+                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)">{{ '购买套餐' | translate}}</md-button>
             </div>
         </md-card-content>
     </md-card>
