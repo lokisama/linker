@@ -42,7 +42,7 @@ var onlineCacheUrl = [
   '/public/views/home/signup.html',
 
   '/public/views/user/account.html',
-  '/public/views/user/changePassword.html',
+  '/public/views/dialog/changePassword.html',
   '/public/views/user/index.html',
   '/public/views/user/qrcodeDialog.html',
   '/public/views/user/user.html',
