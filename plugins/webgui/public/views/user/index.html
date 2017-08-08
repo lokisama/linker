@@ -5,39 +5,12 @@
 </style>
 <div layout="row" layout-xs="column">
 <div flex="50" flex-xs="100">
-
-    <md-card>
-    <md-card-title>
-      <md-card-title-text>
-        <span class="md-headline">{{userServers[cIndex].name}}</span>
-        <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
-        <span class="md-subhead"><span translate>端口</span>:{{userServers[cIndex].port}}</span>
-        <span class="md-subhead"><span translate>密码</span>:{{userServers[cIndex].password}}</span>
-        <span class="md-subhead"><span translate>加密</span>:{{userServers[cIndex].method}}</span>
-
-      </md-card-title-text>
-      <md-card-title-media>
-
-        <div class="md-media-lg card-media" style="display: block;" 
-        ng-click="showQrcodeDialog(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)">
-
-            <qr size="120" layout-margin 
-            text="createQrCode(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)" image="true"></qr>
-        </div>
-
-      </md-card-title-media>
-
-    </md-card-title>
-    <md-card-actions layout="row" layout-align="end center">
-      <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
-      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0" translate>上一页</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1" translate>上一页</md-button>
-    </md-card-actions>
-    </md-card>
-
     <md-card>
         <md-card-title>
-            <md-card-title-text><span class="md-headline" translate>下载</span></md-card-title-text>
+            <md-card-title-text layout="row">
+                <span class="md-headline" translate>第一步、</span>
+                <span class="md-headline" translate>下载工具</span>
+            </md-card-title-text>
         </md-card-title>
         <md-card-content>
             <div layout="row">
@@ -70,11 +43,57 @@
                 </div>
             </div>
         </md-card-content>
-    </md-card>   
+    </md-card>  
+
+    <md-card>
+        <style>
+        md-card md-card-title md-card-title-text .md-subhead{
+            font-size: 13px;
+        }
+        md-card md-card-title{
+            padding: 18px 14px 16px;
+        }
+        </style>
+    <md-card-title>
+      <md-card-title-text>
+        <span class="md-headline">
+            <span class="md-headline" translate>第二步、</span>
+            <span class="md-headline" translate>扫二维码</span>
+        </span>
+        <span class="md-subhead"><span translate>线路</span>:{{userServers[cIndex].name}}</span>
+        <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
+        <span class="md-subhead"><span translate>端口</span>:{{userServers[cIndex].port}}</span>
+        <span class="md-subhead"><span translate>密码</span>:{{userServers[cIndex].password}}</span>
+        <span class="md-subhead"><span translate>加密</span>:{{userServers[cIndex].method}}</span>
+
+      </md-card-title-text>
+      <md-card-title-media>
+
+        <div class="md-media-lg card-media" style="display: block;width: auto;height:auto; margin-top:10px;" 
+        ng-click="showQrcodeDialog(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)">
+
+            <qr size="110" 
+            text="createQrCode(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)" image="true"></qr>
+            <div class="md-headline" translate>移动设备可点击</div>
+        </div>
+
+      </md-card-title-media>
+
+    </md-card-title>
+    <md-card-actions layout="row" layout-align="end center">
+      <md-button class="md-primary" ng-click="toMyAccount()" translate>More</md-button>
+      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0" translate>上一页</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1" translate>上一页</md-button>
+    </md-card-actions>
+    </md-card>
+
+     
     <md-card>
         <md-card-title>
             <md-card-title-text style="text-align: right">
-                <span class="md-headline" translate>套餐</span>
+                <span class="md-headline" style="text-align: left" >
+                    <span class="md-headline" translate>第三步、</span><span class="md-headline" translate>查看套餐</span>
+                </span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">
                     {{account[0].data.flow  | flowServer}}/月 包年套餐</span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">

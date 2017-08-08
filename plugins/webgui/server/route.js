@@ -94,6 +94,8 @@ app.get('/api/admin/setting/payment', isAdmin, adminSetting.getPayment);
 app.put('/api/admin/setting/payment', isAdmin, adminSetting.modifyPayment);
 app.get('/api/admin/setting/account', isAdmin, adminSetting.getAccount);
 app.put('/api/admin/setting/account', isAdmin, adminSetting.modifyAccount);
+app.get('/api/admin/setting/base', isAdmin, adminSetting.getBase);
+app.put('/api/admin/setting/base', isAdmin, adminSetting.modifyBase);
 
 app.get('/api/user/notice', isUser, user.getNotice);
 app.get('/api/user/account', isUser, user.getAccount);
@@ -134,7 +136,18 @@ app.get('/serviceworker.js', (req, res) => {
 
 const manifest = appRequire('plugins/webgui/views/manifest').manifest;
 app.get('/manifest.json', (req, res) => {
-  return res.json(manifest);
+  return knex('webguiSetting').select().where({
+    key: 'base',
+  }).then(success => {
+    if(!success.length) {
+      return Promise.reject('settings not found');
+    }
+    success[0].value = JSON.parse(success[0].value);
+    return success[0].value;
+  }).then(success => {
+    manifest.name = success.title;
+    return res.json(manifest);
+  });
 });
 
 const version = appRequire('package').version;
@@ -144,12 +157,52 @@ const configForFrontend = {
   paypal: config.plugins.paypal && config.plugins.paypal.use,
   paypalMode: config.plugins.paypal && config.plugins.paypal.mode,
 };
+
 const cdn = config.plugins.webgui.cdn;
-const homePage = (req, res) => res.render('index', {
-  version,
-  cdn,
-  config: configForFrontend,
-});
+const colors = [
+  { value: 'red', color: '#F44336' },
+  { value: 'pink', color: '#E91E63' },
+  { value: 'purple', color: '#9C27B0' },
+  { value: 'deep-purple', color: '#673AB7' },
+  { value: 'indigo', color: '#3F51B5' },
+  { value: 'blue', color: '#2196F3' },
+  { value: 'light-blue', color: '#03A9F4' },
+  { value: 'cyan', color: '#00BCD4' },
+  { value: 'teal', color: '#009688' },
+  { value: 'green', color: '#4CAF50' },
+  { value: 'light-green', color: '#8BC34A' },
+  { value: 'lime', color: '#CDDC39' },
+  { value: 'yellow', color: '#FFEB3B' },
+  { value: 'amber', color: '#FFC107' },
+  { value: 'orange', color: '#FF9800' },
+  { value: 'deep-orange', color: '#FF5722' },
+  { value: 'brown', color: '#795548' },
+  { value: 'blue-grey', color: '#607D8B' },
+  { value: 'grey', color: '#9E9E9E' },
+];
+const homePage = (req, res) => {
+  return knex('webguiSetting').select().where({
+    key: 'base',
+  }).then(success => {
+    if(!success.length) {
+      return Promise.reject('settings not found');
+    }
+    success[0].value = JSON.parse(success[0].value);
+    return success[0].value;
+  }).then(success => {
+    configForFrontend.title = success.title;
+    configForFrontend.themePrimary = success.themePrimary;
+    configForFrontend.themeAccent = success.themeAccent;
+    const filterColor = colors.filter(f => f.value === success.themePrimary);
+    configForFrontend.browserColor = filterColor[0] ? filterColor[0].color : '#3F51B5';
+    return res.render('index', {
+      title: success.title,
+      version,
+      cdn,
+      config: configForFrontend,
+    });
+  });
+};
 app.get('/', homePage);
 app.get(/^\/home\//, homePage);
 app.get(/^\/admin\//, homePage);

@@ -4,18 +4,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="零卡">
+    <meta name="apple-mobile-web-app-title" content="<%= title%>">
     <link rel="apple-touch-startup-image" href="<%= cdn%>/libs/favicon.png">
     <link rel="apple-touch-icon" href="<%= cdn%>/libs/favicon.png">
     <meta name="msapplication-TileImage" content="<%= cdn%>/libs/favicon.png">
-    <meta name="msapplication-TileColor" content="#3F51B5">
-    <meta name="theme-color" content="#3F51B5">
+    <meta name="msapplication-TileColor" content="<%= config.browserColor%>">
+    <meta name="theme-color" content="<%= config.browserColor%>">
     <link rel="stylesheet" href="<%= cdn%>/libs/style.css">
     <link rel="stylesheet" href="<%= cdn%>/libs/angular-material.min.css">
     <link rel="shortcut icon" href="<%= cdn%>/libs/favicon.png">
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" id="ng_load_plugins_before">
-    <title>零卡加速</title>
+    <title><%= title%></title>
     <base href="/">
 </head>
 
@@ -57,7 +57,7 @@
 
 
 <style>
-    #lang{ position:fixed;left:10px;bottom:30px;z-index: 101; }
+    #lang{ position:fixed;left:10px;bottom:20px;z-index: 101; }
     .fabSpeedDialdemoBasicUsage .text-capitalize {
       text-transform: capitalize; }
 
