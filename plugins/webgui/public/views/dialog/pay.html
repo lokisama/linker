@@ -21,7 +21,7 @@
                     <md-radio-button ng-repeat="t in publicInfo.time" value="{{t.type}}" ng-show="publicInfo.alipay[t.type] || publicInfo.paypal[t.type]">
                         <span layout="row" layout-align="space-between center" style="min-width: 280px; max-width: 380px;">
                             <span flex="5"></span>
-                            <span flex="45">{{ t.name }}</span>
+                            <span flex="45">{{ t.name | translate}}</span>
                             <span flex="0"></span>
                             <span flex="45" style="text-align:right; color: #888">
                                 <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay">¥{{publicInfo.alipay[t.type]}}</span>
@@ -35,12 +35,12 @@
                 </md-radio-group>
             </div>
             <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'success'">
-                <div style="margin-bottom: 20px;">支付成功</div>
-                <div style="margin-bottom: 20px;">订单会在两分钟内生效，请稍候</div>
+                <div style="margin-bottom: 20px;" translate>支付成功</div>
+                <div style="margin-bottom: 20px;" translate>订单会在两分钟内生效，请稍候</div>
             </div>
             <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'error'">
-                <div style="margin-bottom: 20px;">系统错误</div>
-                <div style="margin-bottom: 20px;">生成支付订单出错，请稍后再试</div>
+                <div style="margin-bottom: 20px;" translate>系统错误</div>
+                <div style="margin-bottom: 20px;" translate>生成支付订单出错，请稍后再试</div>
             </div>
         </div>
     </md-dialog-content>

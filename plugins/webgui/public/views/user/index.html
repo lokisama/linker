@@ -83,7 +83,7 @@
     <md-card-actions layout="row" layout-align="end center">
       <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
       <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">{{ '上一页' | translate}}</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">{{ '上一页' | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">{{ '下一页' | translate}}</md-button>
     </md-card-actions>
     </md-card>
 
@@ -95,13 +95,13 @@
                     <span class="md-headline" translate>第三步、</span><span class="md-headline" translate>查看套餐</span>
                 </span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">
-                    {{account[0].data.flow  | flowServer}}/月 包年套餐</span>
+                    {{account[0].data.flow  | flowServer}}/月 <span translate>包年套餐</span></span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">
-                    {{account[0].data.flow  | flowServer}}/月 包季套餐</span>
+                    {{account[0].data.flow  | flowServer}}/月 <span translate>包季套餐</span></span>
                 <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit < 3">
-                    {{account[0].data.flow  | flowServer}}/月 包月套餐</span>
+                    {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
                 <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit >= 30">
-                    {{account[0].data.flow  | flowServer}}/月 包月套餐</span>
+                    {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
                 <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit < 30">
                     {{account[0].data.flow  | flowServer}}/试用</span>
                 <span class="md-subhead" ng-if="account[0].type >= 2 && account[0].type <= 5">
