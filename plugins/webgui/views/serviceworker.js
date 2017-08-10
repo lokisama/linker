@@ -1,7 +1,9 @@
 // importScripts('/libs/serviceworker-cache-polyfill.js');
 
-var ONLINE_CACHE_NAME = '2017-08-09 23:03:32';
-var onlineCacheUrl = [
+const ONLINE_CACHE_NAME = '2017-08-10 20:45:22' + ' <%= serviceWorkerTime%>';
+
+const emptyCacheUrl = [];
+const onlineCacheUrl = [
   '/',
 
   '/libs/angular.min.js',
@@ -85,7 +87,7 @@ var onlineCacheUrl = [
 ];
 
 this.addEventListener('activate', function(event) {
-  var cacheWhitelist = [ONLINE_CACHE_NAME];
+  const cacheWhitelist = [ONLINE_CACHE_NAME];
   event.waitUntil(
     caches.keys().then(function(keyList) {
       return Promise.all(keyList.map(function(key) {
@@ -103,7 +105,7 @@ self.addEventListener('install', event => {
     caches.open(ONLINE_CACHE_NAME)
     .then(function(cache) {
       console.log('Opened cache');
-      return cache.addAll(onlineCacheUrl);
+      return cache.addAll(<%= serviceWorker%> ? onlineCacheUrl : emptyCacheUrl);
     })
   );
 });

@@ -74,10 +74,10 @@
       </md-card-title-text>
       <md-card-title-media>
 
-        <div class="md-media-lg card-media" style="display: block;width: auto;height:auto; margin-top:10px;" 
+        <div flex layout="column" layout-align="center center" class="md-media-lg card-media" style="display: flex;width: auto;height:auto; margin-top:14px;" 
         ng-click="showQrcodeDialog(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)">
 
-            <qr  size="110" 
+            <qr  layout-align="center center" size="110" 
             text="createQrCode(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)" image="true"></qr>
             <div style="font-size: 10px;text-align: center;" translate>移动设备可点击二维码添加线路</div>
         </div>
