@@ -54,6 +54,13 @@
           }
           lastTouchEnd = now;
         }, false);
+
+        document.documentElement.addEventListener('touchstart', function (event) {
+          if (event.touches.length > 1) {
+            event.preventDefault();
+          }
+        }, false);
+        
     </script>
     <script src="/libs/bundle.js"></script>
     <div class="layout-screen" ng-controller="MainController" layout-fill>
