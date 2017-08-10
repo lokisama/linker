@@ -45,6 +45,15 @@
         window.ssmgrVersion = '<%= version%>'
         window.cdn = '<%= cdn%>'
         window.ssmgrConfig = '<%- JSON.stringify(config)%>'
+
+        var lastTouchEnd = 0;
+        document.documentElement.addEventListener('touchend', function (event) {
+          var now = Date.now();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        }, false);
     </script>
     <script src="/libs/bundle.js"></script>
     <div class="layout-screen" ng-controller="MainController" layout-fill>
