@@ -22,15 +22,20 @@
                            label="{{server.name}}"
                            md-on-select="getServerPortData(a, server.id, a.port)">
                         <div layout="row" layout-align="center center" layout-wrap>
-                            <div flex flex-xs="100" layout="row" layout-align-xs="center center" layout-align-gt-xs="space-between center">
-                                <div hide-xs></div>
-                                <qr ng-click="showQrcodeDialog(server.method, a.password , server.host, a.port, server.name)" size="getQrCodeSize()" layout-margin text="createQrCode(server.method, a.password , server.host, a.port, server.name)" image="true"></qr>
-                                <div hide-xs></div>
-                            </div>
-                            <div flex flex-xs="100">
-                                
-                                <md-button class="md-primary" ng-click="showChangePasswordDialog(a.id, a.password)">{{ '修改密码' | translate }}</md-button>
-                                <md-button ng-show="config.alipay || config.paypal" class="md-primary" ng-if="a.type >= 2 && a.type <= 5" ng-click="createOrder(a.id)">{{ '续费' | translate }}</md-button>
+                            <div layout="column" flex="40" flex-xs="100">
+                                <div flex flex-xs="100" style="text-align: center;">
+                                    <span >{{'移动设备可点击二维码添加线路' | translate}}</span>
+                                </div>
+                                <div flex flex-xs="100" layout="row" layout-align-xs="center center" layout-align-gt-xs="space-between center">
+                                    <div hide-xs></div>
+                                    <qr ng-click="showQrcodeDialog(server.method, a.password , server.host, a.port, server.name)" size="getQrCodeSize()" layout-margin text="createQrCode(server.method, a.password , server.host, a.port, server.name)" image="true"></qr>
+                                    <div hide-xs></div>
+                                </div>
+                                <div flex flex-xs="100" style="text-align: center;">
+                                    
+                                    <md-button class="md-primary" ng-click="showChangePasswordDialog(a.id, a.password)">{{ '修改密码' | translate }}</md-button>
+                                    <md-button ng-show="config.alipay || config.paypal" class="md-primary" ng-if="a.type >= 2 && a.type <= 5" ng-click="createOrder(a.id)">{{ '续费' | translate }}</md-button>
+                                </div>
                             </div>
                             <div flex="60" flex-xs="100">
                                 <md-list>

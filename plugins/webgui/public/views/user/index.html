@@ -54,12 +54,17 @@
             padding: 18px 14px 16px;
         }
         </style>
+
     <md-card-title>
       <md-card-title-text>
         <span class="md-headline">
             <span class="md-headline" translate>第二步、</span>
             <span class="md-headline" translate>扫二维码</span>
         </span>
+      </md-card-title-text>
+    </md-card-title>
+    <md-card-title>
+      <md-card-title-text>
         <span class="md-subhead"><span translate>线路</span>:{{userServers[cIndex].name}}</span>
         <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
         <span class="md-subhead"><span translate>端口</span>:{{userServers[cIndex].port}}</span>
@@ -72,9 +77,9 @@
         <div class="md-media-lg card-media" style="display: block;width: auto;height:auto; margin-top:10px;" 
         ng-click="showQrcodeDialog(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)">
 
-            <qr size="110" 
+            <qr  size="110" 
             text="createQrCode(userServers[cIndex].method, userServers[cIndex].password , userServers[cIndex].host, userServers[cIndex].port, userServers[cIndex].name)" image="true"></qr>
-            <div class="md-headline" translate>移动设备可点击</div>
+            <div style="font-size: 10px;text-align: center;" translate>移动设备可点击二维码添加线路</div>
         </div>
 
       </md-card-title-media>
