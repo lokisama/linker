@@ -21,17 +21,17 @@
                     <md-tab ng-repeat="server in a.serverList track by server.id"
                            label="{{server.name}}"
                            md-on-select="getServerPortData(a, server.id, a.port)">
-                        <div layout="row" layout-align="center center" layout-wrap>
-                            <div layout="column" flex="40" flex-xs="100" layout-align="center center" style="margin-top:10px;" >
-                                <div flex flex-xs="100">
-                                    <span flex="100" style="text-align: center;">{{'移动设备可点击二维码添加线路'  | translate}}</span>
+                        <div layout="row" layout-xs="column" layout-align="center center" layout-wrap>
+                            <div layout="column" flex="40" flex-xs="100"  layout-align="center center" style="margin-top:10px;" >
+                                <div flex flex-xs="100" >
+                                    <span flex="100">{{'移动设备可点击二维码添加线路'  | translate}}</span>
                                 </div>
-                                <div flex flex-xs="100" layout="column" layout-align="center center" layout-align-gt-xs="space-between center">
+                                <div flex flex-xs="100" layout="column" layout-align-gt-xs="space-between center">
                                     <div hide-xs></div>
                                     <qr flex="100" ng-click="showQrcodeDialog(server.method, a.password , server.host, a.port, server.name)" size="getQrCodeSize()" layout-margin text="createQrCode(server.method, a.password , server.host, a.port, server.name)" image="true"></qr>
                                     <div hide-xs></div>
                                 </div>
-                                <div flex flex-xs="100" layout="row"  layout-align="center center">
+                                <div flex flex-xs="100" layout="row">
                                     
                                     <md-button class="md-primary" ng-click="showChangePasswordDialog(a.id, a.password)">{{ '修改密码' | translate }}</md-button>
                                     <md-button ng-show="config.alipay || config.paypal" class="md-primary" ng-if="a.type >= 2 && a.type <= 5" ng-click="createOrder(a.id)">{{ '续费' | translate }}</md-button>
