@@ -94,7 +94,10 @@ const editAccount = async (id, options) => {
   update.type = options.type;
   update.userId = options.userId;
   update.autoRemove = options.autoRemove;
-  update.server = options.server ? JSON.stringify(options.server) : null;
+  // update.server = options.server ? JSON.stringify(options.server) : null;
+  if(options.hasOwnProperty('server')) {
+    update.server = options.server ? JSON.stringify(options.server) : null;
+  }
   if(options.type === 1) {
     update.data = null;
     update.port = +options.port;
@@ -240,7 +243,16 @@ const setAccountLimit = async (userId, accountId, orderType) => {
       flow[payType[p]] = paymentInfo[p].flow * 1000 * 1000;
     }
   };
-  if(!accountId) {
+  let account;
+  if(accountId) {
+    account = await knex('account_plugin').select().where({ id: accountId }).then(success => {
+      if(success.length) {
+        return success[0];
+      }
+      return null;
+    });
+  }
+  if(!accountId || !account) {
     const getNewPort = () => {
       return knex('webguiSetting').select().where({
         key: 'account',
@@ -293,12 +305,6 @@ const setAccountLimit = async (userId, accountId, orderType) => {
     });
     return;
   }
-  const account = await knex('account_plugin').select().where({ id: accountId }).then(success => {
-    if(success.length) {
-      return success[0];
-    }
-    return Promise.reject('account not found');
-  });
   const accountData = JSON.parse(account.data);
   accountData.flow = flow[orderType];
   const timePeriod = {

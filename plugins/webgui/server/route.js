@@ -8,6 +8,7 @@ const adminServer = appRequire('plugins/webgui/server/adminServer');
 const adminFlow = appRequire('plugins/webgui/server/adminFlow');
 const adminSetting = appRequire('plugins/webgui/server/adminSetting');
 const adminNotice = appRequire('plugins/webgui/server/adminNotice');
+const adminAccount = appRequire('plugins/webgui/server/adminAccount');
 const push = appRequire('plugins/webgui/server/push');
 const path = require('path');
 const knex = appRequire('init/knex').knex;
@@ -35,6 +36,7 @@ app.get('/api/home/login', home.status);
 app.post('/api/home/code', home.sendCode);
 app.post('/api/home/signup', home.signup);
 app.post('/api/home/login', home.login);
+app.post('/api/home/macLogin', home.macLogin);
 app.post('/api/home/logout', home.logout);
 app.post('/api/home/password/sendEmail', home.sendResetPasswordEmail);
 app.get('/api/home/password/reset', home.checkResetPasswordToken);
@@ -56,6 +58,13 @@ app.post('/api/admin/account', isAdmin, admin.addAccount);
 app.put('/api/admin/account/:accountId(\\d+)/port', isAdmin, admin.changeAccountPort);
 app.put('/api/admin/account/:accountId(\\d+)/data', isAdmin, admin.changeAccountData);
 app.delete('/api/admin/account/:accountId(\\d+)', isAdmin, admin.deleteAccount);
+
+app.get('/api/admin/account/mac', isAdmin, adminAccount.getMacAccount);
+app.post('/api/admin/account/mac/:macAddress', isAdmin, adminAccount.addMacAccount);
+app.put('/api/admin/account/mac', isAdmin, adminAccount.editMacAccount);
+app.delete('/api/admin/account/mac', isAdmin, adminAccount.deleteMacAccount);
+
+app.get('/api/user/account/mac/:macAddress', adminAccount.getMacAccountForUser);
 
 app.get('/api/admin/flow/:serverId(\\d+)', isAdmin, adminFlow.getServerFlow);
 app.get('/api/admin/flow/:serverId(\\d+)/lastHour', isAdmin, adminFlow.getServerLastHourFlow);
@@ -96,6 +105,9 @@ app.get('/api/admin/setting/account', isAdmin, adminSetting.getAccount);
 app.put('/api/admin/setting/account', isAdmin, adminSetting.modifyAccount);
 app.get('/api/admin/setting/base', isAdmin, adminSetting.getBase);
 app.put('/api/admin/setting/base', isAdmin, adminSetting.modifyBase);
+app.get('/api/admin/setting/mail', isAdmin, adminSetting.getMail);
+app.put('/api/admin/setting/mail', isAdmin, adminSetting.modifyMail);
+
 
 app.get('/api/user/notice', isUser, user.getNotice);
 app.get('/api/user/account', isUser, user.getAccount);
@@ -103,7 +115,7 @@ app.get('/api/user/account/:accountId(\\d+)', isUser, user.getOneAccount);
 app.get('/api/user/server', isUser, user.getServers);
 app.get('/api/user/flow/:serverId(\\d+)/:port(\\d+)', isUser, user.getServerPortFlow);
 app.get('/api/user/flow/:serverId(\\d+)/:port(\\d+)/lastConnect', isUser, user.getServerPortLastConnect);
-app.put('/api/user/:accountId(\\d+)/password', isUser, user.changePassword);
+app.put('/api/user/:accountId(\\d+)/password', isUser, user.changeShadowsocksPassword);
 app.get('/api/user/multiServerFlow', isUser, user.getMultiServerFlowStatus);
 
 app.get('/api/user/status/alipay', isUser, user.getAlipayStatus);
@@ -118,21 +130,11 @@ app.post('/api/user/paypal/execute', isUser, user.executePaypalOrder);
 app.post('/api/user/alipay/callback', user.alipayCallback);
 app.post('/api/user/paypal/callback', user.paypalCallback);
 
+app.post('/api/user/changePassword', user.changePassword);
+
 if(config.plugins.webgui.gcmAPIKey && config.plugins.webgui.gcmSenderId) {
   app.post('/api/push/client', push.client);
 }
-
-// app.get('/serviceworker.js', (req, res) => {
-//   res.header('Content-Type', 'text/javascript');
-//   res.sendFile('serviceworker.js', {
-//     root: path.resolve(__dirname, '../public/'),
-//   }, err => {
-//     if (err) {
-//       console.log(err);
-//       return res.status(404).end();
-//     }
-//   });
-// });
 
 const manifest = appRequire('plugins/webgui/views/manifest').manifest;
 app.get('/manifest.json', (req, res) => {
@@ -156,9 +158,11 @@ const configForFrontend = {
   alipay: config.plugins.alipay && config.plugins.alipay.use,
   paypal: config.plugins.paypal && config.plugins.paypal.use,
   paypalMode: config.plugins.paypal && config.plugins.paypal.mode,
+  macAccount: config.plugins.macAccount && config.plugins.macAccount.use,
 };
 
 const cdn = config.plugins.webgui.cdn;
+const analytics = config.plugins.webgui.googleAnalytics || '';
 const colors = [
   { value: 'red', color: '#F44336' },
   { value: 'pink', color: '#E91E63' },
@@ -199,6 +203,7 @@ const homePage = (req, res) => {
       title: success.title,
       version,
       cdn,
+      analytics,
       config: configForFrontend,
     });
   });
@@ -219,7 +224,7 @@ app.get('/serviceworker.js', (req, res) => {
     return success[0].value;
   }).then(success => {
     res.header('Content-Type', 'text/javascript');
-    res.render('serviceworker.ejs', {
+    res.render('serviceworker.js', {
       serviceWorker: !!success.serviceWorker,
       serviceWorkerTime: success.serviceWorkerTime,
     });

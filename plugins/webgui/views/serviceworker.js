@@ -1,6 +1,7 @@
 // importScripts('/libs/serviceworker-cache-polyfill.js');
 
-const ONLINE_CACHE_NAME = '2017-08-10 20:45:22' + ' <%= serviceWorkerTime%>';
+const ONLINE_CACHE_NAME = '2017-09-14 17:24:36' + ' <%= serviceWorkerTime%>';
+const isSWOpen = JSON.parse('<%= serviceWorker%>');
 
 const emptyCacheUrl = [];
 const onlineCacheUrl = [
@@ -105,7 +106,7 @@ self.addEventListener('install', event => {
     caches.open(ONLINE_CACHE_NAME)
     .then(function(cache) {
       console.log('Opened cache');
-      return cache.addAll(<%= serviceWorker%> ? onlineCacheUrl : emptyCacheUrl);
+      return cache.addAll(isSWOpen ? onlineCacheUrl : emptyCacheUrl);
     })
   );
 });

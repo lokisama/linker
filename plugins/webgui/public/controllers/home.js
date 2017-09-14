@@ -116,9 +116,9 @@ app
     ($scope, $state, homeApi, alertDialog, $localStorage) => {
       $scope.user = {};
       $scope.login = () => {
-        alertDialog.loading();
-        homeApi.userLogin($scope.user.email, $scope.user.password)
-        .then(success => {
+        alertDialog.loading().then(() => {
+          return homeApi.userLogin($scope.user.email, $scope.user.password);
+        }).then(success => {
           $localStorage.home.status = success;
           return alertDialog.close().then(() => {
             return success;
@@ -135,8 +135,10 @@ app
         });
       };
       $scope.findPassword = () => {
-        alertDialog.loading();
-        homeApi.findPassword($scope.user.email).then(success => {
+        alertDialog.loading().then(() => {
+          return homeApi.findPassword($scope.user.email);
+        })
+        .then(success => {
           alertDialog.show(success, '确定');
         }).catch(err => {
           alertDialog.show(err, '确定');
@@ -154,8 +156,9 @@ app
       $scope.user = {};
       $scope.sendCodeTime = 0;
       $scope.sendCode = () => {
-        alertDialog.loading();
-        homeApi.sendCode($scope.user.email)
+        alertDialog.loading().then(() => {
+          return homeApi.sendCode($scope.user.email);
+        })
         .then(success => {
           alertDialog.show('验证码已发至邮箱', '确定');
           $scope.sendCodeTime = 120;
@@ -172,8 +175,10 @@ app
         });
       };
       $scope.signup = () => {
-        alertDialog.loading();
-        homeApi.userSignup($scope.user.email, $scope.user.code, $scope.user.password).then(success => {
+        alertDialog.loading().then(() => {
+          return homeApi.userSignup($scope.user.email, $scope.user.code, $scope.user.password);
+        })
+        .then(success => {
           alertDialog.show('用户注册成功', '确定').then(success => {
             $state.go('home.login');
           });
@@ -187,14 +192,15 @@ app
     ($scope, $http, $state, $stateParams, alertDialog) => {
       $scope.user = {};
       const token = $stateParams.token;
-      alertDialog.loading();
-      $http.get('/api/home/password/reset', {
-        params: {
-          token
-        },
-      }).then(success => {
-        alertDialog.close();
-      }).catch(err => {
+      alertDialog.loading().then(() => {
+        return $http.get('/api/home/password/reset', {
+          params: {
+            token
+          },
+        });
+      }).then(() => {
+        return alertDialog.close();
+      }).catch(() => {
         alertDialog.show('该链接已经失效', '确定').then(() => {
           $state.go('home.index');
         });
@@ -213,4 +219,18 @@ app
         });
       };
     }
-  ]);
+  ])
+  .controller('HomeMacLoginController', ['$scope', '$http', '$state', '$stateParams', '$localStorage',
+  ($scope, $http, $state, $stateParams, $localStorage) => {
+    const mac = $stateParams.mac;
+    $http.post('/api/home/macLogin', {
+      mac,
+    }).then(() => {
+      $localStorage.home.status = 'normal';
+      $state.go('user.index');
+    }).catch(() => {
+      $state.go('home.index');
+    });
+  }
+])
+;

@@ -140,6 +140,8 @@ module.exports = {
   '到期时间：': 'Due Date:',
   '最近连接：': 'Last Connected:',
   '修改密码': 'Change Password',
+  '修改密码成功': 'Change password success',
+  '修改密码失败': 'Change password fail',
   '续费': 'Recharge',
   '不限时': 'unlimited',
   '不限量': 'unlimited',
@@ -202,6 +204,20 @@ module.exports = {
   '系统错误': 'An error occurred.',
   '生成支付订单出错，请稍后再试': 'Unable to process your order. Please try again later.',
 
+  '修改': 'Modify',
 
+  '网站标题': 'Website Title',
+  '使用Service Worker缓存静态页面': 'Use ServiceWorker to create a static cache page',
+  '新用户自动分配账号': 'New User Gets Auto-Allocation Account',
+  '随机分配端口号': 'Random Port',
+  '开放注册': 'Open Registration',
+  '合并多服务器流量统计': 'Sum Up Stat. of Multi-Server Data Usage',
+  '注册时间': 'Signup Date',
+  '上次登录': 'Latest Signin',
 
+  '创建': 'Created',
+  '等待': 'Pending',
+  '付款': 'Paid',
+  '完成': 'Success',
+  '关闭': 'Closed',
 };

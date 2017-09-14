@@ -32,6 +32,11 @@ app.config(['$stateProvider', $stateProvider => {
       controller: 'HomeLoginController',
       templateUrl: '/public/themes/linker/views/home/login.html',
     })
+    .state('home.macLogin', {
+      url: '/login/:mac',
+      controller: 'HomeMacLoginController',
+      templateUrl: `${ cdn }/public/views/home/macLogin.html`,
+    })
     .state('home.signup', {
       url: '/signup',
       controller: 'HomeSignupController',

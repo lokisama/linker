@@ -178,6 +178,7 @@ exports.getUsers = (req, res) => {
         email: m.email,
         lastLogin: m.lastLogin,
         username: m.username,
+        port: m.port,
       };
     });
     return res.send(success);
@@ -543,9 +544,6 @@ exports.getAccountIpInfo = (req, res) => {
     });
   };
 
-  // const getIpFunction = [taobao, sina, ipip];
-  // const random = +Math.random().toString().substr(2) % getIpFunction.length;
-  // getIpFunction[random](ip)
   const getIpFunction = ip => {
     return taobao(ip).catch(() => {
       return sina(ip);

@@ -2,24 +2,60 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('email');
 
 const nodemailer = require('nodemailer');
+const rp = require('request-promise');
 const config = appRequire('services/config').all();
 const knex = appRequire('init/knex').knex;
 const isInBlackList = appRequire('plugins/email/blackList').isInBlackList;
 
-const smtpConfig = {
-  host: config.plugins.email.host,
-  port: config.plugins.email.port || 465,
-  secure: (config.plugins.email.port === 465 || !config.plugins.email.port) ? true : false,
-  auth: {
-    user: config.plugins.email.username,
-    pass: config.plugins.email.password,
-  },
-  tls: {
-    rejectUnauthorized: !config.plugins.email.allowUnauthorizedTls,
-  },
-};
+let emailConfig;
+let transporter;
 
-const transporter = nodemailer.createTransport(smtpConfig);
+if(!config.plugins.email.type) {
+  config.plugins.email.type = 'smtp';
+}
+if(config.plugins.email.type === 'smtp') {
+  emailConfig = {
+    host: config.plugins.email.host,
+    port: config.plugins.email.port || 465,
+    secure: (config.plugins.email.port === 465 || !config.plugins.email.port) ? true : false,
+    auth: {
+      user: config.plugins.email.username,
+      pass: config.plugins.email.password,
+    },
+    tls: {
+      rejectUnauthorized: !config.plugins.email.allowUnauthorizedTls,
+    },
+  };
+  transporter = nodemailer.createTransport(emailConfig);
+} else if (config.plugins.email.type === 'mailgun') {
+  emailConfig = {
+    baseUrl: config.plugins.email.baseUrl,
+    apiKey: config.plugins.email.apiKey,
+  };
+  config.plugins.email.email = 'mailgun@' + emailConfig.baseUrl.split('/').slice(-1);
+  const uri = 'https://api:' + emailConfig.apiKey + '@' + emailConfig.baseUrl.split('https://')[1] + '/messages';
+  transporter = {};
+  transporter.sendMail = (options, cb) => {
+    rp({
+      uri,
+      method: 'POST',
+      form: {
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+      },
+    }).then(success => {
+      cb(null);
+    }).catch(err => {
+      cb(err);
+    });
+  };
+}
+
+
+
+
 
 const sendMail = async (to, subject, text, options = {}) => {
   if(isInBlackList(to)) {
@@ -81,7 +117,11 @@ const sendCode = async (to, subject = 'subject', text, options = {}) => {
       return findEmail[0].remark;
     }
     const code = Math.random().toString().substr(2, 6);
-    text += '\n' + code;
+    if(text.indexOf('${code}') >= 0) {
+      text = text.replace(/\$\{code\}/g, '[ ' + code + ']');
+    } else {
+      text += '\n[ ' + code + ']';
+    }
     await sendMail(to, subject, text, {
       type: 'code',
       remark: code,

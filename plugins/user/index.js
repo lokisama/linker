@@ -159,7 +159,23 @@ const getUserAndPaging = async (opt = {}) => {
   const pageSize = opt.pageSize || 20;
 
   let count = knex('user').select().where({ type: 'normal' });
-  let users = knex('user').select().where({ type: 'normal' });
+  // let users = knex('user').select().where({ type: 'normal' });
+
+  let users = knex('user').select([
+    'user.id as id',
+    'user.username as username',
+    'user.email as email',
+    'user.telegram as telegram',
+    'user.password as password',
+    'user.type as type',
+    'user.createTime as createTime',
+    'user.lastLogin as lastLogin',
+    'user.resetPasswordId as resetPasswordId',
+    'user.resetPasswordTime as resetPasswordTime',
+    'account_plugin.port as port',
+  ]).leftJoin('account_plugin', 'user.id', 'account_plugin.userId')
+  .where({ 'user.type': 'normal' }).groupBy('user.id');
+
   if(search) {
     count = count.where('username', 'like', `%${ search }%`);
     users = users.where('username', 'like', `%${ search }%`);
@@ -197,6 +213,21 @@ const deleteUser = async userId => {
   }
 };
 
+const changePassword = async (userId, oldPassword, newPassword) => {
+  const userInfo = await knex('user').where({
+    id: userId,
+  }).then(user => {
+    if(!user.length) { return Promise.reject('user not found'); }
+    return user[0];
+  });
+  await checkPassword(userInfo.username, oldPassword);
+  await editUser({
+    id: userId, 
+  }, {
+    password: newPassword,
+  });
+};
+
 exports.add = addUser;
 exports.edit = editUser;
 exports.checkPassword = checkPassword;
@@ -206,3 +237,4 @@ exports.getRecentLogin = getRecentLoginUsers;
 exports.getOne = getOneUser;
 exports.getUserAndPaging = getUserAndPaging;
 exports.delete = deleteUser;
+exports.changePassword = changePassword;
