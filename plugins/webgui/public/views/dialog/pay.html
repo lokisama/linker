@@ -18,21 +18,13 @@
             <div layout="column" layout-align="center center" ng-if="publicInfo.status === 'choose'">
                 <div style="margin-bottom: 20px;" translate>请选择续费周期：</div>
                 <md-radio-group ng-model="publicInfo.orderType" flex>
-<<<<<<< HEAD
-                    <md-radio-button ng-repeat="t in publicInfo.time" value="{{t.type}}" ng-show="publicInfo.alipay[t.type] || publicInfo.paypal[t.type]">
-                        <span layout="row" layout-align="space-between center" style="min-width: 280px; max-width: 380px;">
-                            <span flex="5"></span>
-                            <span flex="45">{{ t.name | translate}}</span>
-                            <span flex="0"></span>
-                            <span flex="45" style="text-align:right; color: #888">
-=======
+
                     <md-radio-button ng-repeat="t in publicInfo.time" value="{{t.type}}" ng-show="(publicInfo.alipay[t.type] && publicInfo.config.alipay) || (publicInfo.paypal[t.type] && publicInfo.config.paypal)">
                         <span layout="row" layout-align="space-between center" style="min-width: 325px; max-width: 390px;">
                             <span flex="5"></span>
                             <span flex="30" translate>{{ t.name }}</span>
                             <span flex="5"></span>
                             <span flex="55" style="text-align:right; color: #888">
->>>>>>> 78f192c19ac3d4dfe55b47865784af665c776f1f
                                 <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay">¥{{publicInfo.alipay[t.type]}}</span>
                                 <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay && publicInfo.paypal[t.type] && publicInfo.config.paypal">/</span>
                                 <span ng-show="publicInfo.paypal[t.type] && publicInfo.config.paypal">${{publicInfo.paypal[t.type]}}</span>

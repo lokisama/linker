@@ -2,8 +2,8 @@ type: m
 empty: false
 
 manager:
-  address: www.linkersocks.com:3001
-  password: 'wx11530600'
+  address: hk.linkersocks.com:4001
+  password: '123456'
   # 这部分的端口和密码需要跟上一步 manager 参数里的保持一致，以连接 type s 部分监听的 tcp 端口
 plugins:
   flowSaver:
