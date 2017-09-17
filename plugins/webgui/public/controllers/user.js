@@ -36,14 +36,14 @@ app
       icon: 'account_circle',
       click: 'user.account'
     }, {
-      name: '修改密码',
-      icon: 'vpn_key',
+      name: '设置',
+      icon: 'settings',
       click: 'user.changePassword'
     }, {
       name: 'divider',
     }, {
       name: '退出',
-      icon: 'settings',
+      icon: 'exit_to_app',
       click: function() {
         $http.post('/api/home/logout').then(() => {
           $localStorage.home = {};
@@ -352,7 +352,7 @@ app
   }
 ]).controller('UserChangePasswordController', ['$scope', '$state', 'userApi', 'alertDialog', '$http', '$localStorage',
   ($scope, $state, userApi, alertDialog, $http, $localStorage) => {
-    $scope.setTitle('修改密码');
+    $scope.setTitle('设置');
     $scope.data = {
       password: '',
       newPassword: '',
