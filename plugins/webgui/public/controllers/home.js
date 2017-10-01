@@ -127,7 +127,6 @@ app
           if (success === 'normal') {
             $state.go('user.index');
           } else if (success === 'admin') {
-            $scope.sendPushSubscribe();
             $state.go('admin.index');
           }
         }).catch(err => {

@@ -450,7 +450,7 @@ exports.getAccountIp = (req, res) => {
     const port = accountInfo.port;
     return manager.send({
       command: 'ip',
-      port,
+      port: port + serverInfo.shift,
     }, {
       host: serverInfo.host,
       port: serverInfo.port,
@@ -474,14 +474,14 @@ exports.getAccountIpFromAllServer = (req, res) => {
     const getIp = (port, serverInfo) => {
       return manager.send({
         command: 'ip',
-        port,
+        port: port + serverInfo.shift,
       }, {
         host: serverInfo.host,
         port: serverInfo.port,
         password: serverInfo.password,
       });
     };
-    promiseArray = servers.map(server => {
+    const promiseArray = servers.map(server => {
       return getIp(accountInfo.port, server).catch(err => []);
     });
     return Promise.all(promiseArray);

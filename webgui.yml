@@ -2,7 +2,7 @@ type: m
 empty: false
 
 manager:
-  address: hk.linkersocks.com:4001
+  address: 0.0.0.0:4001
   password: '123456'
   # 这部分的端口和密码需要跟上一步 manager 参数里的保持一致，以连接 type s 部分监听的 tcp 端口
 plugins:
@@ -21,14 +21,13 @@ plugins:
   webgui:
     use: true
     host: '127.0.0.1'
-    #port: '80'
-    #site: 'http://www.linkersocks.com'
-    port: '8809'
+    port: '8089'
     site: 'http://localhost'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
     gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
   alipay:
+
     # 如果不使用支付宝，这段可以去掉
     use: true
     appid: 2017052407326042
@@ -64,8 +63,8 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
     # 如果不使用paypal，这段可以去掉
     use: true
     mode: 'live' # sandbox or live
-    client_id: '9VSLBFL55PWDGXD4'
-    client_secret: 'AFcWxV21C7fd0v3bYYYRCpSSRl31ABxT.s1nd2A4SeduDj.P8uwVX4jk'
+    client_id: 'AWQES8rlXnwH-ZCxdsNFUz5fVuVHSzE_PJQP55eKd040h7U3sD5q2mWG1Sho9sIBP-iGvDD1UkhcQy5m'
+    client_secret: 'EHAl-7t_OVmRG8iE2CGUKek38IbZbI9_69X8VQZ5ug8wnSvW-qbh9-cu_bVWTEicvvi05eCY04cAri0g'
 
 db:
   host: 'jp.linkersocks.com'
