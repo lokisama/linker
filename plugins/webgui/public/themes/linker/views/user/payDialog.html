@@ -1,0 +1,93 @@
+<md-dialog aria-label="pay dialog">
+    <div ng-show="publicInfo.status === 'loading'" layout="row" layout-align="center center" layout-margin layout-padding>
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+    </div>
+    <md-dialog-content ng-show="publicInfo.status !== 'loading'">
+        <div class="md-dialog-content">
+            <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'pay'">
+                <qr size="getQrCodeSize()" layout-margin text="qrCode()" image="true" ng-click="pay()"></qr>
+                <div>支付宝扫码支付</div>
+                <div>手机请点击二维码付款</div>
+            </div>
+            <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'choose'">
+                <div style="margin-bottom: 20px;">请选择续费周期：</div>
+                <md-radio-group ng-model="publicInfo.orderType" flex>
+                    <!-- <md-radio-button value="hour" ng-show="publicInfo.price.hour" style="height: 50px;padding: 9px 0;">
+                        <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                            <span flex="15"></span>
+                            <span flex="45">1GB/小时</span>
+                            <span flex="5"></span>
+                            <span flex="35" style="text-align:right; color: #888">{{publicInfo.price.hour}}元</span>
+                            <span flex="10"></span>
+                        </span>
+                    </md-radio-button> -->
+                    
+                    <md-radio-button value="day" ng-show="publicInfo.price.day" style="height: 50px;padding: 9px 0;">
+                      <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                          <span flex="15"></span>
+                          <span flex="45">5GB/月</span>
+                          <span flex="5"></span>
+                          <span flex="25" style="text-align:right; color: #888">{{publicInfo.price.day}}元</span>
+                          <span flex="10"></span>
+                      </span>
+                      </md-radio-button>
+                      <!-- <md-radio-button value="week" ng-show="publicInfo.price.week" style="height: 50px;padding: 9px 0;">
+                      <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                          <span flex="15"></span>
+                          <span flex="45">20GB/月</span>
+                          <span flex="5"></span>
+                          <span flex="25" style="text-align:right; color: #888">{{publicInfo.price.week}}元</span>
+                          <span flex="10"></span>
+                      </span>
+                      </md-radio-button> -->
+                      <md-radio-button value="month" ng-show="publicInfo.price.month" style="height: 50px;padding: 9px 0;">
+                      <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                          <span flex="15"></span>
+                          <span flex="45">无限/月</span>
+                          <span flex="5"></span>
+                          <span flex="25" style="text-align:right; color: #888">{{publicInfo.price.month}}元</span>
+                          <span flex="10"></span>
+                      </span>
+                    </md-radio-button>
+                    <md-radio-button value="season" ng-show="publicInfo.price.season" style="height: 50px;padding: 9px 0;">
+                      <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                          <span flex="15"></span>
+                          <span flex="45">包季优惠<br/>无限/月</span>
+                          <span flex="5"></span>
+                          <span flex="35" style="text-align:right; color: #888">{{publicInfo.price.season}}元</span>
+                          <span flex="10"></span>
+                      </span>
+                    </md-radio-button>
+                    <md-radio-button value="year" ng-show="publicInfo.price.year" style="height: 50px;padding: 9px 0;">
+                      <span layout="row" layout-align="space-between center" style="min-width: 180px; max-width: 220px;">
+                          <span flex="15"></span>
+                          <span flex="45">包年特价<br/>无限/月</span>
+                          <span flex="5"></span>
+                          <span flex="35" style="text-align:right; color: #888">{{publicInfo.price.year}}元</span>
+                          <span flex="10"></span>
+                      </span>
+                    </md-radio-button>
+                </md-radio-group>
+            </div>
+            <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'success'">
+                <div style="margin-bottom: 20px;">支付成功</div>
+                <div style="margin-bottom: 20px;">订单会在两分钟内生效，请稍候</div>
+            </div>
+            <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'error'">
+                <div style="margin-bottom: 20px;">系统错误</div>
+                <div style="margin-bottom: 20px;">生成支付订单出错，请稍后再试</div>
+            </div>
+        </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="center center" ng-show="publicInfo.status !== 'loading'">
+        <md-button class="md-primary" ng-show="publicInfo.status === 'choose'" ng-click="publicInfo.close()">
+            取消
+        </md-button>
+        <md-button class="md-primary" ng-show="publicInfo.status === 'choose'" ng-click="publicInfo.createOrder()">
+            下一步
+        </md-button>
+        <md-button class="md-primary" ng-show="publicInfo.status === 'pay' || publicInfo.status === 'success' || publicInfo.status === 'error'" ng-click="publicInfo.close()">
+            关闭
+        </md-button>
+    </md-dialog-actions>
+</md-dialog>
