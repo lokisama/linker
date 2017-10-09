@@ -63,7 +63,7 @@
         </span>
       </md-card-title-text>
     </md-card-title>
-    <md-card-title ng-if="userServers[cIndex]">
+    <md-card-title ng-if="userServers && userServers[cIndex]">
       <md-card-title-text>
         <span class="md-subhead"><span translate>线路</span>:{{userServers[cIndex].name}}</span>
         <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
