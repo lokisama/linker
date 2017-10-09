@@ -63,7 +63,7 @@
         </span>
       </md-card-title-text>
     </md-card-title>
-    <md-card-title ng-if="userServers && userServers[cIndex]">
+    <md-card-title ng-if="account && !account.length">
       <md-card-title-text>
         <span class="md-subhead"><span translate>线路</span>:{{userServers[cIndex].name}}</span>
         <span class="md-subhead"><span translate>地址</span>:{{userServers[cIndex].host}}</span>
@@ -94,7 +94,7 @@
 
      
     <md-card>
-        <md-card-title>
+        <md-card-title ng-if="account && !account.length">
             <md-card-title-text style="text-align: right">
                 <span class="md-headline" style="text-align: left" >
                     <span class="md-headline" translate>第三步、</span><span class="md-headline" translate>查看套餐</span>
