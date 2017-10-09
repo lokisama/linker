@@ -172,7 +172,10 @@ app
       $scope.servers = $localStorage.user.serverInfo.data || [];
       setAccountServerList($scope.account, $scope.servers);
       getUserAccountInfo();
-
+      
+      if($scope.account.length == 0){
+        return;
+      }
       $scope.account[0].serverList.forEach((a,index)=>{
         console.log(a);
         a.password = $scope.account[0].password;
