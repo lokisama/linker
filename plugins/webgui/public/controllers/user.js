@@ -32,7 +32,7 @@ app
       icon: 'home',
       click: 'user.index'
     }, {
-      name: '账号',
+      name: '我的节点',
       icon: 'account_circle',
       click: 'user.account'
     }, {
@@ -83,10 +83,15 @@ app
         };
       });
     };
+
+    // $scope.alipayStatus = false;
+    // userApi.getAlipayStatus().then(success => {
+    //   $scope.alipayStatus = success.status;
+    // });
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog',
-  ($scope, $state, userApi, markdownDialog) => {
+.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog','qrcodeDialog',
+  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog, qrcodeDialog) => {
     $scope.setTitle('首页');
     // $scope.notices = [];
     userApi.getNotice().then(success => {
@@ -98,11 +103,113 @@ app
     $scope.showNotice = notice => {
       markdownDialog.show(notice.title, notice.content);
     };
+
+    const setAccountServerList = (account, server) => {
+      account.forEach(a => {
+        a.serverList = server.filter(f => {
+          return !a.server || a.server.indexOf(f.id) >= 0;
+        });
+      });
+    };
+    
+
+    const getUserAccountInfo = () => {
+      userApi.getUserAccount().then(success => {
+        $scope.servers = success.servers;
+        if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
+          success.account.forEach((a, index) => {
+            console.log('success.account -> a');
+            console.log(a);
+          });
+        } else {
+          $scope.account = success.account;
+        }
+        setAccountServerList($scope.account, $scope.servers);
+        
+        $localStorage.user.serverInfo.data = success.servers;
+        $localStorage.user.serverInfo.time = Date.now();
+        $localStorage.user.accountInfo.data = success.account;
+        $localStorage.user.accountInfo.time = Date.now();
+        if($scope.account.length >= 2) {
+          $scope.flexGtSm = 50;
+        }
+      });
+    };
+
+
+    $scope.base64Encode = (str) => {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+      }));
+    };
+    $scope.createQrCode = (method, password, host, port, serverName) => {
+      return 'ss://' + $scope.base64Encode(method + ':' + password + '@' + host + ':' + port);
+    };
+
+    $scope.prev = () => {
+      if($scope.cIndex <= 0) return;
+      $scope.cIndex --;
+    }
+
+    $scope.next = () => {
+      if($scope.cIndex >=$scope.servers.length-1) return;
+      $scope.cIndex ++;
+    }
+
+    $scope.createOrder = (accountId) => {
+      payDialog.chooseOrderType(accountId);
+    };
+
+    $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
+      const ssAddress = $scope.createQrCode(method, password, host, port, serverName);
+      qrcodeDialog.show(serverName, ssAddress);
+    };
+
+
+
+    $scope.initUserIndex = () =>{
+      $scope.account = $localStorage.user.accountInfo.data || [];
+      $scope.servers = $localStorage.user.serverInfo.data || [];
+      setAccountServerList($scope.account, $scope.servers);
+      getUserAccountInfo();
+      
+      if($scope.account.length == 0){
+        return;
+      }
+      $scope.account[0].serverList.forEach((a,index)=>{
+        console.log(a);
+        a.password = $scope.account[0].password;
+        a.port = $scope.account[0].port;
+        // a.qrcode = $scope.createQrCode(a.method, $scope.account[0].password, a.host, $scope.account[0].port, a.name);
+      })
+
+      $scope.cIndex = 0;
+      $scope.userServers = $scope.account[0].serverList;
+    }
+
+
+    if(!$localStorage.user.serverInfo && !$localStorage.user.accountInfo) {
+      userApi.getUserAccount().then(success => {
+        $localStorage.user.serverInfo = {
+          data: success.servers,
+          time: Date.now(),
+        };
+        $localStorage.user.accountInfo = {
+          data: success.account,
+          time: Date.now(),
+        };
+        $scope.initUserIndex();
+      });
+      
+    }else{
+      $scope.initUserIndex();
+    }
+
   }
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog',
   ($scope, $http, $mdMedia, userApi, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog) => {
-    $scope.setTitle('账号');
+    $scope.setTitle('我的节点');
     $scope.flexGtSm = 100;
     if(!$localStorage.user.serverInfo) {
       $localStorage.user.serverInfo = {

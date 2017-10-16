@@ -1,5 +1,6 @@
 const app = angular.module('app');
 
+
 app.controller('MainController', ['$scope', '$localStorage', '$location', '$http', '$translate', 'languageDialog', '$state',
   ($scope, $localStorage, $location, $http, $translate, languageDialog, $state) => {
     $scope.version = window.ssmgrVersion;
@@ -44,6 +45,11 @@ app.controller('MainController', ['$scope', '$localStorage', '$location', '$http
     }
     $scope.chooseLanguage = () => {
       languageDialog.show();
+    };
+    $scope.isOpen = true;
+    $scope.useLanguage = (lang) => {
+        $translate.use(lang);
+        $localStorage.language = lang;
     };
     $translate.use($localStorage.language || navigator.language || 'zh-CN');
   }

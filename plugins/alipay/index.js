@@ -56,9 +56,9 @@ const createOrder = async (user, account, amount, orderType = 3) => {
   });
   const qrCode = await alipay_f2f.createQRPay({
     tradeNo: orderId,
-    subject: orderSetting.orderName || 'ss续费',
+    subject: orderSetting.orderName || '零卡续费',
     totalAmount: +amount,
-    body: 'ss',
+    body: '零卡套餐',
     timeExpress: 10,
   });
   await knex('alipay').insert({

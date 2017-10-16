@@ -7,17 +7,30 @@ app.config(['$stateProvider', $stateProvider => {
     .state('home', {
       url: '/home',
       abstract: true,
-      templateUrl: `${ cdn }/public/views/home/home.html`,
+      templateUrl: '/public/themes/linker/views/home/home.html',
+      resolve: {
+            deps: ['$ocLazyLoad', function($ocLazyLoad) {
+                return $ocLazyLoad.load({
+                    name: 'app',
+                    insertBefore: '#ng_load_plugins_before', // load the above css files before a LINK element with this ID. Dynamic CSS files must be loaded between core and theme css files
+                    files: [
+                        '/public/themes/linker/js/compiled.min.js?ver=4.3.3',
+                        '/public/themes/linker/css/compiled.min.css?ver=4.3.3',
+                    ] 
+                })
+            }]  
+        } 
     })
+
     .state('home.index', {
       url: '/index',
       controller: 'HomeIndexController',
-      templateUrl: `${ cdn }/public/views/home/index.html`,
+      templateUrl: '/public/themes/linker/views/home/index.html', 
     })
     .state('home.login', {
       url: '/login',
       controller: 'HomeLoginController',
-      templateUrl: `${ cdn }/public/views/home/login.html`,
+      templateUrl: '/public/themes/linker/views/home/login.html',
     })
     .state('home.macLogin', {
       url: '/login/:mac',
@@ -27,13 +40,12 @@ app.config(['$stateProvider', $stateProvider => {
     .state('home.signup', {
       url: '/signup',
       controller: 'HomeSignupController',
-      templateUrl: `${ cdn }/public/views/home/signup.html`,
+      templateUrl: '/public/themes/linker/views/home/signup.html',
     })
     .state('home.resetPassword', {
       url: '/password/reset/:token',
       controller: 'HomeResetPasswordController',
-      templateUrl: `${ cdn }/public/views/home/resetPassword.html`,
+      templateUrl: '/public/themes/linker/views/home/resetPassword.html',
     });
   }
 ]);
-

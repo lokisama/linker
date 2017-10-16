@@ -10,4 +10,16 @@ angular.module('app', [
   'angular-inview',
   'hc.marked',
   'pascalprecht.translate',
-]);
+  'oc.lazyLoad',
+])
+.config(["$mdThemingProvider",$mdThemingProvider => {
+  $mdThemingProvider.alwaysWatchTheme(true);
+  
+  $mdThemingProvider.theme('default');
+  //   .dark();
+  $mdThemingProvider.theme('pink')
+    .primaryPalette('pink')
+    .accentPalette('orange');
+
+
+}]);

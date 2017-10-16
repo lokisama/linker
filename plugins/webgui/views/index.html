@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -16,6 +15,7 @@
     <link rel="stylesheet" href="<%= cdn%>/libs/angular-material.min.css">
     <link rel="shortcut icon" href="/favicon.png">
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" id="ng_load_plugins_before">
     <title><%= title%></title>
     <base href="/">
 </head>
@@ -28,6 +28,7 @@
     <script src="<%= cdn%>/libs/angular-messages.min.js"></script>
     <script src="<%= cdn%>/libs/angular-material.min.js"></script>
     <script src="<%= cdn%>/libs/angular-ui-router.min.js"></script>
+    <script src="<%= cdn%>/libs/ocLazyLoad.min.js"></script>
     <script src="<%= cdn%>/libs/angular-translate.min.js"></script>
     <script src="<%= cdn%>/libs/qrcode.min.js"></script>
     <script src="<%= cdn%>/libs/angular-qr.min.js"></script>
@@ -44,6 +45,22 @@
         window.ssmgrVersion = '<%= version%>'
         window.cdn = '<%= cdn%>'
         window.ssmgrConfig = '<%- JSON.stringify(config)%>'
+
+        var lastTouchEnd = 0;
+        document.documentElement.addEventListener('touchend', function (event) {
+          var now = Date.now();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        }, false);
+
+        document.documentElement.addEventListener('touchstart', function (event) {
+          if (event.touches.length > 1) {
+            event.preventDefault();
+          }
+        }, false);
+        
     </script>
     <% if (analytics) { %>
     <script>
@@ -56,13 +73,57 @@
     </script>
     <% } %>
     <script src="/libs/bundle.js"></script>
-    <div ng-controller="MainController" layout-fill>
+    <div ng-controller="MainController" layout-fill  class="layout-screen" >
         <div layout-fill layout="row" layout-align="center center" ng-show="mainLoading">
             <div layout="column" layout-align="center center">
                 <md-progress-circular md-mode="indeterminate" class="md-accent"></md-progress-circular>
             </div>
         </div>
-        <div ng-hide="mainLoading" ui-view layout-fill></div>
+<div class="layout-screen" ng-hide="mainLoading" ui-view layout-fill></div>
+
+
+<style>
+    #lang{ position:fixed;left:10px;bottom:20px;z-index: 101; }
+    .fabSpeedDialdemoBasicUsage .text-capitalize {
+      text-transform: capitalize; }
+
+    .fabSpeedDialdemoBasicUsage .md-fab:hover, .fabSpeedDialdemoBasicUsage .md-fab.md-focused {
+      background-color: #000 !important; }
+
+    .fabSpeedDialdemoBasicUsage p.note {
+      font-size: 1.2rem; }
+
+    .fabSpeedDialdemoBasicUsage .lock-size {
+      min-width: 300px;
+      min-height: 300px;
+      width: 300px;
+      height: 300px;
+      margin-left: auto;
+      margin-right: auto; }
+    
+</style>
+<md-fab-speed-dial id="lang" md-open="isOpen" md-direction="up" class="md-fling">
+  <md-fab-trigger>
+    <md-button aria-label="language menu" class="md-fab md-error">
+      <md-icon class="material-icons">language</md-icon>
+    </md-button>
+  </md-fab-trigger>
+
+  <md-fab-actions>
+    <md-button aria-label="China" class="md-fab md-raised md-mini" ng-click="useLanguage('zh-CN')">
+      <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_the_China.svg"></md-icon>
+    </md-button>
+    <md-button aria-label="Japan" class="md-fab md-raised md-mini" ng-click="useLanguage('ja')">
+      <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_Japan.svg"></md-icon>
+    </md-button>
+    <md-button aria-label="England" class="md-fab md-raised md-mini" ng-click="useLanguage('en-US')">
+      <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_the_United_Kingdom.svg"></md-icon>
+    </md-button>
+    <md-button aria-label="America" class="md-fab md-raised md-mini" ng-click="useLanguage('en-US')">
+      <md-icon md-svg-src="<%= cdn%>/libs/Flag_of_the_United_States.svg"></md-icon>
+    </md-button>
+  </md-fab-actions>
+</md-fab-speed-dial>
     </div>
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>

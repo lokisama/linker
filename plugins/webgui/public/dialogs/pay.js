@@ -9,15 +9,15 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$timeout', '$http', ($mdD
     time: [{
       type: 'hour', name: '一小时'
     }, {
-      type: 'day', name: '一天'
+      type: 'day', name: '500M/天'
     }, {
-      type: 'week', name: '一周'
+      type: 'week', name: '5G/月'
     }, {
-      type: 'month', name: '一个月'
+      type: 'month', name: '无限/月'
     }, {
-      type: 'season', name: '三个月'
+      type: 'season', name: '无限包季-优惠'
     }, {
-      type: 'year', name: '一年'
+      type: 'year', name: '无限包年-特惠'
     }],
   };
   let dialogPromise = null;
