@@ -119,19 +119,27 @@ const is5min = (start, end) => {
   return true;
 };
 
-// const child = appFork('plugins/flowSaver/flowChildProcess');
+const child = appFork('plugins/flowSaver/flowChildProcess');
 // child.setMaxListeners(200);
-const splitTime = async (start, end) => {
-  // const random = Math.random().toString().substr(2);
-  // return new Promise((resolve, reject) => {
-  //   child.on('message', msg => {
-  //     if(msg[0] === 'splitTime' && msg[1] === random) {
-  //       return resolve(msg[2]);
-  //     }
-  //   });
-  //   child.send(['splitTime', random, start, end]);
-  // });
+const splitTimePromises = {};
+const sumFlowPromises = {};
+child.on('message', msg => {
+  if(msg[0] === 'splitTime') {
+    splitTimePromises[msg[1]](msg[2]);
+    delete splitTimePromises[msg[1]];
+  } else if(msg[0] === 'sumFlow') {
+    sumFlowPromises[msg[1]](msg[2]);
+    delete sumFlowPromises[msg[1]];
+  }
+});
 
+const splitTime = async (start, end) => {
+  const random = Math.random().toString().substr(2);
+  return new Promise((resolve, reject) => {
+    splitTimePromises[random] = resolve;
+    child.send(['splitTime', random, start, end]);
+  });
+  
   const time = {
     day: [],
     hour: [],
@@ -269,35 +277,39 @@ const getFlowFromSplitTime = async (serverId, port, start, end) => {
       let knexQuery = knex(tableName)
       .sum('flow as sumFlow')
       .groupBy('port')
-      .select(['port']);
-      servers.forEach((server, index) => {
-        if(index === 0) {
-          knexQuery = knexQuery.where({
-            id: server.id,
-            port: port + server.shift,
-          });
-        } else {
-          knexQuery = knexQuery.orWhere({
-            id: server.id,
-            port: port + server.shift,
-          });
-        }
+      .select(['port']).whereBetween('time', [startTime, endTime - 1]).andWhere(function() {
+        let self = this;
+        servers.forEach((server, index) => {
+          if(index === 0) {
+            self = self.where({
+              id: server.id,
+              port: port + server.shift,
+            });
+          } else {
+            self = self.orWhere({
+              id: server.id,
+              port: port + server.shift,
+            });
+          }
+        });
       });
-      return knexQuery.whereBetween('time', [startTime, endTime - 1]).then(success => {
+      // servers.forEach((server, index) => {
+      //   if(index === 0) {
+      //     knexQuery = knexQuery.where({
+      //       id: server.id,
+      //       port: port + server.shift,
+      //     });
+      //   } else {
+      //     knexQuery = knexQuery.orWhere({
+      //       id: server.id,
+      //       port: port + server.shift,
+      //     });
+      //   }
+      // });
+      return knexQuery.then(success => {
         if(success[0]) { return success[0].sumFlow; }
         return 0;
       });
-
-
-      // return knex(tableName)
-      // .sum('flow as sumFlow')
-      // .groupBy('port')
-      // .select(['port'])
-      // .where(where)
-      // .whereBetween('time', [startTime, endTime - 1]).then(success => {
-      //   if(success[0]) { return success[0].sumFlow; }
-      //   return 0;
-      // });
     };
   }
   time.day.forEach(f => {
@@ -313,17 +325,13 @@ const getFlowFromSplitTime = async (serverId, port, start, end) => {
     sum.push(getFlow('saveFlow', f[0], f[1]));
   });
   const result = await Promise.all(sum);
-  const sumFlow = result.length ? result.reduce((a, b) => a + b) : 0;
-  // const random = Math.random().toString().substr(2);
-  // return new Promise((resolve, reject) => {
-  //   child.on('message', msg => {
-  //     if(msg[0] === 'sumFlow' && msg[1] === random) {
-  //       return resolve(msg[2]);
-  //     }
-  //   });
-  //   child.send(['sumFlow', random, result]);
-  // });
-  return sumFlow;
+  // const sumFlow = result.length ? result.reduce((a, b) => a + b) : 0;
+  const random = Math.random().toString().substr(2);
+  return new Promise((resolve, reject) => {
+    sumFlowPromises[random] = resolve;
+    child.send(['sumFlow', random, result]);
+  });
+  // return sumFlow;
 };
 
 const getServerFlow = async (serverId, timeArray) => {
@@ -412,16 +420,6 @@ const getUserPortLastConnect = async port => {
     }
     return 0;
   });
-
-  // const lastConnectFromSaveFlow = await knex('saveFlow')
-  // .select(['time'])
-  // .where({ port })
-  // .orderBy('time', 'desc').limit(1).then(success => {
-  //   if(success[0]) {
-  //     return success[0].time;
-  //   }
-  //   return 0;
-  // });
   if(lastConnectFromSaveFlow) {
     return { lastConnect: lastConnectFromSaveFlow };
   }
@@ -432,15 +430,6 @@ const getUserPortLastConnect = async port => {
     }
     return { lastConnect: 0 };
   });
-  // return knex('saveFlow5min')
-  // .select(['time'])
-  // .where({ port })
-  // .orderBy('time', 'desc').limit(1).then(success => {
-  //   if(success[0]) {
-  //     return { lastConnect: success[0].time };
-  //   }
-  //   return { lastConnect: 0 };
-  // });
 };
 
 const getServerUserFlow = (serverId, timeArray) => {
@@ -457,6 +446,7 @@ const getServerUserFlow = (serverId, timeArray) => {
     if(timeEnd - timeStart === 7 * 24 * 3600 * 1000 && Date.now() - timeEnd >= 3600 * 1000) {
       tableName = 'saveFlowDay';
     }
+    timeArray[1] -= 1;
   }
   const where = {};
   where[tableName + '.id'] = +serverId;
@@ -485,6 +475,7 @@ const getAccountServerFlow = (accountId, timeArray) => {
     if(timeEnd - timeStart === 7 * 24 * 3600 * 1000 && Date.now() - timeEnd >= 3600 * 1000) {
       tableName = 'saveFlowDay';
     }
+    timeArray[1] -= 1;
   }
   return knex(tableName).sum(`${ tableName }.flow as flow`).groupBy(`${ tableName }.id`)
   .select([
