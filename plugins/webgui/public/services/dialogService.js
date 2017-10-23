@@ -135,11 +135,11 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$http', ($mdDialog, $inte
     }, {
       type: 'week', name: '5G/一个月'
     }, {
-      type: 'month', name: '无限/一个月'
+      type: 'month', name: '20G/月 包月'
     }, {
-      type: 'season', name: '无限/三个月'
+      type: 'season', name: '20G/月 包季'
     }, {
-      type: 'year', name: '无限/一年'
+      type: 'year', name: '无限/月 包年'
     }],
   };
   let dialogPromise = null;
