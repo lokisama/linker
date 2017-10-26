@@ -13,9 +13,9 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$timeout', '$http', ($mdD
     }, {
       type: 'week', name: '5G/月'
     }, {
-      type: 'month', name: '无限/月'
+      type: 'month', name: '20G/月'
     }, {
-      type: 'season', name: '无限包季-优惠'
+      type: 'season', name: '20G/月 包季'
     }, {
       type: 'year', name: '无限包年-特惠'
     }],
