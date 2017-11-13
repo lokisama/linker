@@ -129,11 +129,12 @@ const getAccountForUser = async (mac, ip) => {
         address: success,
         port: account.port + f.shift,
         method: f.method,
+        comment: f.comment,
       };
       return serverInfo;
     }).then(success => {
       if(startTime) {
-        return flow.getFlowFromSplitTime(isMultiServerFlow ? null : success.id, success.port, startTime, Date.now());
+        return flow.getFlowFromSplitTime(isMultiServerFlow ? null : success.id, account.accountId, startTime, Date.now());
       } else {
         return -1;
       }
@@ -152,11 +153,13 @@ const getAccountForUser = async (mac, ip) => {
   const serverReturn = await Promise.all(serverList);
   const data = {
     default: {
+      id: server.id,
       name: server.name,
       address,
-      port: account.port,
+      port: account.port + server.shift,
       password: account.password,
       method: server.method,
+      comment: server.comment,
     },
     servers: serverReturn,
   };
