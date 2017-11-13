@@ -2,7 +2,7 @@ type: m
 empty: false
 
 manager:
-  address: 0.0.0.0:4001
+  address: 47.90.97.4:4001
   password: '123456'
   # 这部分的端口和密码需要跟上一步 manager 参数里的保持一致，以连接 type s 部分监听的 tcp 端口
 plugins:
@@ -22,7 +22,7 @@ plugins:
     use: true
     host: '127.0.0.1'
     port: '8089'
-    site: 'http://localhost'
+    site: 'http://127.0.0.1'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
     gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
@@ -65,10 +65,21 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
     mode: 'live' # sandbox or live
     client_id: 'AWQES8rlXnwH-ZCxdsNFUz5fVuVHSzE_PJQP55eKd040h7U3sD5q2mWG1Sho9sIBP-iGvDD1UkhcQy5m'
     client_secret: 'EHAl-7t_OVmRG8iE2CGUKek38IbZbI9_69X8VQZ5ug8wnSvW-qbh9-cu_bVWTEicvvi05eCY04cAri0g'
-
+# db:
+#   host: 'mysql.linkersocks.com'
+#   port: 3306
+#   user: 'root'
+#   password: 'maji1234!'
+#   database: 'ssmgr'
 db:
-  host: 'jp.linkersocks.com'
+  host: '139.162.108.254'
   port: 3306
   user: 'root'
   password: 'wx11530600'
   database: 'ssmgr_webgui'
+db:
+#  host: 'rm-uf614hmyuddi3vx23o.mysql.rds.aliyuncs.com'
+#  port: 3306
+#  user: 'root'
+#  password: '1989Zj1011'
+#  database: 'ssmgr'
