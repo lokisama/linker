@@ -5,6 +5,10 @@ const flow = appRequire('plugins/flowSaver/flow');
 const dns = require('dns');
 const net = require('net');
 
+const formatMacAddress = mac => {
+  return mac.replace(/-/g, '').replace(/:/g, '').toLowerCase();
+};
+
 const loginLog = {};
 const scanLoginLog = ip => {
   for(let i in loginLog) {
@@ -109,9 +113,12 @@ const getAccountForUser = async (mac, ip) => {
     return success[0].value.multiServerFlow;
   });
   const servers = await serverPlugin.list({ status: false });
-  const server = servers.filter(s => {
+  let server = servers.filter(s => {
     return s.id === myServerId;
   })[0];
+  if(!server) {
+    server = servers[0];
+  }
   const address = await getIp(server.host);
   const validServers = JSON.parse(accountData.server);
   const serverList = servers.filter(f => {
@@ -184,7 +191,9 @@ const login = async (mac, ip) => {
   if(scanLoginLog(ip)) {
     return Promise.reject('ip is in black list');
   }
-  const account = await knex('mac_account').where({ mac }).then(success => success[0]);
+  const account = await knex('mac_account').where({
+    mac: formatMacAddress(mac)
+  }).then(success => success[0]);
   if(!account) {
     loginFail(ip);
     return Promise.reject('mac account not found');

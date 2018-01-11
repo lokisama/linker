@@ -7,6 +7,36 @@
 <div flex="50" flex-xs="100">
     <md-card>
         <md-card-title>
+            <md-card-title-text style="text-align: right">
+                <span class="md-headline" style="text-align: left" >
+                    <span class="md-headline" translate></span><span class="md-headline" translate>欢迎使用零卡加速</span>
+                </span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">
+                    当前套餐: {{account[0].data.flow  | flowServer}}/月 <span translate>包年套餐</span></span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">
+                    当前套餐:  {{account[0].data.flow  | flowServer}}/月 <span translate>包季套餐</span></span>
+                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit < 3">
+                    当前套餐: {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
+                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit >= 30">
+                    当前套餐: {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
+                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit < 30">
+                    当前套餐: {{account[0].data.flow  | flowServer}}/试用</span>
+                <span class="md-subhead" ng-if="account[0].type >= 2 && account[0].type <= 5">
+                      <span style="font-size: 0.9em;">到期时间: {{account[0].data.expire | date : 'yyyy-MM-dd HH:mm'}}({{ account[0].data.expire | timeago }})</span><br>
+                  </span>
+            </md-card-title-text>
+        </md-card-title>
+        <md-card-content>
+            <div style="text-align: right;">
+                <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
+                <md-button class="md-primary md-raised" 
+                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)">{{ '购买套餐' | translate}}</md-button>
+            </div>
+        </md-card-content>
+    </md-card>
+
+    <md-card>
+        <md-card-title>
             <md-card-title-text layout="row">
                 <span class="md-headline" translate>第一步、</span>
                 <span class="md-headline" translate>下载工具</span>
@@ -87,41 +117,13 @@
     </md-card-title>
     <md-card-actions layout="row" layout-align="end center">
       <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
-      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">{{ '上一页' | translate}}</md-button>
-      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">{{ '下一页' | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="prev()" ng-disabled="cIndex <= 0">{{ '上一节点' | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="next()" ng-disabled="cIndex >= userServers.length-1">{{ '下一节点' | translate}}</md-button>
     </md-card-actions>
     </md-card>
 
      
-    <md-card>
-        <md-card-title ng-if="account && !account.length">
-            <md-card-title-text style="text-align: right">
-                <span class="md-headline" style="text-align: left" >
-                    <span class="md-headline" translate>第三步、</span><span class="md-headline" translate>查看套餐</span>
-                </span>
-                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit >= 12">
-                    {{account[0].data.flow  | flowServer}}/月 <span translate>包年套餐</span></span>
-                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit == 3">
-                    {{account[0].data.flow  | flowServer}}/月 <span translate>包季套餐</span></span>
-                <span class="md-subhead" ng-if="account[0].type == 3 && account[0].data.limit < 3">
-                    {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
-                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit >= 30">
-                    {{account[0].data.flow  | flowServer}}/月 <span translate>包月套餐</span></span>
-                <span class="md-subhead" ng-if="account[0].type == 4 && account[0].data.limit < 30">
-                    {{account[0].data.flow  | flowServer}}/试用</span>
-                <span class="md-subhead" ng-if="account[0].type >= 2 && account[0].type <= 5">
-                      <span style="font-size: 0.9em;">到期:{{account[0].data.expire | date : 'yyyy-MM-dd HH:mm'}}({{ account[0].data.expire | timeago }})</span><br>
-                  </span>
-            </md-card-title-text>
-        </md-card-title>
-        <md-card-content>
-            <div style="text-align: right;">
-                <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看更多' | translate}}</md-button>
-                <md-button class="md-primary md-raised" 
-                ng-if="account[0].type >= 2 && account[0].type <= 5" ng-click="createOrder(userServers[cIndex].id)">{{ '购买套餐' | translate}}</md-button>
-            </div>
-        </md-card-content>
-    </md-card>
+    
 </div>
 
 <div flex="50" flex-xs="100">

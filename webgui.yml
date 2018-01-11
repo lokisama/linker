@@ -2,7 +2,7 @@ type: m
 empty: false
 
 manager:
-  address: 47.90.97.4:4001
+  address: 47.90.98.120:4001
   password: '123456'
   # 这部分的端口和密码需要跟上一步 manager 参数里的保持一致，以连接 type s 部分监听的 tcp 端口
 plugins:
@@ -21,16 +21,15 @@ plugins:
   webgui:
     use: true
     host: '127.0.0.1'
-    port: '8089'
-    site: 'http://127.0.0.1'
+    port: '8088'
+    site: 'https://www.linkersocks.com'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
     gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
   alipay:
-
     # 如果不使用支付宝，这段可以去掉
     use: true
-    appid: 2017052407326042
+    appid: 2018010201527586
     notifyUrl: 'http://www.linkersocks.com/api/call'
     merchantPrivateKey: 'MIIEpAIBAAKCAQEAxuDx5VgyXjJ+we5hWNxYYmhas+oFnuxzy8iy4JD4a6GW/C4x
 QrsbCnao2Vp726KvJEzeGbHDDurzp5Eb85d5y+e934cEgj2RX0972SBTHF2Ws3gG
@@ -57,7 +56,7 @@ Xw1wDWGJzBc+2KI5T0W6K2SHokZY1aGrGTL7wg6ry90rPHHA+0uAYg/fPMu97Aj0
 Sm2FSQKBgQC0o3kMorX8a+30MDMb94NfEkzg9Fpa/527BaZJ7ykIs73iz3TxewD4
 o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
 8S7n9PZtxJOhBo3exT2mhxPojPg1DoR+zeDDbn1+WqVVsQdDg3jFIw=='
-    alipayPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnXOh41+dRp+twKqxl2pde6MByMKt9q9VxDfsyusEYc3l8Kov+TUns5d29vDaKKr699ezxQuosOV2Cct7EWSTmhGxb0W0AgKer4WwsOdJODRmSPiZVT0KDG19Qp0HvDmehXUx0XP8gYHMCegZwU7BVOkLAmJ1Mvml/wF9o8eSt0EG3rjB6YChGxuT42jyLteq0yGJzedL7h4jh2IEaaVfo/11HjpPAPwx4ipgtE2lUUB8wKwMp9cvf8jRhlfRi03sNvdh8tBGl+d3VKYV/db/E3tzLWIv0WldXhvi3Lj2CeFO+eSwzI5eyHyWW9BuDJUJxU6G8+a1a/vVoBUZhCEErwIDAQAB'
+    alipayPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAimfyQyJI4oQQuIeuIKHYuQDqGd0aMj860GQXgEEnY4RnQa4Yugox5MzzzFe04faOxA+L85hdnzM3icxInVa7LmNs045T67ALEXkQbG4s6ssugTccG9r9hpvyei6h9ziQgpJ8tj1K53CUBB5QW020ZbZUvPzGIc71nGflydYeDPCKLjzVIK+rGXnqvWuOu0ejw0JmiA1N7Ej8YVwvqGA/SmlcgNvkcBpvy8QcDzCtX8Hz6Oc9TG5tGZHyvpe0ZwYxfanbUU5xqfpUnW6kt0lw/OoNp/vlOaqaBUAdAEgyMqOIcxgkv7Q95etYt6vOdHtdJTi0TY0jRTEvuFQ/djId5QIDAQAB'
     gatewayUrl: 'https://openapi.alipay.com/gateway.do'
   paypal:
     # 如果不使用paypal，这段可以去掉
@@ -65,21 +64,15 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
     mode: 'live' # sandbox or live
     client_id: 'AWQES8rlXnwH-ZCxdsNFUz5fVuVHSzE_PJQP55eKd040h7U3sD5q2mWG1Sho9sIBP-iGvDD1UkhcQy5m'
     client_secret: 'EHAl-7t_OVmRG8iE2CGUKek38IbZbI9_69X8VQZ5ug8wnSvW-qbh9-cu_bVWTEicvvi05eCY04cAri0g'
-# db:
-#   host: 'mysql.linkersocks.com'
-#   port: 3306
-#   user: 'root'
-#   password: 'maji1234!'
-#   database: 'ssmgr'
+#db:
+#  host: 'mysql.linkersocks.com'
+#  port: 3306
+#  user: 'root'
+#  password: 'maji1234!'
+#  database: 'ssmgr'
 db:
   host: '139.162.108.254'
   port: 3306
   user: 'root'
   password: 'wx11530600'
   database: 'ssmgr_webgui'
-db:
-#  host: 'rm-uf614hmyuddi3vx23o.mysql.rds.aliyuncs.com'
-#  port: 3306
-#  user: 'root'
-#  password: '1989Zj1011'
-#  database: 'ssmgr'
