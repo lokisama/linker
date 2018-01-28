@@ -163,7 +163,7 @@ exports.changeAccountData = (req, res) => {
 };
 
 exports.getRecentSignUpUsers = (req, res) => {
-  user.getRecentSignUp(5).then(success => {
+  user.getRecentSignUp(10).then(success => {
     return res.send(success);
   }).catch(err => {
     console.log(err);
@@ -172,7 +172,7 @@ exports.getRecentSignUpUsers = (req, res) => {
 };
 
 exports.getRecentLoginUsers = (req, res) => {
-  user.getRecentLogin(5).then(success => {
+  user.getRecentLogin(10).then(success => {
     return res.send(success);
   }).catch(err => {
     console.log(err);
@@ -185,7 +185,7 @@ exports.getRecentOrders = (req, res) => {
     return res.send([]);
   }
   alipay.orderListAndPaging({
-    pageSize: 5,
+    pageSize: 10,
   }).then(success => {
     return res.send(success.orders);
   }).catch(err => {
@@ -199,7 +199,7 @@ exports.getPaypalRecentOrders = (req, res) => {
     return res.send([]);
   }
   paypal.orderListAndPaging({
-    pageSize: 5,
+    pageSize: 10,
   }).then(success => {
     return res.send(success.orders);
   }).catch(err => {
