@@ -31,7 +31,7 @@ module.exports = {
   '下载工具':'Download',
   '当前套餐':'Your Plan',
   '套餐':'Plan',
-  '购买套餐':'Select a plan',
+  '充值套餐':'Select a plan',
   '地址': 'Address',
   '端口': 'Port',
   '密码': 'Password',
