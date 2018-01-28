@@ -219,6 +219,9 @@ app
       $scope.initUserIndex();
     }
 
+    $scope.toTelegram = () => {
+      $state.go('user.telegram');
+    };
   }
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog',

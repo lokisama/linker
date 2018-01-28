@@ -202,9 +202,32 @@ const login = async (mac, ip) => {
   }
 };
 
+const getAccountByAccountId = accountId => {
+  return knex('mac_account').where({
+    accountId
+  });
+};
+
+const getAllAccount = async () => {
+  const accounts = await knex('mac_account').select([
+    'mac_account.id as id',
+    'mac_account.mac as mac',
+    'mac_account.userId as userId',
+    'mac_account.accountId as accountId',
+    'mac_account.serverId as serverId',
+    'account_plugin.port as port',
+  ]).leftJoin('account_plugin', 'mac_account.accountId', 'account_plugin.id')
+  .where({
+
+  });
+  return accounts;
+};
+
 exports.editAccount = editAccount;
 exports.newAccount = newAccount;
 exports.getAccount = getAccount;
 exports.deleteAccount = deleteAccount;
 exports.getAccountForUser = getAccountForUser;
 exports.login = login;
+exports.getAccountByAccountId = getAccountByAccountId;
+exports.getAllAccount = getAllAccount;

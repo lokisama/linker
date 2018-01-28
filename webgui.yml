@@ -22,7 +22,8 @@ plugins:
     use: true
     host: '127.0.0.1'
     port: '8088'
-    site: 'https://www.linkersocks.com'
+    site: 'http://www.linkersocks.com'
+    googleAnalytics: 'UA-113197119-1'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
     gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'

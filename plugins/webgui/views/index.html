@@ -71,6 +71,14 @@
         ga('create', '<%= analytics%>', 'auto');
         ga('send', 'pageview');
     </script>
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: "ca-pub-2243707098790416",
+        enable_page_level_ads: true
+      });
+    </script>
+
     <% } %>
     <script src="/libs/bundle.js"></script>
     <div ng-controller="MainController" layout-fill  class="layout-screen" >
@@ -128,8 +136,6 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
-    <script src="<%= dig%>"></script>
-    <script><%- digsrc%></script>
 </body>
 
 </html>
