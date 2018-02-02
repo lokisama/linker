@@ -7,7 +7,7 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       $state.go('admin.notice');
     };
     $scope.toPayment = () => {
-      $state.go('admin.paymentSetting');
+      $state.go('admin.paymentList');
     };
     $scope.toAccount = () => {
       $state.go('admin.accountSetting');
@@ -70,7 +70,6 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
         $scope.saveSetting();
       }, true);
     });
-    
   }
 ]).controller('AdminAccountSettingController', ['$scope', '$http', '$timeout', '$state',
   ($scope, $http, $timeout, $state) => {
@@ -86,14 +85,41 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       const timeout = Date.now() - lastSave >= saveTime ? 0 : saveTime - Date.now() + lastSave;
       lastSave = Date.now();
       lastSavePromise = $timeout(() => {
+        if(!$scope.setServerForNewUser) {
+          $scope.accountData.accountForNewUser.server = null;
+        } else {
+          $scope.accountData.accountForNewUser.server = [];
+          for(const ele in $scope.accountServerObj) {
+            if($scope.accountServerObj[ele]) {
+              $scope.accountData.accountForNewUser.server.push(+ele);
+            }
+          };
+        }
         $http.put('/api/admin/setting/account', {
           data: $scope.accountData,
         });
       }, timeout);
     };
+    $scope.setServerForNewUser = false;
+    $scope.accountServerObj = {};
     $http.get('/api/admin/setting/account').then(success => {
       $scope.accountData = success.data;
+      if($scope.accountData.accountForNewUser.server) {
+        $scope.setServerForNewUser = true;
+        $scope.accountData.accountForNewUser.server.forEach(f => {
+          $scope.accountServerObj[f] = true;
+        });
+      }
+      return $http.get('/api/admin/server');
+    }).then(success => {
+      $scope.servers = success.data;
       $scope.$watch('accountData', () => {
+        $scope.saveSetting();
+      }, true);
+      $scope.$watch('setServerForNewUser', () => {
+        $scope.saveSetting();
+      }, true);
+      $scope.$watch('accountServerObj', () => {
         $scope.saveSetting();
       }, true);
     });
@@ -280,6 +306,109 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       $scope.isLoading = true;
       $http.post('/api/admin/telegram/unbind');
     };
+  }
+]).controller('AdminPaymentListController', ['$scope', '$http', '$state',
+  ($scope, $http, $state) => {
+    $scope.setTitle('支付设置');
+    $scope.setMenuButton('arrow_back', 'admin.settings');
+    $scope.time = [{
+      id: 'hour',
+      name: '小时',
+    }, {
+      id: 'day',
+      name: '天',
+    }, {
+      id: 'week',
+      name: '周',
+    }, {
+      id: 'month',
+      name: '月',
+    }, {
+      id: 'season',
+      name: '季',
+    }, {
+      id: 'year',
+      name: '年',
+    }];
+    $scope.editPayment = id => {
+      $state.go('admin.editPayment', { paymentType: id });
+    };
+    $http.get('/api/admin/setting/payment').then(success => {
+      $scope.paymentData = success.data;
+    });
+  }
+]).controller('AdminEditPaymentController', ['$scope', '$http', '$timeout', '$interval', '$state', '$stateParams',
+  ($scope, $http, $timeout, $interval, $state, $stateParams) => {
+    $scope.setTitle('修改支付');
+    $scope.setMenuButton('arrow_back', 'admin.paymentList');
+    $scope.paymentType = $stateParams.paymentType;
+    $scope.paymentTypeName = type => {
+      switch(type) {
+        case 'hour':
+          return '小时'; break;
+        case 'day':
+          return '天'; break;
+        case 'week':
+          return '周'; break;
+        case 'month':
+          return '月'; break;
+        case 'season':
+          return '季'; break;
+        case 'year':
+          return '年'; break;
+        default:
+          return '';
+      }
+    };
+    let lastSave = 0;
+    let lastSavePromise = null;
+    const saveTime = 3500;
+    $scope.saveSetting = () => {
+      if(Date.now() - lastSave <= saveTime) {
+        lastSavePromise && $timeout.cancel(lastSavePromise);
+      }
+      const timeout = Date.now() - lastSave >= saveTime ? 0 : saveTime - Date.now() + lastSave;
+      lastSave = Date.now();
+      lastSavePromise = $timeout(() => {
+        if(!$scope.setServerForPayment) {
+          $scope.paymentData.server = null;
+        } else {
+          $scope.paymentData.server = [];
+          for(const ele in $scope.accountServerObj) {
+            if($scope.accountServerObj[ele]) {
+              $scope.paymentData.server.push(+ele);
+            }
+          };
+        }
+        $http.put('/api/admin/setting/payment', {
+          data: $scope.payment,
+        });
+      }, timeout);
+    };
+    $scope.setServerForPayment = false;
+    $scope.accountServerObj = {};
+    $http.get('/api/admin/setting/payment').then(success => {
+      $scope.payment = success.data;
+      $scope.paymentData = $scope.payment[$scope.paymentType];
+      if($scope.paymentData.server) {
+        $scope.setServerForPayment = true;
+        $scope.paymentData.server.forEach(f => {
+          $scope.accountServerObj[f] = true;
+        });
+      }
+      return $http.get('/api/admin/server');
+    }).then(success => {
+      $scope.servers = success.data;
+      $scope.$watch('paymentData', () => {
+        $scope.saveSetting();
+      }, true);
+      $scope.$watch('setServerForPayment', () => {
+        $scope.saveSetting();
+      }, true);
+      $scope.$watch('accountServerObj', () => {
+        $scope.saveSetting();
+      }, true);
+    });
   }
 ])
 ;

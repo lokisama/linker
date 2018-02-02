@@ -17,6 +17,7 @@ const addAccount = async (type, options) => {
       port: options.port,
       password: options.password,
       status: 0,
+      server: options.server ? options.server : null,
       autoRemove: 0,
     });
     await checkAccount.checkServer();
@@ -33,6 +34,7 @@ const addAccount = async (type, options) => {
         limit: options.limit || 1,
       }),
       status: 0,
+      server: options.server ? options.server : null,
       autoRemove: options.autoRemove || 0,
     });
     await checkAccount.checkServer();
@@ -75,12 +77,12 @@ const getAccount = async (options = {}) => {
 };
 
 const delAccount = async (id) => {
-  const macAccounts = await macAccount.getAccountByAccountId(id);
-  if(macAccounts.length) {
-    macAccounts.forEach(f => {
-      macAccount.deleteAccount(f.id);
-    });
-  }
+  // const macAccounts = await macAccount.getAccountByAccountId(id);
+  // if(macAccounts.length) {
+  //   macAccounts.forEach(f => {
+  //     macAccount.deleteAccount(f.id);
+  //   });
+  // }
   const result = await knex('account_plugin').delete().where({ id });
   if(!result) {
     return Promise.reject('Account id[' + id + '] not found');
@@ -232,6 +234,7 @@ const setAccountLimit = async (userId, accountId, orderType) => {
   const payType = {
     week: 2, month: 3, day: 4, hour: 5, season: 6, year: 7,
   };
+  let paymentType;
   let limit = 1;
   if(orderType === 6) { limit = 3; }
   if(orderType === 7) { limit = 12; }
@@ -246,6 +249,9 @@ const setAccountLimit = async (userId, accountId, orderType) => {
     return success[0].value;
   });
   for (const p in payType) {
+    if(payType[p] === orderType) {
+      paymentType = p;
+    }
     if(paymentInfo[p].alipay) {
       flow[payType[p]] = paymentInfo[p].flow * 1000 * 1000;
     }
@@ -308,7 +314,8 @@ const setAccountLimit = async (userId, accountId, orderType) => {
       time: Date.now(),
       limit,
       flow: flow[orderType],
-      autoRemove: 0,
+      server: paymentInfo[paymentType].server ? JSON.stringify(paymentInfo[paymentType].server) : null,
+      autoRemove: paymentInfo[paymentType].autoRemove ? 1 : 0,
     });
     return;
   }
@@ -341,10 +348,10 @@ const setAccountLimit = async (userId, accountId, orderType) => {
   await knex('account_plugin').update({
     type: orderType >= 6 ? 3 : orderType,
     data: JSON.stringify(accountData),
-    autoRemove: 0,
+    server: paymentInfo[paymentType].server ? JSON.stringify(paymentInfo[paymentType].server) : null,
+    autoRemove: paymentInfo[paymentType].autoRemove ? 1 : 0,
   }).where({ id: accountId });
   checkAccount.deleteCheckAccountTimePort(port);
-  // await checkAccount.checkServer();
   return;
 };
 
