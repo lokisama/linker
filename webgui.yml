@@ -12,6 +12,10 @@ plugins:
     use: true
   account:
     use: true
+  macAccount:
+    use: true
+  giftcard:
+    use: true
   email:
     use: true
     username: 'no-reply@linkersocks.com'
@@ -22,7 +26,7 @@ plugins:
     use: true
     host: '127.0.0.1'
     port: '8088'
-    site: 'http://www.linkersocks.com'
+    site: 'https://www.linkersocks.com'
     googleAnalytics: 'UA-113197119-1'
     # cdn:  'http://opub24jup.bkt.clouddn.com/'
     gcmSenderId: '456102641793'
@@ -72,8 +76,8 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
 #  password: 'maji1234!'
 #  database: 'ssmgr'
 db:
-  host: '139.162.108.254'
+  host: 'rm-uf614hmyuddi3vx23o.mysql.rds.aliyuncs.com'
   port: 3306
   user: 'root'
-  password: 'wx11530600'
-  database: 'ssmgr_webgui'
+  password: '1989Zj1011'
+  database: 'ssmgr'

@@ -104,8 +104,8 @@ app
     // });
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog','qrcodeDialog',
-  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog, qrcodeDialog) => {
+.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$localStorage', 'payDialog','qrcodeDialog','payByGiftCardDialog',
+  ($scope, $state, userApi, markdownDialog,$localStorage,payDialog, qrcodeDialog,payByGiftCardDialog) => {
     $scope.setTitle('首页');
     // $scope.notices = [];
     userApi.getNotice().then(success => {
@@ -171,7 +171,7 @@ app
     }
 
     $scope.createOrder = (accountId) => {
-      payDialog.chooseOrderType(accountId);
+      payDialog.choosePayType(accountId);
     };
 
     $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
