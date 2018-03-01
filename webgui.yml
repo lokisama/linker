@@ -72,7 +72,7 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
 #  password: 'maji1234!'
 #  database: 'ssmgr'
 db:
-  host: '101.132.37.226'
+  host: '139.162.108.254'
   port: 3306
   user: 'root'
   password: 'wx11530600'

@@ -98,7 +98,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
             data: servers,
           };
           $scope.servers = servers;
-          $scope.servers.forEach(server => {
+          $scope.servers.forEach((server, index) => {
             adminApi.getServerFlow(server.id).then(flow => {
               server.flow = flow;
             });

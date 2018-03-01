@@ -224,8 +224,9 @@ app
     };
   }
 ])
-.controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog',
-  ($scope, $http, $mdMedia, userApi, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog) => {
+
+.controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog', 'payByGiftCardDialog',
+  ($scope, $http, $mdMedia, userApi, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog, payByGiftCardDialog) => {
     $scope.setTitle('我的节点');
     $scope.flexGtSm = 100;
     if(!$localStorage.user.serverInfo) {
@@ -245,7 +246,6 @@ app
     if($scope.account.length >= 2) {
       $scope.flexGtSm = 50;
     }
-
     $http.get('/api/user/multiServerFlow').then(success => {
       $scope.isMultiServerFlow = success.data.status;
     });
@@ -345,9 +345,15 @@ app
         getUserAccountInfo();
       });
     };
-    $scope.createOrder = (accountId) => {
-      payDialog.chooseOrderType(accountId);
+    $scope.createOrder = accountId => {
+      payDialog.choosePayType(accountId).then(success => {
+        getUserAccountInfo();
+      });
     };
+    $scope.useGiftCard = (accountId) => {
+      payByGiftCardDialog.show(accountId).then(() => getUserAccountInfo());
+    };
+
     $scope.fontColor = (time) => {
       if(time >= Date.now()) {
         return {
