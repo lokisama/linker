@@ -74,7 +74,7 @@
 
                                                 <span ng-if="a.type >=2 && a.type <= 5">
                                                     <span ng-style="a.isFlowOutOfLimit[server.id] ? {color: '#a33'} : {color: '#333'}">{{a.serverPortFlow | flow}}</span> / {{a.data.flow * (isMultiServerFlow
-                                                    ? 1 : server.scale) | flow}}</span>
+                                                    ? 1 : server.scale) | flowServer}}</span>
                                             </div>
                                         </div>
                                     </md-list-item>
