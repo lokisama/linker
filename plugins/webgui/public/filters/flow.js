@@ -39,7 +39,7 @@ app.filter('flowServer', function() {
     } else if (input < G) {
       return (input / M).toFixed(1) + ' MB';
     } else if (input < T) {
-      if((input / G) > 31){
+      if((input / G) < 31){
         return (input / G).toFixed(2) + ' GB';
       }else{
         return '无限流量';
