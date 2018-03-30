@@ -3,31 +3,58 @@ const app = angular.module('app');
 app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$state',
   ($scope, $http, $timeout, $state) => {
     $scope.setTitle('设置');
-    $scope.toGiftCard = () => {
-      $state.go('admin.listGiftCardBatch');
+    $scope.toSetting = path => { $state.go(path); };
+    if($scope.id === 1) {
+      $scope.settingList = [
+        {
+          name: '基本设置',
+          to: 'admin.baseSetting',
+        },
+        {
+          name: '公告管理',
+          to: 'admin.notice',
+        },
+        {
+          name: '群组管理',
+          to: 'admin.groupSetting',
+        },
+        {
+          name: '支付设置',
+          to: 'admin.paymentList',
+        },
+        {
+          name: '邮件设置',
+          to: 'admin.mailSetting',
+        },
+        {
+          name: '账号设置',
+          to: 'admin.accountSetting',
+        },
+        {
+          name: '修改密码',
+          to: 'admin.passwordSetting',
+        },
+      ];
+      if($scope.config.telegram) {
+        $scope.settingList.push({
+          name: 'Telegram',
+          to: 'admin.telegramSetting',
+        });
+      };
+      if($scope.config.giftcard) {
+        $scope.settingList.push({
+          name: '充值码',
+          to: 'admin.listGiftCardBatch',
+        });
+      };
+    } else {
+      $scope.settingList = [
+        {
+          name: '修改密码',
+          to: 'admin.passwordSetting',
+        },
+      ];
     }
-    $scope.toNotice = () => {
-      $state.go('admin.notice');
-    };
-    $scope.toPayment = () => {
-      $state.go('admin.paymentList');
-    };
-    $scope.toAccount = () => {
-      $state.go('admin.accountSetting');
-    };
-    $scope.toBase = () => {
-      $state.go('admin.baseSetting');
-    };
-    $scope.toMail = () => {
-      $state.go('admin.mailSetting');
-    };
-    $scope.toPassword = () => {
-      $state.go('admin.passwordSetting');
-    };
-    $scope.toTelegram = () => {
-      $state.go('admin.telegramSetting');
-    };
-    $scope.empty = () => {};
   }
 ]).controller('AdminPaymentSettingController', ['$scope', '$http', '$timeout', '$state',
   ($scope, $http, $timeout, $state) => {
@@ -412,6 +439,81 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
         $scope.saveSetting();
       }, true);
     });
+  }
+]).controller('AdminGroupSettingController', ['$scope', '$http', '$timeout', '$state',
+  ($scope, $http, $timeout, $state) => {
+    $scope.setTitle('群组管理');
+    $scope.setMenuButton('arrow_back', function() {
+      $state.go('admin.settings');
+    });
+    $scope.setFabButton(() => {
+      $state.go('admin.addGroup');
+    });
+    $http.get('/api/admin/group').then(success => {
+      $scope.groups = success.data;
+    });
+    $scope.editGroup = id => { $state.go('admin.editGroup', { groupId: id }); };
+  }
+]).controller('AdminAddGroupController', ['$scope', '$http', '$timeout', '$state', 'alertDialog',
+  ($scope, $http, $timeout, $state, alertDialog) => {
+    $scope.setTitle('新增群组');
+    $scope.setMenuButton('arrow_back', 'admin.groupSetting');
+    $scope.group = {};
+    $scope.confirm = () => {
+      alertDialog.loading();
+      $http.post('/api/admin/group', {
+        name: $scope.group.name,
+        comment: $scope.group.comment,
+      }, {
+        timeout: 15000,
+      }).then(success => {
+        alertDialog.show('添加群组成功', '确定');
+        $state.go('admin.groupSetting');
+      }).catch(() => {
+        alertDialog.show('添加群组失败', '确定');
+      });
+    };
+    $scope.cancel = () => {
+      $state.go('admin.groupSetting');
+    };
+  }
+]).controller('AdminEditGroupController', ['$scope', '$http', '$timeout', '$state', '$stateParams', 'alertDialog',
+  ($scope, $http, $timeout, $state, $stateParams, alertDialog) => {
+    $scope.setTitle('修改群组');
+    $scope.setMenuButton('arrow_back', 'admin.groupSetting');
+    $scope.groupId = +$stateParams.groupId;
+    $scope.group = {};
+    $http.get(`/api/admin/group/${ $scope.groupId }`).then(success => {
+      $scope.group = success.data;
+    });
+    $scope.confirm = () => {
+      alertDialog.loading();
+      $http.put(`/api/admin/group/${ $scope.groupId }`, {
+        name: $scope.group.name,
+        comment: $scope.group.comment,
+      }, {
+        timeout: 15000,
+      }).then(success => {
+        alertDialog.show('修改群组成功', '确定');
+        $state.go('admin.groupSetting');
+      }).catch(() => {
+        alertDialog.show('修改群组失败', '确定');
+      });
+    };
+    $scope.cancel = () => {
+      $state.go('admin.groupSetting');
+    };
+    $scope.delete = () => {
+      alertDialog.loading();
+      $http.delete(`/api/admin/group/${ $scope.groupId }`, {
+        timeout: 15000,
+      }).then(success => {
+        alertDialog.show('删除群组成功', '确定');
+        $state.go('admin.groupSetting');
+      }).catch(() => {
+        alertDialog.show('删除群组失败', '确定');
+      });
+    };
   }
 ])
 ;

@@ -3,11 +3,23 @@ const app = angular.module('app');
 app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', ($http, $q, moment, preload, $timeout) => {
   const getUser = (opt = {}) => {
     const search = opt.search || '';
-    const filter = opt.filter || 'all';
-    const sort = opt.sort || 'id';
+    // const filter = opt.filter || 'all';
+    const sort = opt.sort || 'id_desc';
     const page = opt.page || 1;
     const pageSize = opt.pageSize || 20;
-    return $http.get('/api/admin/user', { params: opt }).then(success => success.data);
+    const group = opt.group || -1;
+    const type = [];
+    for(const i in opt.type) {
+      if(opt.type[i]) { type.push(i); }
+    };
+    return $http.get('/api/admin/user', { params: {
+      search,
+      sort,
+      page,
+      pageSize,
+      group,
+      type,
+    } }).then(success => success.data);
   };
   const getOrder = (payType, opt = {}) => {
     if(payType === 'Paypal') {
@@ -118,18 +130,20 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', ($http,
       $http.get('/api/admin/user/recentLogin').then(success => success.data),
       $http.get('/api/admin/alipay/recentOrder').then(success => success.data),
       $http.get('/api/admin/paypal/recentOrder').then(success => success.data),
+      $http.get('/api/admin/flow/top').then(success => success.data),
     ]).then(success => {
       return {
         signup: success[0],
         login: success[1],
         order: success[2],
         paypalOrder: success[3],
+        topFlow: success[4],
       };
     });
     return indexInfoPromise;
   };
 
-  const getUserData = (userId) => {
+  const getUserData = userId => {
     const macAccount = JSON.parse(window.ssmgrConfig).macAccount;
     const promises = [
       $http.get('/api/admin/user/' + userId),
@@ -155,6 +169,14 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', ($http,
         paypalOrders: success[2].data,
         server: success[3].data,
         macAccount: success[4].data,
+      };
+    });
+  };
+
+  const getAdminData = userId => {
+    return $http.get('/api/admin/admin/' + userId).then(success => {
+      return {
+        user: success.data
       };
     });
   };
@@ -288,6 +310,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', ($http,
     getIndexInfo,
     getServerPortData,
     getUserData,
+    getAdminData,
     getChartData,
     getAccountChartData,
     getUserPortLastConnect,

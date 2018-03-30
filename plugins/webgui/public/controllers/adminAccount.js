@@ -12,6 +12,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
           expired: true,
           unexpired: true,
           unlimit: true,
+          mac: true,
         },
       };
     }
@@ -49,6 +50,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         $scope.sortAndFilter();
         return adminApi.getMacAccount();
       }).then(macAccounts => {
+        $localStorage.admin.macAccountInfo = {
+          time: Date.now(),
+          data: macAccounts,
+        };
         // $scope.macAccount = macAccounts;
         $scope.macAccountInfo.originalAccount = macAccounts;
         $scope.macAccountInfo.account = angular.copy($scope.macAccountInfo.originalAccount);
@@ -67,9 +72,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         getAccountInfo();
       }
     }, 15 * 1000));
-    $scope.setFabButton(() => {
+    $scope.setFabButton($scope.id === 1 ? () => {
       $state.go('admin.addAccount');
-    });
+    } : null);
     $scope.toAccount = id => {
       $state.go('admin.accountPage', { accountId: id });
     };
@@ -127,6 +132,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     $scope.setTitle('账号');
     $scope.setMenuButton('arrow_back', 'admin.account');
     $scope.accountId = +$stateParams.accountId;
+    $scope.account = { port: '...' };
     $q.all([
       $http.get(`/api/admin/account/${ $scope.accountId }`),
       $http.get('/api/admin/server'),
@@ -135,12 +141,15 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       $scope.account = success[0].data;
       $scope.servers = success[1].data.map(server => {
         if(server.host.indexOf(':') >= 0) {
-          server.host = server.host.split(':')[1];
+          // server.host = server.host.split(':')[1];
+          const hosts = server.host.split(':');
+          const number = Math.ceil(Math.random() * (hosts.length - 1));
+          server.host = hosts[number];
         }
         return server;
       });
       $scope.getServerPortData($scope.servers[0], $scope.accountId);
-      $scope.isMultiServerFlow = success[2].data.multiServerFlow;
+      $scope.isMultiServerFlow = !!$scope.account.multiServerFlow;
     }).catch(err => {
       console.log(err);
       $state.go('admin.account');
@@ -367,6 +376,8 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
   ($scope, $state, $stateParams, $http, $mdBottomSheet, alertDialog) => {
     $scope.setTitle('添加账号');
     $scope.setMenuButton('arrow_back', 'admin.account');
+    $scope.accountServer = false;
+    $scope.accountServerObj = {};
     $scope.typeList = [
       {key: '不限量', value: 1},
       {key: '按周', value: 2},
@@ -391,6 +402,16 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     };
     $scope.confirm = () => {
       alertDialog.loading();
+      if($scope.account.server) {
+        $scope.servers.forEach(server => {
+          if($scope.account.server.indexOf(server.id) >= 0) {
+            $scope.accountServerObj[server.id] = true;
+          } else {
+            $scope.accountServerObj[server.id] = false;
+          }
+        });
+      }
+      const server = Object.keys($scope.accountServerObj).map(m => +m);
       $http.post('/api/admin/account', {
         type: +$scope.account.type,
         port: +$scope.account.port,
@@ -399,6 +420,8 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         limit: +$scope.account.limit,
         flow: +$scope.account.flow * 1000 * 1000,
         autoRemove: $scope.account.autoRemove ? 1 : 0,
+        multiServerFlow: $scope.account.multiServerFlow ? 1 : 0,
+        server: $scope.accountServer ? server : null,
       }).then(success => {
         alertDialog.show('添加账号成功', '确定');
         $state.go('admin.account');
@@ -422,6 +445,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         $scope.account.limit = 1;
       }
     };
+    $http.get('/api/admin/server').then(success => {
+      $scope.servers = success.data;
+    });
   }
 ])
 .controller('AdminEditAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'confirmDialog', 'alertDialog',
@@ -457,7 +483,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       $scope.account.type = success.data.type;
       $scope.account.port = success.data.port;
       $scope.account.password = success.data.password;
+      $scope.account.cleanFlow = false;
       $scope.account.autoRemove = success.data.autoRemove;
+      $scope.account.multiServerFlow = success.data.multiServerFlow;
       if(success.data.type >= 2 && success.data.type <= 5) {
         $scope.account.time = success.data.data.create;
         $scope.account.limit = success.data.data.limit;
@@ -495,7 +523,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         time: $scope.account.time,
         limit: +$scope.account.limit,
         flow: +$scope.account.flow * 1000 * 1000,
+        cleanFlow: $scope.account.cleanFlow,
         autoRemove: $scope.account.autoRemove ? 1 : 0,
+        multiServerFlow: $scope.account.multiServerFlow ? 1 : 0,
         server: $scope.accountServer ? server : null,
       }).then(success => {
         alertDialog.show('修改账号成功', '确定');

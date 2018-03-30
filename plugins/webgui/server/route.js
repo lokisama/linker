@@ -11,6 +11,7 @@ const adminSetting = appRequire('plugins/webgui/server/adminSetting');
 const adminNotice = appRequire('plugins/webgui/server/adminNotice');
 const adminAccount = appRequire('plugins/webgui/server/adminAccount');
 const adminGiftCard = appRequire('plugins/webgui/server/adminGiftCard');
+const adminGroup = appRequire('plugins/webgui/server/adminGroup');
 const push = appRequire('plugins/webgui/server/push');
 const os = require('os');
 const path = require('path');
@@ -29,10 +30,19 @@ const isUser = (req, res, next) => {
 };
 const isAdmin = (req, res, next) => {
   if (req.session.type === 'admin') {
-    return next();
+    knex('user').where({ id: req.session.user, type: 'admin' }).then(s => s[0]).then(user => {
+      if(!user) { return res.status(401).end(); }
+      req.adminInfo = user;
+      next();
+    });
   } else {
     return res.status(401).end();
   }
+};
+
+const isSuperAdmin = (req, res, next) => {
+  if(req.session.user !== 1) { return res.status(403).end(); }
+  next();
 };
 
 app.get('/api/home/login', home.status);
@@ -47,21 +57,24 @@ app.post('/api/home/password/reset', home.resetPassword);
 
 app.get('/api/admin/server', isAdmin, adminServer.getServers);
 app.get('/api/admin/server/:serverId(\\d+)', isAdmin, adminServer.getOneServer);
-app.post('/api/admin/server', isAdmin, adminServer.addServer);
-app.put('/api/admin/server/:serverId(\\d+)', isAdmin, adminServer.editServer);
-app.delete('/api/admin/server/:serverId(\\d+)', isAdmin, adminServer.deleteServer);
+app.post('/api/admin/server', isAdmin, isSuperAdmin, adminServer.addServer);
+app.put('/api/admin/server/:serverId(\\d+)', isAdmin, isSuperAdmin, adminServer.editServer);
+app.delete('/api/admin/server/:serverId(\\d+)', isAdmin, isSuperAdmin, adminServer.deleteServer);
 
 app.get('/api/admin/account', isAdmin, admin.getAccount);
 app.get('/api/admin/macAccount', isAdmin, admin.getAllMacAccount);
 app.get('/api/admin/account/port/:port(\\d+)', isAdmin, admin.getAccountByPort);
 app.get('/api/admin/account/:accountId(\\d+)', isAdmin, admin.getOneAccount);
 app.get('/api/admin/account/:serverId(\\d+)/:accountId(\\d+)/ip', isAdmin, admin.getAccountIp);
+app.get('/api/admin/account/:serverId(\\d+)/:accountId(\\d+)/ban', isSuperAdmin, adminAccount.getBanAccount);
+app.post('/api/admin/account/:serverId(\\d+)/:accountId(\\d+)/ban', isSuperAdmin, adminAccount.banAccount);
 app.get('/api/admin/account/ip/:ip', isAdmin, admin.getAccountIpInfo);
 app.get('/api/admin/account/:accountId(\\d+)/ip', isAdmin, admin.getAccountIpFromAllServer);
-app.post('/api/admin/account', isAdmin, admin.addAccount);
-app.put('/api/admin/account/:accountId(\\d+)/port', isAdmin, admin.changeAccountPort);
-app.put('/api/admin/account/:accountId(\\d+)/data', isAdmin, admin.changeAccountData);
-app.delete('/api/admin/account/:accountId(\\d+)', isAdmin, admin.deleteAccount);
+app.post('/api/admin/account', isAdmin, isSuperAdmin, admin.addAccount);
+app.put('/api/admin/account/:accountId(\\d+)/port', isAdmin, isSuperAdmin, admin.changeAccountPort);
+app.put('/api/admin/account/:accountId(\\d+)/data', isAdmin, isSuperAdmin, admin.changeAccountData);
+app.delete('/api/admin/account/:accountId(\\d+)', isAdmin, isSuperAdmin, admin.deleteAccount);
+app.post('/api/admin/account/:accountId(\\d+)/resetFlow', isAdmin, isSuperAdmin, admin.resetAccountFlow);
 
 app.get('/api/admin/account/mac', isAdmin, adminAccount.getMacAccount);
 app.post('/api/admin/account/mac/:macAddress', isAdmin, adminAccount.addMacAccount);
@@ -71,6 +84,7 @@ app.delete('/api/admin/account/mac', isAdmin, adminAccount.deleteMacAccount);
 app.get('/api/user/account/mac/:macAddress', adminAccount.getMacAccountForUser);
 
 app.get('/api/admin/flow/:serverId(\\d+)', isAdmin, adminFlow.getServerFlow);
+app.get('/api/admin/flow/top', isAdmin, adminFlow.getTopFlow);
 app.get('/api/admin/flow/:serverId(\\d+)/lastHour', isAdmin, adminFlow.getServerLastHourFlow);
 app.get('/api/admin/flow/:serverId(\\d+)/user', isAdmin, adminFlow.getServerUserFlow);
 app.get('/api/admin/flow/account/:accountId(\\d+)', isAdmin, adminFlow.getAccountServerFlow);
@@ -84,6 +98,7 @@ app.get('/api/admin/user/recentLogin', isAdmin, admin.getRecentLoginUsers);
 
 app.get('/api/admin/user/account', isAdmin, admin.getUserAccount);
 app.get('/api/admin/user/:userId(\\d+)', isAdmin, admin.getOneUser);
+app.get('/api/admin/admin/:userId(\\d+)', isAdmin, admin.getOneAdmin);
 app.post('/api/admin/user/:userId(\\d+)/sendEmail', isAdmin, admin.sendUserEmail);
 app.put('/api/admin/user/:userId(\\d+)/:accountId(\\d+)', isAdmin, admin.setUserAccount);
 app.delete('/api/admin/user/:userId(\\d+)', isAdmin, admin.deleteUser);
@@ -97,26 +112,33 @@ app.get('/api/admin/paypal', isAdmin, admin.getPaypalOrders);
 app.get('/api/admin/paypal/recentOrder', isAdmin, admin.getPaypalRecentOrders);
 app.get('/api/admin/paypal/:userId(\\d+)', isAdmin, admin.getPaypalUserOrders);
 
-app.get('/api/admin/notice', isAdmin, adminNotice.getNotice);
-app.get('/api/admin/notice/:noticeId(\\d+)', isAdmin, adminNotice.getOneNotice);
-app.post('/api/admin/notice', isAdmin, adminNotice.addNotice);
-app.put('/api/admin/notice/:noticeId(\\d+)', isAdmin, adminNotice.editNotice);
-app.delete('/api/admin/notice/:noticeId(\\d+)', isAdmin, adminNotice.deleteNotice);
+app.get('/api/admin/notice', isAdmin, isSuperAdmin, adminNotice.getNotice);
+app.get('/api/admin/notice/:noticeId(\\d+)', isAdmin, isSuperAdmin, adminNotice.getOneNotice);
+app.post('/api/admin/notice', isAdmin, isSuperAdmin, adminNotice.addNotice);
+app.put('/api/admin/notice/:noticeId(\\d+)', isAdmin, isSuperAdmin, adminNotice.editNotice);
+app.delete('/api/admin/notice/:noticeId(\\d+)', isAdmin, isSuperAdmin, adminNotice.deleteNotice);
 
-app.get('/api/admin/setting/payment', isAdmin, adminSetting.getPayment);
-app.put('/api/admin/setting/payment', isAdmin, adminSetting.modifyPayment);
-app.get('/api/admin/setting/account', isAdmin, adminSetting.getAccount);
-app.put('/api/admin/setting/account', isAdmin, adminSetting.modifyAccount);
-app.get('/api/admin/setting/base', isAdmin, adminSetting.getBase);
-app.put('/api/admin/setting/base', isAdmin, adminSetting.modifyBase);
-app.get('/api/admin/setting/mail', isAdmin, adminSetting.getMail);
-app.put('/api/admin/setting/mail', isAdmin, adminSetting.modifyMail);
+app.get('/api/admin/setting/payment', isAdmin, isSuperAdmin, adminSetting.getPayment);
+app.put('/api/admin/setting/payment', isAdmin, isSuperAdmin, adminSetting.modifyPayment);
+app.get('/api/admin/setting/account', isAdmin, isSuperAdmin, adminSetting.getAccount);
+app.put('/api/admin/setting/account', isAdmin, isSuperAdmin, adminSetting.modifyAccount);
+app.get('/api/admin/setting/base', isAdmin, isSuperAdmin, adminSetting.getBase);
+app.put('/api/admin/setting/base', isAdmin, isSuperAdmin, adminSetting.modifyBase);
+app.get('/api/admin/setting/mail', isAdmin, isSuperAdmin, adminSetting.getMail);
+app.put('/api/admin/setting/mail', isAdmin, isSuperAdmin, adminSetting.modifyMail);
 
 app.get('/api/admin/giftcard', isAdmin, adminGiftCard.getOrders);
 app.get('/api/admin/giftcard/list', isAdmin, adminGiftCard.listBatch);
 app.get('/api/admin/giftcard/details/:batchNumber(\\d+)', isAdmin, adminGiftCard.getBatchDetails);
 app.post('/api/admin/giftcard/revoke', isAdmin, adminGiftCard.revokeBatch);
 app.post('/api/admin/giftcard/add', isAdmin, adminGiftCard.addGiftCard);
+
+app.get('/api/admin/group', isAdmin, adminGroup.getGroups);
+app.get('/api/admin/group/:id(\\d+)', isAdmin, adminGroup.getOneGroup);
+app.post('/api/admin/group', isAdmin, isSuperAdmin, adminGroup.addGroup);
+app.put('/api/admin/group/:id(\\d+)', isAdmin, isSuperAdmin, adminGroup.editGroup);
+app.delete('/api/admin/group/:id(\\d+)', isAdmin, isSuperAdmin, adminGroup.deleteGroup);
+app.post('/api/admin/group/:groupId(\\d+)/:userId(\\d+)', isAdmin, isSuperAdmin, adminGroup.setUserGroup);
 
 app.post('/api/admin/setting/changePassword', isAdmin, adminSetting.changePassword);
 
@@ -206,7 +228,7 @@ const configForFrontend = {
   paypalMode: config.plugins.paypal && config.plugins.paypal.mode,
   macAccount: config.plugins.macAccount && config.plugins.macAccount.use,
   telegram: config.plugins.webgui_telegram && config.plugins.webgui_telegram.use,
-  giftcard: config.plugins.giftcard && config.plugins.giftcard.use
+  giftcard: config.plugins.giftcard && config.plugins.giftcard.use,
 };
 
 const cdn = config.plugins.webgui.cdn;
@@ -233,6 +255,8 @@ const colors = [
   { value: 'grey', color: '#9E9E9E' },
 ];
 const homePage = (req, res) => {
+  let id = -1;
+  if(req.session && req.session.user) { id = req.session.user; }
   return knex('webguiSetting').select().where({
     key: 'base',
   }).then(success => {
@@ -242,11 +266,12 @@ const homePage = (req, res) => {
     success[0].value = JSON.parse(success[0].value);
     return success[0].value;
   }).then(success => {
-    configForFrontend.title = success.title;
+    configForFrontend.id = id;
     configForFrontend.themePrimary = success.themePrimary;
     configForFrontend.themeAccent = success.themeAccent;
     const filterColor = colors.filter(f => f.value === success.themePrimary);
     configForFrontend.browserColor = filterColor[0] ? filterColor[0].color : '#3F51B5';
+    configForFrontend.skin = config.plugins.webgui.skin || 'default';
     return res.render('index', {
       title: success.title,
       version,

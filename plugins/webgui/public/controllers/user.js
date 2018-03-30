@@ -246,9 +246,6 @@ app
     if($scope.account.length >= 2) {
       $scope.flexGtSm = 50;
     }
-    $http.get('/api/user/multiServerFlow').then(success => {
-      $scope.isMultiServerFlow = success.data.status;
-    });
     
     const setAccountServerList = (account, server) => {
       account.forEach(a => {
@@ -295,14 +292,15 @@ app
 
     $scope.getServerPortData = (account, serverId) => {
       account.currentServerId = serverId;
-      const scale = $scope.servers.filter(f => f.id === serverId)[0].scale;
+      const server = $scope.servers.filter(f => f.id === serverId);
+      const scale = server[0] ? server[0].scale : 1;
       if(!account.isFlowOutOfLimit) { account.isFlowOutOfLimit = {}; }
       userApi.getServerPortData(account, serverId).then(success => {
         account.lastConnect = success.lastConnect;
         account.serverPortFlow = success.flow;
         let maxFlow = 0;
         if(account.data) {
-          maxFlow = account.data.flow * ($scope.isMultiServerFlow ? 1 : scale);
+          maxFlow = account.data.flow * (account.multiServerFlow ? 1 : scale);
         }
         account.isFlowOutOfLimit[serverId] = maxFlow ? ( account.serverPortFlow >= maxFlow ) : false;
       });
@@ -318,12 +316,13 @@ app
       }
     });
     $scope.setInterval($interval(() => {
-      if($scope.account) {
-        userApi.updateAccount($scope.account)
-        .then(() => {
-          setAccountServerList($scope.account, $scope.servers);
-        });
+      if(!$scope.account.length) {
+        getUserAccountInfo();
       }
+      userApi.updateAccount($scope.account)
+      .then(() => {
+        setAccountServerList($scope.account, $scope.servers);
+      });
       $scope.account.forEach(a => {
         const currentServerId = a.currentServerId;
         userApi.getServerPortData(a, a.currentServerId, a.port).then(success => {

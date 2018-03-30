@@ -35,7 +35,9 @@ const loginFail = ip => {
 const getIp = address => {
   let myAddress = address;
   if(address.indexOf(':') >= 0) {
-    myAddress = address.split(':')[1];
+    const hosts = address.split(':');
+    const number = Math.ceil(Math.random() * (hosts.length - 1));
+    myAddress = hosts[number];
   }
   if(net.isIP(myAddress)) {
     return Promise.resolve(myAddress);
@@ -56,10 +58,19 @@ const newAccount = (mac, userId, serverId, accountId) => {
   });
 };
 
-const getAccount = async userId => {
-  const macAccounts = await knex('mac_account').where({
-    'mac_account.userId': userId,
-  });
+const getAccount = async (userId, group) => {
+  const where = {};
+  where['mac_account.userId'] = userId;
+  if(group >= 0) {
+    where['user.group'] = group;
+  }
+  const macAccounts = await knex('mac_account').select([
+    'mac_account.id as id',
+    'mac_account.userId as userId',
+    'mac_account.mac as mac',
+    'mac_account.accountId as accountId',
+    'mac_account.serverId as serverId',
+  ]).where(where).leftJoin('user', 'user.id', 'mac_account.userId');
   const accounts = await knex('account_plugin').where({ userId });
   macAccounts.forEach(macAccount => {
     const isExists = accounts.filter(f => {
@@ -94,6 +105,7 @@ const getAccountForUser = async (mac, ip) => {
     'account_plugin.id as accountId',
     'account_plugin.port',
     'account_plugin.password',
+    'account_plugin.multiServerFlow as multiServerFlow',
   ])
   .leftJoin('user', 'mac_account.userId', 'user.id')
   .leftJoin('account_plugin', 'mac_account.userId', 'account_plugin.userId');
@@ -116,16 +128,7 @@ const getAccountForUser = async (mac, ip) => {
     }
     expire = accountData.data.create + accountData.data.limit * timePeriod;
   }
-  const isMultiServerFlow = await knex('webguiSetting')
-  .select()
-  .where({ key: 'account' })
-  .then(success => {
-    if(!success.length) {
-      return Promise.reject('settings not found');
-    }
-    success[0].value = JSON.parse(success[0].value);
-    return success[0].value.multiServerFlow;
-  });
+  const isMultiServerFlow = account.multiServerFlow;
   const servers = await serverPlugin.list({ status: false });
   let server = servers.filter(s => {
     return s.id === myServerId;
@@ -221,7 +224,11 @@ const getAccountByAccountId = accountId => {
   });
 };
 
-const getAllAccount = async () => {
+const getAllAccount = async group => {
+  const where = {};
+  if(group >= 0) {
+    where['user.group'] = group;
+  }
   const accounts = await knex('mac_account').select([
     'mac_account.id as id',
     'mac_account.mac as mac',
@@ -230,7 +237,8 @@ const getAllAccount = async () => {
     'mac_account.serverId as serverId',
     'account_plugin.port as port',
   ]).leftJoin('account_plugin', 'mac_account.accountId', 'account_plugin.id')
-  .where({});
+  .leftJoin('user', 'user.id', 'mac_account.userId')
+  .where(where);
   return accounts;
 };
 

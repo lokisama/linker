@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
 <head>
+	<meta name="description" content="零卡加速，基于区块链，加速全世界">
+	<meta name="keywords" content="网页加速，视频加速，游戏加速，区块链，共享流量，共享cdn，路由器">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,6 +30,7 @@
 </head>
 
 <body ng-app="app" ng-cloak>
+    <script src="<%= cdn%>/libs/jquery.min.js"></script>
     <script src="<%= cdn%>/libs/angular.min.js"></script>
     <script src="<%= cdn%>/libs/angular-inview.js"></script>
     <script src="<%= cdn%>/libs/angular-animate.min.js"></script>
@@ -49,25 +52,10 @@
     <script src="<%= cdn%>/libs/angular-marked.min.js"></script>
     <script src="<%= cdn%>/libs/angular-translate.min.js"></script>
     <script>
-        window.ssmgrVersion = '<%= version%>'
-        window.cdn = '<%= cdn%>'
-        window.ssmgrConfig = '<%- JSON.stringify(config)%>'
-
-        var lastTouchEnd = 0;
-        document.documentElement.addEventListener('touchend', function (event) {
-          var now = Date.now();
-          if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-          }
-          lastTouchEnd = now;
-        }, false);
-
-        document.documentElement.addEventListener('touchstart', function (event) {
-          if (event.touches.length > 1) {
-            event.preventDefault();
-          }
-        }, false);
-        
+        window.cdn = '<%= cdn%>';
+        window.title = '<%= title%>';
+        window.ssmgrConfig = '<%- JSON.stringify(config)%>';
+        window.ssmgrVersion = '<%= version%>';
     </script>
     <% if (analytics) { %>
     <script>

@@ -5,6 +5,12 @@ const cdn = window.cdn || '';
 app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $state, $http) => {
   const macAccount = JSON.parse(window.ssmgrConfig).macAccount;
   const publicInfo = {};
+  publicInfo.isMacAddress = mac => {
+    if(!mac) { return false; }
+    const match = mac.toLowerCase().replace(/-/g, '').replace(/:/g, '').match(/^[0-9a-f]{12}$/);
+    if(!match) { return false; }
+    return match[0];
+  };
   publicInfo.status = 'choose';
   publicInfo.accountType = 'port';
   const hide = () => {
@@ -40,10 +46,11 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
           return { 'min-width': '400px', 'max-width': '640px' };
         };
         $scope.$watch('publicInfo.mac.account', () => {
+          if(!$scope.publicInfo.mac) { return; }
           const account = $scope.publicInfo.account.filter(f => {
             return f.id === $scope.publicInfo.mac.account;
           })[0];
-          if(!account.server) {
+          if(!account || !account.server) {
             $scope.publicInfo.validServer = $scope.publicInfo.server;
           } else {
             $scope.publicInfo.validServer = $scope.publicInfo.server.filter(f => {
@@ -67,7 +74,7 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
   const macAddress = () => {
     publicInfo.status = 'mac';
     publicInfo.mac = {
-      account: publicInfo.account[0].id,
+      account: publicInfo.account[0] ? publicInfo.account[0].id : null,
       server: publicInfo.server[0].id,
     };
   };
@@ -93,7 +100,7 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
   };
   publicInfo.setPort = setPort;
   const setMac = () => {
-    $http.post(`/api/admin/account/mac/${ publicInfo.mac.macAddress }`, {
+    $http.post(`/api/admin/account/mac/${ publicInfo.isMacAddress(publicInfo.mac.macAddress) }`, {
       userId: publicInfo.userId,
       accountId: publicInfo.mac.account,
       serverId: publicInfo.mac.server
@@ -105,7 +112,7 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
   const editMac = () => {
     $http.put(`/api/admin/account/mac`, {
       id: publicInfo.mac.id,
-      macAddress: publicInfo.mac.macAddress,
+      macAddress: publicInfo.isMacAddress(publicInfo.mac.macAddress),
       accountId: publicInfo.mac.account,
       serverId: publicInfo.mac.server
     }).then(success => {
@@ -130,14 +137,15 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
     dialogPromise = $mdDialog.show(dialog);
     return dialogPromise;
   };
-  const show = (userId, account, server) => {
+  const show = (userId, account, server, id) => {
+    publicInfo.status = 'choose';
     publicInfo.userId = userId;
     publicInfo.account = account;
     publicInfo.server = server;
+    publicInfo.id = id;
     publicInfo.isLoading = false;
-    if(macAccount) {
-      publicInfo.status = 'choose';
-    } else {
+    if(publicInfo.id !== 1) {
+      publicInfo.accountType = 'mac';
       next();
     }
     if(isDialogShow()) {

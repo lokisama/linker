@@ -78,10 +78,20 @@ exports.getOneAccount = (req, res) => {
 
 exports.getServers = (req, res) => {
   const userId = req.session.user;
+  const serverAliasFilter = servers => {
+    return servers.map(server => {
+      if(server.host.indexOf(':') >= 0) {
+        const hosts = server.host.split(':');
+        const number = Math.ceil(Math.random() * (hosts.length - 1));
+        server.host = hosts[number];
+      }
+      return server;
+    });
+  };
   let servers;
   knex('server').select(['id', 'host', 'name', 'method', 'scale', 'comment', 'shift']).orderBy('name')
     .then(success => {
-      servers = success;
+      servers = serverAliasFilter(success);
       return account.getAccount({
         userId,
       }).then(accounts => {
@@ -147,16 +157,17 @@ exports.getServerPortFlow = (req, res) => {
           i++;
         }
       }
-      return knex('webguiSetting').select().where({ key: 'account' })
-        .then(success => {
-          if (!success.length) {
-            return Promise.reject('settings not found');
-          }
-          success[0].value = JSON.parse(success[0].value);
-          return success[0].value.multiServerFlow;
-        }).then(isMultiServerFlow => {
-          return flow.getServerPortFlow(serverId, accountId, timeArray, isMultiServerFlow);
-        });
+      return flow.getServerPortFlow(serverId, accountId, timeArray, account.multiServerFlow);
+      // return knex('webguiSetting').select().where({ key: 'account' })
+      //   .then(success => {
+      //     if (!success.length) {
+      //       return Promise.reject('settings not found');
+      //     }
+      //     success[0].value = JSON.parse(success[0].value);
+      //     return success[0].value.multiServerFlow;
+      //   }).then(isMultiServerFlow => {
+      //     return flow.getServerPortFlow(serverId, accountId, timeArray, isMultiServerFlow);
+      //   });
     } else {
       return [0];
     }

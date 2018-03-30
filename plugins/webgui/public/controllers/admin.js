@@ -27,6 +27,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       name: '服务器',
       icon: 'cloud',
       click: 'admin.server',
+      hide: !!($scope.id !== 1),
     }, {
       name: '用户',
       icon: 'people',
@@ -77,8 +78,15 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.title = '';
     $scope.setTitle = str => { $scope.title = str; };
     $scope.fabButton = false;
+    $scope.fabButtonIcon = '';
     $scope.fabButtonClick = () => {};
-    $scope.setFabButton = (fn) => {
+    $scope.setFabButton = (fn, icon = '') => {
+      $scope.fabButtonIcon = icon;
+      if(!fn) {
+        $scope.fabButton = false;
+        $scope.fabButtonClick = () => {};
+        return;
+      }
       $scope.fabButton = true;
       $scope.fabButtonClick = fn;
     };
@@ -139,6 +147,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     };
     $scope.$on('$stateChangeStart', function(event, toUrl, fromUrl) {
       $scope.fabButton = false;
+      $scope.fabButtonIcon = '';
       $scope.title = '';
       $scope.menuButtonIcon = '';
       $scope.menuRightButtonIcon = '';
@@ -159,14 +168,15 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     });
   }
 ])
-.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog',
-  ($scope, $state, adminApi, $localStorage, $interval, orderDialog) => {
+.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog', '$http',
+  ($scope, $state, adminApi, $localStorage, $interval, orderDialog, $http) => {
     $scope.setTitle('首页');
     if($localStorage.admin.indexInfo) {
       $scope.signupUsers = $localStorage.admin.indexInfo.data.signup;
       $scope.loginUsers = $localStorage.admin.indexInfo.data.login;
       $scope.orders = $localStorage.admin.indexInfo.data.order;
       $scope.paypalOrders = $localStorage.admin.indexInfo.data.paypalOrder;
+      $scope.topFlow = $localStorage.admin.indexInfo.data.topFlow;
     }
     $scope.toUser = id => {
       $state.go('admin.userPage', { userId: id });
@@ -181,6 +191,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         $scope.loginUsers = success.login;
         $scope.orders = success.order;
         $scope.paypalOrders = success.paypalOrder;
+        $scope.topFlow = success.topFlow;
       });
     };
     updateIndexInfo();
@@ -198,6 +209,13 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     }, 15 * 1000));
     $scope.showOrderInfo = order => {
       orderDialog.show(order);
+    };
+    $scope.toTopUser = top => {
+      if(top.email) {
+        $state.go('admin.userPage', { userId: top.userId });
+      } else {
+        $state.go('admin.accountPage', { accountId: top.accountId });
+      }
     };
   }
 ])
@@ -232,6 +250,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
           FINISH: true,
           TRADE_CLOSED: true,
         },
+        group: -1,
       };
     }
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
@@ -254,6 +273,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         pageSize: getPageSize(),
         search,
         // sort: $scope.userSort.sort,
+        group: $scope.orderFilter.group,
         filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
       }).then(success => {
         if(oldTabSwitchTime !== tabSwitchTime) { return; }
@@ -301,7 +321,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     };
     $scope.setMenuRightButton('sort_by_alpha');
     $scope.orderFilterDialog = () => {
-      orderFilterDialog.show().then(() => {
+      orderFilterDialog.show($scope.id).then(() => {
         $scope.orders = [];
         $scope.currentPage = 1;
         $scope.isOrderPageFinish = false;

@@ -42,7 +42,7 @@ app.factory('languageDialog' , [ '$mdDialog', $mdDialog => {
     }],
     clickOutsideToClose: true,
   };
-  const show = (accountMethod, accountInfo) => {
+  const show = () => {
     if(isDialogShow()) {
       return dialogPromise;
     }

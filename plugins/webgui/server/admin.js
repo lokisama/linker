@@ -15,7 +15,8 @@ const rp = require('request-promise');
 const macAccount = appRequire('plugins/macAccount/index');
 
 exports.getAccount = (req, res) => {
-  account.getAccount().then(success => {
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
+  account.getAccount({ group }).then(success => {
     success.forEach(account => {
       account.data = JSON.parse(account.data);
       if(account.type >= 2 && account.type <= 5) {
@@ -103,8 +104,10 @@ exports.addAccount = (req, res) => {
       const limit = +req.body.limit;
       const flow = +req.body.flow;
       const autoRemove = +req.body.autoRemove || 0;
+      const multiServerFlow = +req.body.multiServerFlow || 0;
+      const server = req.body.server ? JSON.stringify(req.body.server) : null;
       return account.addAccount(type, {
-        port, password, time, limit, flow, autoRemove,
+        port, password, time, limit, flow, autoRemove, server, multiServerFlow,
       });
     }
     result.throw();
@@ -153,8 +156,12 @@ exports.changeAccountData = (req, res) => {
     limit: +req.body.limit,
     flow: +req.body.flow,
     autoRemove: +req.body.autoRemove,
+    multiServerFlow: +req.body.multiServerFlow,
     server: req.body.server,
   }).then(success => {
+    if(req.body.cleanFlow) {
+      flow.cleanAccountFlow(accountId);
+    }
     res.send('success');
   }).catch(err => {
     console.log(err);
@@ -163,7 +170,9 @@ exports.changeAccountData = (req, res) => {
 };
 
 exports.getRecentSignUpUsers = (req, res) => {
-  user.getRecentSignUp(10).then(success => {
+
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
+  user.getRecentSignUp(5, group).then(success => {
     return res.send(success);
   }).catch(err => {
     console.log(err);
@@ -172,7 +181,8 @@ exports.getRecentSignUpUsers = (req, res) => {
 };
 
 exports.getRecentLoginUsers = (req, res) => {
-  user.getRecentLogin(10).then(success => {
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
+  user.getRecentLogin(5, group).then(success => {
     return res.send(success);
   }).catch(err => {
     console.log(err);
@@ -184,8 +194,10 @@ exports.getRecentOrders = (req, res) => {
   if(!isAlipayUse) {
     return res.send([]);
   }
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
   alipay.orderListAndPaging({
-    pageSize: 10,
+    pageSize: 5,
+    group,
   }).then(success => {
     return res.send(success.orders);
   }).catch(err => {
@@ -198,8 +210,10 @@ exports.getPaypalRecentOrders = (req, res) => {
   if(!isPaypalUse) {
     return res.send([]);
   }
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
   paypal.orderListAndPaging({
-    pageSize: 10,
+    pageSize: 5,
+    group,
   }).then(success => {
     return res.send(success.orders);
   }).catch(err => {
@@ -219,6 +233,16 @@ exports.getOneUser = (req, res) => {
       return f.userId === +userId;
     });
     return res.send(userInfo);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.getOneAdmin = (req, res) => {
+  const userId = req.params.userId;
+  user.getOneAdmin(userId).then(success => {
+    return res.send(success);
   }).catch(err => {
     console.log(err);
     res.status(403).end();
@@ -317,10 +341,16 @@ exports.getOrders = (req, res) => {
     });
   }
   const options = {};
+  if(req.adminInfo.id === 1) {
+    options.group = +req.query.group;
+  } else {
+    options.group = req.adminInfo.group;
+  }
   options.page = +req.query.page || 1;
   options.pageSize = +req.query.pageSize || 20;
   options.search = req.query.search || '';
   options.sort = req.query.sort || 'alipay.createTime_desc';
+  
   options.filter = req.query.filter || '';
   alipay.orderListAndPaging(options)
   .then(success => {
@@ -342,6 +372,11 @@ exports.getPaypalOrders = (req, res) => {
     });
   }
   const options = {};
+  if(req.adminInfo.id === 1) {
+    options.group = +req.query.group;
+  } else {
+    options.group = req.adminInfo.group;
+  }
   options.page = +req.query.page || 1;
   options.pageSize = +req.query.pageSize || 20;
   options.search = req.query.search || '';
@@ -516,8 +551,19 @@ exports.getAccountIpInfo = (req, res) => {
 };
 
 exports.getAllMacAccount = (req, res) => {
-  macAccount.getAllAccount().then(success => {
+  const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
+  macAccount.getAllAccount(group).then(success => {
     return res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.resetAccountFlow = (req, res) => {
+  const accountId = +req.params.accountId;
+  flow.cleanAccountFlow(accountId).then(success => {
+    return res.send('success');
   }).catch(err => {
     console.log(err);
     res.status(403).end();

@@ -68,6 +68,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
             server.name = servers[index].name;
             server.port = servers[index].port;
             server.status = servers[index].status;
+            server.isGfw = servers[index].isGfw;
             adminApi.getServerFlow(server.id).then(flow => {
               if(!server.flow) {
                 server.flow = {};
@@ -137,28 +138,51 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     $scope.toServerPage = (serverId) => {
       $state.go('admin.serverPage', { serverId });
     };
-    $scope.setFabButton(() => {
+    $scope.setFabButton($scope.id === 1 ? () => {
       $state.go('admin.addServer');
-    });
+    } : null);
   }
 ])
-.controller('AdminServerPageController', ['$scope', '$state', '$stateParams', '$http', 'moment', '$mdDialog', 'adminApi', '$q', '$mdMedia',
-  ($scope, $state, $stateParams, $http, moment, $mdDialog, adminApi, $q, $mdMedia) => {
+.controller('AdminServerPageController', ['$scope', '$state', '$stateParams', '$http', 'moment', '$mdDialog', 'adminApi', '$q', '$mdMedia', '$interval', 'banDialog',
+  ($scope, $state, $stateParams, $http, moment, $mdDialog, adminApi, $q, $mdMedia, $interval, banDialog) => {
     $scope.setTitle('服务器');
     $scope.setMenuButton('arrow_back', 'admin.server');
     const serverId = $stateParams.serverId;
-    $http.get(`/api/admin/server/${ serverId }`).then(success => {
-      $scope.server = success.data;
-    }).catch(() => {
-      // $state.go('admin.server');
-    });
+    const getServerInfo = () => {
+      $http.get(`/api/admin/server/${ serverId }`).then(success => {
+        $scope.server = success.data;
+        $scope.currentPorts = {};
+        $scope.server.ports.forEach(f => {
+          $scope.currentPorts[f.port] = {
+            port: f.port,
+            password: f.password,
+            exists: true,
+          };
+        });
+        return adminApi.getAccount();
+      }).then(accounts => {
+        accounts.forEach(account => {
+          if(!$scope.currentPorts[account.port + $scope.server.shift]) {
+            $scope.currentPorts[account.port + $scope.server.shift] = {
+              id: account.id,
+              port: account.port + $scope.server.shift,
+              password: account.password,
+              exists: false,
+            };
+          } else {
+            $scope.currentPorts[account.port + $scope.server.shift].id = account.id;
+          }
+        });
+      });
+    };
+    getServerInfo();
+    $scope.setInterval($interval(() => {
+      getServerInfo();
+    }, 60 * 1000));
     $scope.toAccountPage = port => {
       adminApi.getAccountId(port - $scope.server.shift).then(id => {
         $state.go('admin.accountPage', { accountId: id });
       });
-    };
-    $scope.editServer = () => {
-      $state.go('admin.editServer', { serverId });
     };
     $scope.deleteServer = id => {
       const confirm = $mdDialog.confirm()
@@ -310,6 +334,12 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
           pie: [ 240, 240 ],
         };
       }
+    };
+    $scope.setFabButton($scope.id === 1 ? () => {
+      $state.go('admin.editServer', { serverId });
+    } : null, 'mode_edit');
+    $scope.banAccount = (accountId) => {
+      banDialog.show(serverId, accountId);
     };
   }
 ])
