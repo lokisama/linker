@@ -42,3 +42,4 @@ config/development.yml
 
 .vscode
 lib
+webgui.yml

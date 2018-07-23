@@ -1,0 +1,84 @@
+type: m
+empty: false
+
+manager:
+  address: 66.42.33.9:4001
+  password: '123456'
+  # 这部分的端口和密码需要跟上一步 manager 参数里的保持一致，以连接 type s 部分监听的 tcp 端口
+plugins:
+  flowSaver:
+    use: true
+  user:
+    use: true
+  account:
+    use: true
+  macAccount:
+    use: true
+  giftcard:
+    use: true
+  email:
+    use: true
+    username: 'no-reply@linkersocks.com'
+    password: 'lfdvskilaqoyebbb'
+    host: 'smtp.qq.com'
+    # 这部分的邮箱和密码是用于发送注册验证邮件，重置密码邮件
+  webgui:
+    use: true
+    host: '127.0.0.1'
+    port: '8099'
+    site: 'http://127.0.0.1:8099'
+    skin: 'fs_zelda'
+    #googleAnalytics: 'UA-113197119-1'
+    # cdn:  'http://opub24jup.bkt.clouddn.com/'
+    #gcmSenderId: '456102641793'
+    #gcmAPIKey: 'AAAAGzzdqrE:XXXXXXXXXXXXXX'
+  alipay:
+    # 如果不使用支付宝，这段可以去掉
+    use: true
+    appid: 2018010201527586
+    notifyUrl: 'http://www.linkersocks.com/api/call'
+    merchantPrivateKey: 'MIIEpAIBAAKCAQEAxuDx5VgyXjJ+we5hWNxYYmhas+oFnuxzy8iy4JD4a6GW/C4x
+QrsbCnao2Vp726KvJEzeGbHDDurzp5Eb85d5y+e934cEgj2RX0972SBTHF2Ws3gG
++XadM1xUtW8i+fghEbi5dYkUCUuC+HFN4f4HiZlE4nRyqKPFU9hhAHArwcR300rS
+3Ka6NhHdIZaQuCOz45zTTELEMpivjEatOMSxksc2PvAOyZ30EsUI8SHZOdZK5gaH
+pxfQvoOZ9WFtupkeByXaolo5cxXKmBFQYLjPMUAmi4KYAqJs4bJpLYwDUOH8tt0k
+mYkqUaHy2Sb1jhVgzMCnlFgQ0UDBpAw8+lVYyQIDAQABAoIBAQCPDRZxxTLVlrSe
+gfz7keLxReaYKujIG4RfPImOBjjqEl0sH33HZhZZPGjPjsowfaBFGBVZngeUH2QL
+T9EvMfGlvZdRxSh1FhwO1nlbAGlHqfnQNbGulqcUXoF/z+T0sIn42UptRKBo3yvh
+0H4Y5EQ/sUNfMCuZKdOyL532Vrjisk1B++w7B3JFfcYuBKGqctUENS3NffFtyDlg
+FV0vAMdnj2NDtfBo/DtDBzzsvyDhyrr/D7HmOXS6iI2f6RnCIJ++3leEaBGI1C1r
+0j4b//caKsJ2N4mrSZgq/9K5HqLI1LgQpR/Yu9AxMd2iASIEuFR7ZsYMFhbfnNN8
+hCB8bRzRAoGBAPXYfufBglfqlRIodWhyd95wtBi3LeOBUF+MTI3msNcMkeSE6laD
+nM7Ylfh6DvVUc5MFHH7fNbx0TU6o5BS1BOlduDJBf7ssJkE8rkqsFrNX9e89fcn1
+CF4jHI7LzHupcAJuXP3pHc6JU3wfImWh2YxLwENNCDh0pCIVBzekFH2fAoGBAM8X
+1UpdcOfGU//vDoVm0S1+2DVzwrUNrl6YhPzSwEuyYHHhgeKYQ6MBNruNRh/0Lkab
+ih/GR3bHpxkusXkF9P26co3XF2oXjK/T3J1REU+wWsPjPd7fbHcH9tAlOMkbYYzy
+QXUNzm4RPVTA2GwBYPKGobeRpUkXqofUk8ae+MCXAoGAR67BigfFXqcaojnDyhme
+U/CewpoeujhJXCLHa5S5OWsD2xLaVTF49mL2j4XfeK8QJ+0UmvWwcGuk4uuh3VvO
+u9DE1Xp9qPC9ksYDt+gnklFydziBxfI5Z2FrgUNxMxl7fGn7mVlwhHlMK2PUnrer
+fBnWTIlYfUWdWgaxnQqtotcCgYAHnyzua7n4DciRps62Ai64qe5zKSuFVleQi7R5
+SZhiMNJz3oTVPh1fJnBJPs3R5z68woS23qlKqdZwitNlTN7TZ8VHix8FfJBk+Dsq
+Xw1wDWGJzBc+2KI5T0W6K2SHokZY1aGrGTL7wg6ry90rPHHA+0uAYg/fPMu97Aj0
+Sm2FSQKBgQC0o3kMorX8a+30MDMb94NfEkzg9Fpa/527BaZJ7ykIs73iz3TxewD4
+o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
+8S7n9PZtxJOhBo3exT2mhxPojPg1DoR+zeDDbn1+WqVVsQdDg3jFIw=='
+    alipayPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAimfyQyJI4oQQuIeuIKHYuQDqGd0aMj860GQXgEEnY4RnQa4Yugox5MzzzFe04faOxA+L85hdnzM3icxInVa7LmNs045T67ALEXkQbG4s6ssugTccG9r9hpvyei6h9ziQgpJ8tj1K53CUBB5QW020ZbZUvPzGIc71nGflydYeDPCKLjzVIK+rGXnqvWuOu0ejw0JmiA1N7Ej8YVwvqGA/SmlcgNvkcBpvy8QcDzCtX8Hz6Oc9TG5tGZHyvpe0ZwYxfanbUU5xqfpUnW6kt0lw/OoNp/vlOaqaBUAdAEgyMqOIcxgkv7Q95etYt6vOdHtdJTi0TY0jRTEvuFQ/djId5QIDAQAB'
+    gatewayUrl: 'https://openapi.alipay.com/gateway.do'
+  #paypal:
+    # 如果不使用paypal，这段可以去掉
+   # use: true
+   # mode: 'live' # sandbox or live
+   # client_id: 'AWQES8rlXnwH-ZCxdsNFUz5fVuVHSzE_PJQP55eKd040h7U3sD5q2mWG1Sho9sIBP-iGvDD1UkhcQy5m'
+   # client_secret: 'EHAl-7t_OVmRG8iE2CGUKek38IbZbI9_69X8VQZ5ug8wnSvW-qbh9-cu_bVWTEicvvi05eCY04cAri0g'
+#db:
+#  host: '139.162.108.254'
+#  port: 3306
+#  user: 'root'
+#  password: 'wx11530600'
+#  database: 'ssmgr_webgui'
+db:
+  host: 'rm-uf614hmyuddi3vx23o.mysql.rds.aliyuncs.com'
+  port: 3306
+  user: 'root'
+  password: '1989Zj1011'
+  database: 'ssmgr2'
