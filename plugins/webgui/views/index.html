@@ -17,6 +17,7 @@
     <link rel="shortcut icon" href="/favicon.png">
     <link rel="manifest" href="/manifest.json">
     <title><%= title%></title>
+	<script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="1ab0b393-8c49-409e-baf7-244aebb996f5";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
     <base href="/">
 </head>
 
@@ -49,6 +50,31 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
+	<div id="adBody" style="z-index:100000;position:absolute;height:40px;bottom:0px;left:40px;background:#fff;border:1px solid #d7d7d7;overflow:hidden;">
+		<div id="adButtonOpen" style="background:#f7f7f7;text-align:center;line-height:40px;font-size:12px;cursor:pointer;" onClick="openAd();">猜你喜欢</div>
+		<div  style="background:#f7f7f7;text-align:center;line-height:40px;font-size:12px;">
+			<span style="float:left;margin-left:20px;cursor:pointer;" onclick="window.history.go(-1)">后退</span>
+			<span style="float:left;margin-left:20px;cursor:pointer;" onclick="window.history.go(1)">前进</span>
+			<span style="cursor:pointer;" onClick="closeAd();" id="adButtonClose">我不想看</span>
+		</div>
+		<iframe id="adFrame"  src="http://report.qiyu3.com/lhr/show/?app_id=demo_news&template=1&user_id=test" frameborder="0" width="300" height="500"></iframe>
+	<div>
+	<script>
+	function openAd(){
+		document.getElementById("adFrame").src = 'http://report.qiyu3.com/lhr/show/?app_id=demo_news_video&template=1&user_id=test#/news';
+		document.getElementById("adBody").style.height="540px";
+		document.getElementById("adButtonOpen").style.display = "none";
+		document.getElementById("adButtonClose").style.display = "block";
+	}
+	
+	function closeAd(){
+		document.getElementById("adFrame").src = 'http://report.qiyu3.com/lhr/show/?app_id=demo_news&template=1&user_id=test';
+		document.getElementById("adBody").style.height="40px";
+		document.getElementById("adButtonOpen").style.display = "block";
+		document.getElementById("adButtonClose").style.display = "none";
+	}
+	
+	</script>
 </body>
 
 </html>
