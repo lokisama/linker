@@ -57,18 +57,18 @@
 			<span style="float:left;margin-left:20px;cursor:pointer;" onclick="window.history.go(1)">前进</span>
 			<span style="cursor:pointer;" onClick="closeAd();" id="adButtonClose">我不想看</span>
 		</div>
-		<iframe id="adFrame"  src="http://report.qiyu3.com/lhr/show/?app_id=demo_news&template=1&user_id=test" frameborder="0" width="300" height="500"></iframe>
+		<iframe id="adFrame"  src="https://xiaojiding.com/show/?app_id=demo_news" frameborder="0" width="300" height="500"></iframe>
 	<div>
 	<script>
 	function openAd(){
-		document.getElementById("adFrame").src = 'http://report.qiyu3.com/lhr/show/?app_id=demo_news_video&template=1&user_id=test#/news';
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news_video';
 		document.getElementById("adBody").style.height="540px";
 		document.getElementById("adButtonOpen").style.display = "none";
 		document.getElementById("adButtonClose").style.display = "block";
 	}
 	
 	function closeAd(){
-		document.getElementById("adFrame").src = 'http://report.qiyu3.com/lhr/show/?app_id=demo_news&template=1&user_id=test';
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news';
 		document.getElementById("adBody").style.height="40px";
 		document.getElementById("adButtonOpen").style.display = "block";
 		document.getElementById("adButtonClose").style.display = "none";
