@@ -50,31 +50,41 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
-	<div id="adBody" style="z-index:100000;position:absolute;height:40px;bottom:0px;left:40px;background:#fff;border:1px solid #d7d7d7;overflow:hidden;">
-		<div id="adButtonOpen" style="background:#f7f7f7;text-align:center;line-height:40px;font-size:12px;cursor:pointer;" onClick="openAd();">猜你喜欢</div>
-		<div  style="background:#f7f7f7;text-align:center;line-height:40px;font-size:12px;">
-			<span style="float:left;margin-left:20px;cursor:pointer;" onclick="window.history.go(-1)">后退</span>
-			<span style="float:left;margin-left:20px;cursor:pointer;" onclick="window.history.go(1)">前进</span>
-			<span style="cursor:pointer;" onClick="closeAd();" id="adButtonClose">我不想看</span>
+	<div id="adBody">
+		<div id="adButtonOpen" onClick="openAd();">猜你喜欢</div>
+		<div id="adButtonClose">
+			<span class="goback" style="" onclick="window.history.go(-1)">后退</span>
+			<span  onClick="closeAd();" >我不想看</span>
 		</div>
-		<iframe id="adFrame"  src="https://xiaojiding.com/show/?app_id=demo_news" frameborder="0" width="300" height="500"></iframe>
+		<iframe id="adFrame" style="display:none;"  src="https://xiaojiding.com/show/?app_id=demo_news" frameborder="0" width="300" height="500"></iframe>
 	<div>
 	<script>
 	function openAd(){
 		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news_video';
-		document.getElementById("adBody").style.height="540px";
+		document.getElementById("adFrame").style.display = "block";
 		document.getElementById("adButtonOpen").style.display = "none";
 		document.getElementById("adButtonClose").style.display = "block";
+		document.getElementById("adBody").className = "active";
 	}
 	
 	function closeAd(){
 		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news';
-		document.getElementById("adBody").style.height="40px";
+		document.getElementById("adFrame").style.display = "none";
 		document.getElementById("adButtonOpen").style.display = "block";
 		document.getElementById("adButtonClose").style.display = "none";
+		document.getElementById("adBody").className = "";
 	}
 	
 	</script>
+	<style>
+		#adBody{z-index:100000;position:absolute;min-height:100px;bottom:130px;left:0px;overflow:hidden;}
+		#adButtonOpen{background:rgb(63,81,181);color:#fff;text-align:center;width:20px;padding:10px;line-height:20px;font-size:12px;cursor:pointer;border-top-right-radius:8px;border-bottom-right-radius:8px;}
+		#adButtonClose{background:rgb(63,81,181);color:#fff;text-align:center;line-height:40px;font-size:12px;display:none;}		
+		#adButtonClose .goback{float:left;margin-left:20px;}
+		#adButtonClose span{cursor:pointer;}
+		#adBody.active{bottom:0;background:#fff;}
+		.md-fab-bottom-right{right:auto!important;left:20px!important;}
+	</style>
 </body>
 
 </html>
