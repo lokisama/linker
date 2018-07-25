@@ -50,6 +50,9 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
+	<div id="svBody">
+		<a id="svButtonOpen" onClick="openAd();" href="http://svip.linkersocks.com:321/" target="_blank">节点状态</>
+	<div>
 	<div id="adBody">
 		<div id="adButtonOpen" onClick="openAd();">猜你喜欢</div>
 		<div id="adButtonClose">
@@ -77,8 +80,10 @@
 	
 	</script>
 	<style>
-		#adBody{z-index:100000;position:absolute;min-height:100px;bottom:130px;left:0px;overflow:hidden;}
-		#adButtonOpen{background:rgb(63,81,181);color:#fff;text-align:center;width:20px;padding:10px;line-height:20px;font-size:12px;cursor:pointer;border-top-right-radius:8px;border-bottom-right-radius:8px;}
+		#adBody,#svBody{z-index:100000;position:absolute;min-height:100px;bottom:130px;left:0px;overflow:hidden;}
+		#svBody{bottom:200px;}
+		#adButtonOpen,#svButtonOpen{background:rgb(63,81,181);color:#fff;text-align:center;width:20px;padding:10px;line-height:20px;font-size:12px;cursor:pointer;border-top-right-radius:8px;border-bottom-right-radius:8px;}
+		#svButtonOpen{background-image: -webkit-linear-gradient(top,#5cb85c 0,#449d44 100%);background-image: linear-gradient(to bottom,#5cb85c 0,#449d44 100%);}
 		#adButtonClose{background:rgb(63,81,181);color:#fff;text-align:center;line-height:40px;font-size:12px;display:none;}		
 		#adButtonClose .goback{float:left;margin-left:20px;}
 		#adButtonClose span{cursor:pointer;}
