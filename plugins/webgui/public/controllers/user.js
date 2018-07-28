@@ -159,19 +159,6 @@ app
         time: Date.now(),
         data: [],
       };
-    }else{
-
-      $http.get('/api/user/order/price', {
-        params: { accountId: $localStorage.user.accountInfo.data[0].id }
-      }).then(success => {
-
-        success.data.forEach((a, index) => {
-          $scope.plan[a.id] = a;
-        });
-
-        console.log($scope.plan);
-
-      });
     }
     $scope.account = $localStorage.user.accountInfo.data;
     if($scope.account.length >= 2) {
@@ -208,6 +195,16 @@ app
         $localStorage.user.serverInfo.time = Date.now();
         $localStorage.user.accountInfo.data = success.account;
         $localStorage.user.accountInfo.time = Date.now();
+
+        $scope.getServerPortData($localStorage.user.accountInfo.data[0], $localStorage.user.serverInfo.data[0].id);
+        $http.get('/api/user/order/price', {
+          params: { accountId: $localStorage.user.accountInfo.data[0].id }
+        }).then(success => {
+          success.data.forEach((a, index) => {
+            $scope.plan[a.id] = a;
+          });
+        });
+
         if($scope.account.length >= 2) {
           $scope.flexGtSm = 50;
         }
@@ -334,8 +331,8 @@ app
         background: `linear-gradient(90deg, rgba(0,0,0,0.12) ${ percent }%, rgba(0,0,0,0) 0%)`
       };
     };
-    
-    $scope.getServerPortData($localStorage.user.accountInfo.data[0], $localStorage.user.serverInfo.data[0].id);
+
+    // $scope.getServerPortData($localStorage.user.accountInfo.data[0], $localStorage.user.serverInfo.data[0].id);
   }
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog', 'payByGiftCardDialog', 'subscribeDialog', '$q', '$state',
