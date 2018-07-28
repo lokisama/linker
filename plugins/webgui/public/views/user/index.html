@@ -88,7 +88,7 @@
                         </div>
                         <div class="flow_text">
                             每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span><br/>
-                            <span style="font-size:0.8rem">(系统升级，如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
+                            <span style="font-size:0.8rem">(如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
                         </div>
                         <div class="flow_button" layout="row" flex>
                             <md-button class="md-primary" ng-show="config.alipay || config.paypal || config.giftcard" ng-click="createOrder(flow.serverId)">{{ '新购或续费' | translate }}</md-button>
@@ -100,7 +100,7 @@
         </md-card>
     </div>
 
-    <div flex="50" flex-xs="100">
+    <div flex="50" flex-xs="100" id="follow">
         <md-card flex="100">
             <md-card-title>
                 <md-card-title-text><span class="sm-headline">{{ '教程' | translate }}</span></md-card-title-text>
