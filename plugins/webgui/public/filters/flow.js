@@ -41,7 +41,7 @@ app.filter('flowServer', function() {
       if((input / G) < 51){
         return (input / G).toFixed(2) + ' GB';
       }else{
-        return '无限流量';
+        return '无限';
       }
 
     } else {

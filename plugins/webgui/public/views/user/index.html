@@ -1,8 +1,155 @@
 <div layout="row" layout-xs="column" layout-wrap>
-    <div flex="100">
+    
+    <style>
+        .flow_container{
+            position:relative;
+            background: #68b1e6;
+            color:#fff;
+        }
+        .flow_circle{
+            position:relative;
+            /*top:2px;
+            right:35%;*/
+            background: #fff;
+            width:160px;
+            height:160px;
+            border-radius: 160px;
+        }
+        .flow_circle_inner{
+            position:absolute;
+            left:10px;
+            top:10px;
+            background: #68b1e6;
+            width:140px;
+            height:140px;
+            border-radius: 140px;
+
+        }
+        .flow_circle_text{
+            margin-top:50px;
+            color:#fff;
+            font-size:12px;
+            text-align: center;
+        }
+        .flow_circle_flow{
+            font-size:18px;
+            font-weight: bold;
+        }
+        .flow_button{
+            /*position:absolute;
+            right:10px;
+            top:30px;*/
+        }
+        .flow_button button{
+            background: hsla(0, 0%, 100%, .2);
+            color:#fff!important;
+        }
+        .flow_text{
+            margin-left:8px;
+        }
+        .flow_text_plan{
+            font-size:2em;
+            line-height: 2em;
+        }
+        .font12{
+            font-size:12px!important;
+        }
+    </style>
+    <div flex ng-if="account && !account.length">
+        <md-card>
+            <md-card-content>
+                <div style="margin-top: 30px; margin-bottom: 30px;" translate>目前该用户没有分配账号，请联系管理员处理</div>
+                <div ng-show="config.alipay || config.paypal" ng-click="createOrder()" style="margin-bottom: 30px;">{{ '或' | translate }}
+                    <span><md-button class="md-primary">{{ '点击这里' | translate }}</md-button></span>
+                {{ '付款立即开通帐号' | translate }}</div>
+            </md-card-content>
+        </md-card>
+    </div>
+    <div flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
+        <md-card  flex class="flow_container">
+            <md-card-title>
+                <md-card-title-text><span class="sm-headline">{{ '零卡加速' | translate }}</span></md-card-title-text>
+            </md-card-title>
+            <md-card-content >
+                <div style="margin:0 auto 50px;" layout="row" layout-md="row" layout-xs="column" layout-sm="row">
+                    <div flex layout-align="center center" layout="row">
+                    <div class="flow_circle">
+                        <div class="flow_circle_inner">
+                            <div class="flow_circle_text">
+                            <div class="flow_circle_flow">{{ flow.serverPortFlow | flow}}</div>
+                            <div>本月已用流量</div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div flex layout-align="center center" layout="column">
+                        <div class="flow_text">
+                            <span class="flow_text_plan" ng-bind="plan[flow.type].comment">SVIP</span>套餐
+                        </div>
+                        <div class="flow_text">
+                            每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span><br/>
+                            <span style="font-size:0.8rem">(系统升级，如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
+                        </div>
+                        <div class="flow_button" layout="row" flex>
+                            <md-button class="md-primary" ng-show="config.alipay || config.paypal || config.giftcard" ng-click="createOrder(flow.serverId)">{{ '新购或续费' | translate }}</md-button>
+                            <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看详情' | translate }}</md-button>
+                        </div>
+                    </div>
+                </div>
+            </md-card-content>
+        </md-card>
+    </div>
+
+    <div flex="50" flex-xs="100">
         <md-card flex="100">
             <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '公告' | translate }}</span></md-card-title-text>
+                <md-card-title-text><span class="sm-headline">{{ '教程' | translate }}</span></md-card-title-text>
+            </md-card-title>
+            <md-card-content>
+                <div class="ng-isolate-scope"><p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-windows.jpg"> <a href="https://mp.weixin.qq.com/mp/video?t=pages/video_detail_new&amp;scene=1&amp;vid=o1326fm0nmo&amp;__biz=MzI4NDUxNDUzNg==&amp;mid=100000261&amp;idx=1&amp;sn=75146c9ff800cae3bf0838ddf5ee644e&amp;vidsn=620816b2faf7bd870d3cdb12a1931cce#wechat_redirect" target="_blank">Windows教程</a> |
+<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksR-dotnet4.0.exe" target="_blank">下载</a></p>
+<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-ios.jpg"> <a href="https://mp.weixin.qq.com/s?__biz=MzI4NDUxNDUzNg==&amp;mid=100000334&amp;idx=1&amp;sn=2cb3bad8fd79e98a4d20f85c20fa4944&amp;chksm=6bfb03c95c8c8adf795818d5cbdf1bf4b1564b9faadd3109e51498523e0cfabe804fbf58cb30&amp;mpshare=1&amp;scene=1&amp;srcid=0724QAzQUzDsHJqcSYv4Ru4H#rd" target="_blank">Iphone/Ipad教程</a> | 
+<a href="https://itunes.apple.com/cn/app/ssrconnectpro/id1272045249?mt=8" target="_blank">下载</a></p>
+<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-android.jpg"> <a href="https://mp.weixin.qq.com/s?__biz=MzI4NDUxNDUzNg==&amp;mid=100000179&amp;idx=1&amp;sn=ac403b1f19f10c8fea370af05d36b7e4&amp;chksm=6bfb00345c8c892252d52a936d5ec577b5396e5c978d7860382c2029f29ebfd16f6f1dc7ab0d&amp;mpshare=1&amp;scene=1&amp;srcid=0724BfKSRhGWVm0KBn3PX90C#rd" target="_blank">Android教程</a> |
+<a href="http://www.lynca.tech/android.apk" target="_blank">下载</a></p>
+<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-mac.jpg"> <a href="https://mp.weixin.qq.com/s?__biz=MzI4NDUxNDUzNg==&amp;mid=100000241&amp;idx=1&amp;sn=04c94403e0e67d0b0ba8c7859bf211c9&amp;chksm=6bfb00765c8c89603405f1a046e08f54fc2658a706e67e1617dba1e5422297ffda4bb2ed97da&amp;mpshare=1&amp;scene=1&amp;srcid=0724vqqUK1JEA7MCKWcWeEeM#rd" target="_blank">Mac安装教程</a> |
+<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksX-2.6.3.dmg" target="_blank">下载</a></p>
+</div>
+            </md-card-content>
+        </md-card>
+    </div>
+    
+    <div flex="50" flex-xs="100"  ng-repeat="a in account track by a.id">
+        <md-card flex>
+            <md-card-title>
+                <md-card-title-text>
+                    <span class="sm-headline">个人靓号[{{a.port}}]</span>
+                </md-card-title-text>
+            </md-card-title>
+            <md-card-content style="overflow: auto;height: 296px;">
+                <div ng-show="account.length === 0">{{ '暂无节点' | translate }}</div>
+                <md-list ng-show="account.length > 0" md-selected="0">
+                    <md-divider></md-divider>
+                    <md-list-item ng-repeat-start="server in a.serverList track by server.id" 
+                    md-on-select="getServerPortData(a, server.id)"
+                    ng-click="showQrcodeDialog(a.serverInfo.method, a.password, a.serverInfo.host, a.port + a.serverInfo.shift, a.serverInfo.name)" size="getQrCodeSize()"
+                         text="createQrCode(a.serverInfo.method, a.password, a.serverInfo.host, a.port + a.serverInfo.shift, a.serverInfo.name)">
+                        <div flex layout="row" layout-md="column" layout-xs="column" layout-sm="column" layout-align="space-between left">
+                            <div class="font12">服务器：{{server.host}}</div>
+                            <div class="font12">备注：{{server.comment}}</div>
+                            <div class="font12">网络状态：<span>畅通</span></div>
+                        </div>
+                    </md-list-item>
+                    <md-divider ng-repeat-end></md-divider>
+                </md-list>
+            </md-card-content>
+        </md-card>
+    </div>
+
+    <div flex="100" flex-xs="100">
+        <md-card flex="100">
+            <md-card-title>
+                <md-card-title-text><span class="sm-headline">{{ '公告' | translate }}</span></md-card-title-text>
             </md-card-title>
             <md-card-content>
                 <div ng-show="notices.length === 0">{{ '暂无公告' | translate }}</div>
@@ -15,38 +162,6 @@
                     </md-list-item>
                     <md-divider ng-repeat-end></md-divider>
                 </md-list>
-            </md-card-content>
-        </md-card>
-    </div>
-    <div flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
-        <md-card ng-click="toMyAccount()" flex>
-            <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '账号' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
-            </md-card-content>
-        </md-card>
-        <md-card ng-click="toTelegram()" flex ng-if="config.telegram">
-            <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '绑定Telegram' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
-            </md-card-content>
-        </md-card>
-        <md-card ng-click="toRef()" flex ng-if="config.refCode">
-            <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '邀请码' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
             </md-card-content>
         </md-card>
     </div>
