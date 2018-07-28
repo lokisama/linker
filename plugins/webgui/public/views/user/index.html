@@ -130,12 +130,12 @@
             </md-card-title>
             <md-card-content style="overflow: auto;height: 296px;">
                 <div ng-show="account.length === 0">{{ '暂无节点' | translate }}</div>
-                <md-list ng-show="account.length > 0" md-selected="0">
+                <md-list ng-show="account.length > 0">
                     <md-divider></md-divider>
                     <md-list-item ng-repeat-start="server in a.serverList track by server.id" 
-                    md-on-select="getServerPortData(a, server.id)"
-                    ng-click="showQrcodeDialog(a.serverInfo.method, a.password, a.serverInfo.host, a.port + a.serverInfo.shift, a.serverInfo.name)" size="getQrCodeSize()"
-                         text="createQrCode(a.serverInfo.method, a.password, a.serverInfo.host, a.port + a.serverInfo.shift, a.serverInfo.name)">
+                    
+                    ng-click="showQrcodeDialog(a.serverInfo.method, a.password, server.host, a.port + a.serverInfo.shift, server.name)" size="getQrCodeSize()"
+                         text="createQrCode(a.serverInfo.method, a.password, server.host, a.port + a.serverInfo.shift, server.name)">
                         <div flex layout="row" layout-md="column" layout-xs="column" layout-sm="column" layout-align="space-between left">
                             <div class="font12">服务器：{{server.host}}</div>
                             <div class="font12">备注：{{server.comment}}</div>
