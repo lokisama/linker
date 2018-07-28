@@ -87,7 +87,9 @@
                             <span class="flow_text_plan" ng-bind="plan[flow.type].comment">SVIP</span>套餐
                         </div>
                         <div class="flow_text">
-                            每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span><br/>
+                            每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span>
+                            <span ng-show="isAccountOutOfDate(account[0])" style="color: #a33;">&nbsp;{{ '已过期' | translate }}</span>
+                            <br/>
                             <span style="font-size:0.8rem">(如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
                         </div>
                         <div class="flow_button" layout="row" flex>
