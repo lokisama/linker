@@ -7,6 +7,7 @@ const add = async accountId => {
   const addAccountFlow = async (server, accountId) => {
     const accountFlowInfo = await knex('account_flow').where({ serverId: server.id, accountId }).then(s => s[0]);
     if(accountFlowInfo) { return; }
+    console.log("insert server:"+server.id+", accountId:"+accountId);
     await knex('account_flow').insert({
       serverId: server.id,
       accountId,
@@ -51,6 +52,7 @@ const edit = async accountId => {
   const servers = await knex('server').select();
   const accountInfo = await knex('account_plugin').where({ id: accountId }).then(s => s[0]);
   await Promise.all(servers.map(server => {
+    console.log("update server:"+server.id+", accountId:"+accountId);
     return knex('account_flow').update({
       port: accountInfo.port + server.shift,
       nextCheckTime: 0,
@@ -66,6 +68,7 @@ const server = async serverId => {
   const server = await knex('server').where({ id: serverId }).then(s => s[0]);
   const accounts = await knex('account_plugin').where({});
   for(account of accounts) {
+    console.log("insert/update server:"+server.id+", accountId:"+accountId);
     const exists = await knex('account_flow').where({
       serverId,
       accountId: account.id

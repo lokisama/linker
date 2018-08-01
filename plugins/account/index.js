@@ -605,7 +605,7 @@ const banAccount = async options => {
   const time = options.time;
   await knex('account_flow').update({
     status: 'ban',
-    nextCheckTime: Date.now(),
+    nextCheckTime: 0,
     autobanTime: Date.now() + time,
   }).where({
     serverId, accountId,
