@@ -5,7 +5,7 @@ const cron = appRequire('init/cron');
 const flow = appRequire('plugins/flowSaver/flow');
 const manager = appRequire('services/manager');
 const config = appRequire('services/config').all();
-const sleepTime = 120;
+const sleepTime = 1500;
 const accountFlow = appRequire('plugins/account/accountFlow');
 
 const sleep = time => {
@@ -246,18 +246,23 @@ const checkAccount = async (serverId, accountId) => {
     console.log(err);
   }
 };
+console.log('async');
 
 (async () => {
   while(true) {
     try {
+      console.log('while 1 start');
       const start = Date.now();
       await sleep(sleepTime);
       const servers = await knex('server').where({});
+
+      console.log('servers:'+servers.length);
       for(let server of servers) {
         await sleep(sleepTime);
         await deleteExtraPorts(server);
       }
       await sleep(sleepTime);
+
       const accounts = await knex('account_plugin').select([
         'account_plugin.id as id'
       ]).crossJoin('server')
@@ -270,6 +275,8 @@ const checkAccount = async (serverId, accountId) => {
         await sleep(sleepTime);
         await accountFlow.add(account.id);
       }
+
+      console.log('accounts:'+accounts.length);
       const end = Date.now();
       if(end - start <= 60 * 1000) {
         await sleep(60 * 1000 - (end - start));
@@ -277,21 +284,32 @@ const checkAccount = async (serverId, accountId) => {
     } catch(err) {
       console.log(err);
     }
+
+    console.log('while 1 end');
   }
 })();
 
 (async () => {
   while(true) {
+    console.log('while 2 start');
     const start = Date.now();
     let number = 0;
     try {
+
       const datas = await knex('account_flow').select()
       .orderBy('nextCheckTime', 'asc').limit(30);
       number += datas.length;
-      for(const data of datas) {
-        await checkAccount(data.serverId, data.accountId).catch();
-        await sleep(sleepTime);
-      }
+      console.log('while 2 number:'+number);
+      datas.forEach( (data)=> {
+
+        console.log('serverId :'+ data.serverId +",accountId : "+ data.accountId);
+         checkAccount(data.serverId, data.accountId).catch();
+         sleep(sleepTime);
+
+        console.log('checkAccount end');
+      });
+
+      console.log('nextCheckTime asc 30:'+datas.length);
     } catch(err) {
       console.log(err);
     }
@@ -300,10 +318,11 @@ const checkAccount = async (serverId, accountId) => {
       const datas = await knex('account_flow').select()
       .orderBy('updateTime', 'desc').limit(15);
       number += datas.length;
-      for(const data of datas) {
-        await checkAccount(data.serverId, data.accountId).catch();
-        await sleep(sleepTime);
-      }
+      datas.forEach( (data)=> {
+         checkAccount(data.serverId, data.accountId).catch();
+         sleep(sleepTime);
+      });
+      console.log('updateTime desc 15:'+datas.length);
     } catch(err) {
       console.log(err);
     }
@@ -318,10 +337,11 @@ const checkAccount = async (serverId, accountId) => {
         .orderByRaw('random()').limit(5);
       }
       number += datas.length;
-      for(const data of datas) {
-        await checkAccount(data.serverId, data.accountId).catch();
-        await sleep(sleepTime);
-      }
+      datas.forEach( (data)=> {
+         checkAccount(data.serverId, data.accountId).catch();
+         sleep(sleepTime);
+      });
+      console.log('random() 5:'+datas.length);
     } catch(err) {
       console.log(err);
     }
@@ -329,5 +349,7 @@ const checkAccount = async (serverId, accountId) => {
     if(number) {
       logger.info(`check ${ number } accounts, ${ Date.now() - start } ms`);
     }
+
+    console.log('while 2 end. number : '+number);
   }
 })();
