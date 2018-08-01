@@ -1,14 +1,28 @@
+const log4js = require('log4js');
+const logger = log4js.getLogger('account');
 const knex = appRequire('init/knex').knex;
 const cron = appRequire('init/cron');
 const flow = appRequire('plugins/flowSaver/flow');
 const manager = appRequire('services/manager');
 const config = appRequire('services/config').all();
-const sleepTime = config.plugins.account_checker.time || 100;
+const sleepTime = 120;
+const accountFlow = appRequire('plugins/account/accountFlow');
 
 const sleep = time => {
   return new Promise((resolve, reject) => {
     setTimeout(() => resolve(), time);
   });
+};
+
+const randomInt = max => {
+  return Math.ceil(Math.random() * max % max);
+};
+
+const modifyAccountFlow = async (serverId, accountId, time) => {
+  await knex('account_flow').update({
+    checkTime: Date.now(),
+    nextCheckTime: Date.now() + time,
+  }).where({ serverId, accountId });
 };
 
 const isPortExists = async (server, account) => {
@@ -39,19 +53,35 @@ const isExpired = (server, account) => {
     if(account.type === 4) { timePeriod = 1 * 86400 * 1000; }
     if(account.type === 5) { timePeriod = 3600 * 1000; }
     const data = JSON.parse(account.data);
-    let startTime = data.create;
-    while(startTime + timePeriod <= Date.now()) {
-      startTime += timePeriod;
-    }
-    if(data.create + data.limit * timePeriod <= Date.now() || data.create >= Date.now()) {
-      if(account.autoRemove) {
+    const expireTime = data.create + data.limit * timePeriod;
+    if(expireTime <= Date.now() || data.create >= Date.now()) {
+      const nextCheckTime = 10 * 60 * 1000 + randomInt(30000);
+      if(account.autoRemove && expireTime + account.autoRemoveDelay < Date.now()) {
+        modifyAccountFlow(server.id, account.id, nextCheckTime > account.autoRemoveDelay ? account.autoRemoveDelay : nextCheckTime);
         knex('account_plugin').delete().where({ id: account.id }).then();
+      } else {
+        modifyAccountFlow(server.id, account.id, nextCheckTime);
       }
       return true;
     }
   } else {
     return false;
   }
+};
+
+const isBaned = async (server, account) => {
+  const accountFlowInfo = await knex('account_flow').where({
+    serverId: server.id,
+    accountId: account.id,
+    status: 'ban',
+  }).then(s => s[0]);
+  if(!accountFlowInfo) { return false; }
+  if(!accountFlowInfo.autobanTime || Date.now() > accountFlowInfo.autobanTime) {
+    await knex('account_flow').update({ status: 'checked' }).where({ id: accountFlowInfo.id });
+    return false;
+  }
+  await knex('account_flow').update({ nextCheckTime: accountFlowInfo.autobanTime }).where({ id: accountFlowInfo.id });
+  return true;
 };
 
 const isOverFlow = async (server, account) => {
@@ -88,13 +118,6 @@ const isOverFlow = async (server, account) => {
       servers = await knex('server').where({ id: server.id });
     }
 
-    // const flows0 = await Promise.all(servers.map(currentServer => {
-    //   return flow.getFlowFromSplitTime(currentServer.id, account.id, startTime, endTime).then(flow => {
-    //     if(currentServer.id === server.id) { realFlow = flow; }
-    //     return Math.ceil(flow * currentServer.scale);
-    //   });
-    // }));
-
     const flows = await flow.getFlowFromSplitTimeWithScale(servers.map(m => m.id), account.id, startTime, endTime);
 
     const serverObj = {};
@@ -115,20 +138,21 @@ const isOverFlow = async (server, account) => {
     let sumFlow = 0;
     for(const s in serverObj) {
       const flow = serverObj[s].flow || 0;
+      if(+s === server.id) { realFlow = flow; }
       sumFlow += Math.ceil(flow * serverObj[s].scale);
     }
-    // console.log(sumFlow, flows0.reduce((a, b) => a + b));
-    // const sumFlow = flows.reduce((a, b) => a + b);
     const nextCheckTime = (data.flow - sumFlow) / 200000000 * 60 * 1000;
     await writeFlow(server.id, account.id, realFlow, nextCheckTime <= 0 ? 600 * 1000 : nextCheckTime);
 
     return sumFlow >= data.flow;
   } else {
+    await writeFlow(server.id, account.id, 0, 30 * 60 * 1000 + Number(Math.random().toString().substr(2, 7)));
     return false;
   }
 };
 
 const deletePort = (server, account) => {
+  // console.log(`del ${ server.name } ${ account.port }`);
   const portNumber = server.shift + account.port;
   manager.send({
     command: 'del',
@@ -137,10 +161,11 @@ const deletePort = (server, account) => {
     host: server.host,
     port: server.port,
     password: server.password,
-  });
+  }).catch();
 };
 
 const addPort = (server, account) => {
+  // console.log(`add ${ server.name } ${ account.port }`);
   const portNumber = server.shift + account.port;
   manager.send({
     command: 'add',
@@ -150,25 +175,25 @@ const addPort = (server, account) => {
     host: server.host,
     port: server.port,
     password: server.password,
-  });
+  }).catch();
 };
 
-const deleteExtraPorts = async serverId => {
+const deleteExtraPorts = async serverInfo => {
   try {
-    const serverInfo = await knex('server').where({ id: serverId }).then(s => s[0]);
-    if(!serverInfo) { return Promise.reject(`Server[${ serverId }] not exists`); }
     const currentPorts = await manager.send({ command: 'list' }, {
       host: serverInfo.host,
       port: serverInfo.port,
       password: serverInfo.password,
     });
+    const accounts = await knex('account_plugin').where({});
+    const accountObj = {};
+    accounts.forEach(account => {
+      accountObj[account.port] = account;
+    });
     for(let p of currentPorts) {
-      const accountInfo = await knex('account_plugin').where({ port: p.port - serverInfo.shift }).then(s => s[0]);
-      if(!accountInfo) {
-        deletePort(serverInfo, accountInfo);
-      } else if(accountInfo.server && JSON.parse(accountInfo.server).indexOf(serverInfo.id) < 0) {
-        deletePort(serverInfo, accountInfo);
-      }
+      if(accountObj[p.port - serverInfo.shift]) { continue; }
+      await sleep(sleepTime);
+      deletePort(serverInfo, { port: p.port - serverInfo.shift });
     }
   } catch(err) {
     console.log(err);
@@ -178,21 +203,34 @@ const deleteExtraPorts = async serverId => {
 const checkAccount = async (serverId, accountId) => {
   try {
     const serverInfo = await knex('server').where({ id: serverId }).then(s => s[0]);
-    if(!serverInfo) { return Promise.reject(`Server[${ serverId }] not exists`); }
+    if(!serverInfo) {
+      await knex('account_flow').delete().where({ serverId });
+      return;
+    }
     const accountInfo = await knex('account_plugin').where({ id: accountId }).then(s => s[0]);
-    if(!accountInfo) { return Promise.reject(`Account[${ accountId }] not exists`); }
+    if(!accountInfo) {
+      await knex('account_flow').delete().where({ serverId, accountId });
+      return;
+    }
 
     // 检查当前端口是否存在
     const exists = await isPortExists(serverInfo, accountInfo);
 
     // 检查账号是否包含该服务器
     if(!hasServer(serverInfo, accountInfo)) {
+      await modifyAccountFlow(serverInfo.id, accountInfo.id, 20 * 60 * 1000 + randomInt(30000));
       exists && deletePort(serverInfo, accountInfo);
       return;
     }
 
     // 检查账号是否过期
     if(isExpired(serverInfo, accountInfo)) {
+      exists && deletePort(serverInfo, accountInfo);
+      return;
+    }
+
+    // 检查账号是否被ban
+    if(await isBaned(serverInfo, accountInfo)) {
       exists && deletePort(serverInfo, accountInfo);
       return;
     }
@@ -209,59 +247,87 @@ const checkAccount = async (serverId, accountId) => {
   }
 };
 
+(async () => {
+  while(true) {
+    try {
+      const start = Date.now();
+      await sleep(sleepTime);
+      const servers = await knex('server').where({});
+      for(let server of servers) {
+        await sleep(sleepTime);
+        await deleteExtraPorts(server);
+      }
+      await sleep(sleepTime);
+      const accounts = await knex('account_plugin').select([
+        'account_plugin.id as id'
+      ]).crossJoin('server')
+      .leftJoin('account_flow', function () {
+        this
+        .on('account_flow.serverId', 'server.id')
+        .on('account_flow.accountId', 'account_plugin.id');
+      }).whereNull('account_flow.id');
+      for(let account of accounts) {
+        await sleep(sleepTime);
+        await accountFlow.add(account.id);
+      }
+      const end = Date.now();
+      if(end - start <= 60 * 1000) {
+        await sleep(60 * 1000 - (end - start));
+      }
+    } catch(err) {
+      console.log(err);
+    }
+  }
+})();
 
 (async () => {
   while(true) {
-    // await sleep(sleepTime);
-
-    // const servers = await knex('server').where({});
-    // const accounts = await knex('account_plugin').where({});
-    // for(let server of servers) {
-    //   // await deleteExtraPorts(server.id);
-    //   for(let account of accounts) {
-    //     const start = Date.now();
-    //     const accountFlowData = await knex('account_flow').where({ serverId: server.id, accountId: account.id }).then(s => s[0]);
-    //     if(accountFlowData && Date.now() - accountFlowData.nextCheckTime > 0) {
-    //       console.log('continue');
-    //       continue;
-    //     }
-    //     await checkAccount(server.id, account.id);
-    //     const end = Date.now();
-    //     console.log(`server: ${server.name}, account: ${ account.port }, time: ${ end - start } ms`);
-    //     await sleep(sleepTime);
-    //   }
-    // }
-
-    const servers = await knex('server').where({}).then(s => s.map(m => m.id));
-    const accounts = await knex('account_plugin').where({}).then(s => s.map(m => m.id));
-
-    const datas = await knex('account_flow')
-    .select([
-      'account_flow.id as id',
-      'account_flow.serverId as serverId',
-      'account_flow.accountId as accountId',
-      'account_flow.nextCheckTime as nextCheckTime',
-    ])
-    .leftJoin('account_plugin', 'account_plugin.id', 'account_flow.accountId')
-    .whereIn('account_flow.serverId', servers)
-    .whereIn('account_flow.accountId', accounts)
-    .where('account_plugin.type', '>', 1)
-    .orderBy('account_flow.nextCheckTime', 'asc').limit(20);
-
-    // console.log(datas.length);
-    for(const data of datas) {
-      const start = Date.now();
-      const accountFlowData = await knex('account_flow').where({ id: data.id }).then(s => s[0]);
-      // console.log(accountFlowData);
-      if(accountFlowData && Date.now() - accountFlowData.nextCheckTime > 0) {
-        // console.log('continue');
-        continue;
+    const start = Date.now();
+    let number = 0;
+    try {
+      const datas = await knex('account_flow').select()
+      .orderBy('nextCheckTime', 'asc').limit(30);
+      number += datas.length;
+      for(const data of datas) {
+        await checkAccount(data.serverId, data.accountId).catch();
+        await sleep(sleepTime);
       }
-      await checkAccount(accountFlowData.serverId, accountFlowData.accountId);
-      const end = Date.now();
-      console.log(`next: ${ accountFlowData.nextCheckTime - Date.now() }, server: ${accountFlowData.serverId}, account: ${ accountFlowData.accountId }, time: ${ end - start } ms`);
-      await sleep(sleepTime);
+    } catch(err) {
+      console.log(err);
+    }
+
+    try {
+      const datas = await knex('account_flow').select()
+      .orderBy('updateTime', 'desc').limit(15);
+      number += datas.length;
+      for(const data of datas) {
+        await checkAccount(data.serverId, data.accountId).catch();
+        await sleep(sleepTime);
+      }
+    } catch(err) {
+      console.log(err);
+    }
+
+    try {
+      let datas;
+      try {
+        datas = await knex('account_flow').select()
+        .orderByRaw('rand()').limit(5);
+      } catch(err) {
+        datas = await knex('account_flow').select()
+        .orderByRaw('random()').limit(5);
+      }
+      number += datas.length;
+      for(const data of datas) {
+        await checkAccount(data.serverId, data.accountId).catch();
+        await sleep(sleepTime);
+      }
+    } catch(err) {
+      console.log(err);
     }
     await sleep(sleepTime);
+    if(number) {
+      logger.info(`check ${ number } accounts, ${ Date.now() - start } ms`);
+    }
   }
 })();

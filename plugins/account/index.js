@@ -1,18 +1,17 @@
 const knex = appRequire('init/knex').knex;
 const serverManager = appRequire('plugins/flowSaver/server');
 const manager = appRequire('services/manager');
-const checkAccount = appRequire('plugins/account/checkAccount');
 const config = appRequire('services/config').all();
 const macAccount = appRequire('plugins/macAccount/index');
 const orderPlugin = appRequire('plugins/webgui_order');
+const accountFlow = appRequire('plugins/account/accountFlow');
 
 const addAccount = async (type, options) => {
-  await checkAccount.deleteCheckAccountTimePort(options.port);
   if(type === 6 || type === 7) {
     type = 3;
   }
   if(type === 1) {
-    await knex('account_plugin').insert({
+    const [ accountId ] = await knex('account_plugin').insert({
       type,
       orderId: 0,
       userId: options.user,
@@ -22,10 +21,10 @@ const addAccount = async (type, options) => {
       server: options.server ? options.server : null,
       autoRemove: 0,
     });
-    await checkAccount.checkServer();
+    await accountFlow.add(accountId);
     return;
   } else if (type >= 2 && type <= 5) {
-    await knex('account_plugin').insert({
+    const [ accountId ] = await knex('account_plugin').insert({
       type,
       orderId: options.orderId || 0,
       userId: options.user,
@@ -39,16 +38,17 @@ const addAccount = async (type, options) => {
       status: 0,
       server: options.server ? options.server : null,
       autoRemove: options.autoRemove || 0,
+      autoRemoveDelay: options.autoRemoveDelay || 0,
       multiServerFlow: options.multiServerFlow || 0,
     });
-    await checkAccount.checkServer();
+    await accountFlow.add(accountId);
     return;
   }
 };
 
 const changePort = async (id, port) => {
   const result = await knex('account_plugin').update({ port }).where({ id });
-  await checkAccount.checkServer();
+  await accountFlow.edit(id);
 };
 
 const getAccount = async (options = {}) => {
@@ -76,6 +76,7 @@ const getAccount = async (options = {}) => {
     'account_plugin.data',
     'account_plugin.status',
     'account_plugin.autoRemove',
+    'account_plugin.autoRemoveDelay',
     'account_plugin.multiServerFlow',
     'user.id as userId',
     'user.email as user',
@@ -86,19 +87,28 @@ const getAccount = async (options = {}) => {
 };
 
 const delAccount = async id => {
-  const result = await knex('account_plugin').delete().where({ id });
-  if(!result) {
+  const accountInfo = await knex('account_plugin').where({ id }).then(s => s[0]);
+  if(!accountInfo) {
     return Promise.reject('Account id[' + id + '] not found');
   }
-  await checkAccount.checkServer();
+  const result = await knex('account_plugin').delete().where({ id });
+  const servers = await knex('server').where({});
+  servers.forEach(server => {
+    manager.send({
+      command: 'del',
+      port: accountInfo.port + server.shift,
+    }, {
+      host: server.host,
+      port: server.port,
+      password: server.password,
+    });
+  });
+  await accountFlow.del(id);
   return result;
 };
 
 const editAccount = async (id, options) => {
-  if(options.port) {
-    await checkAccount.deleteCheckAccountTimePort(options.port);
-  }
-  const account = await knex('account_plugin').select().where({ id }).then(success => {
+  const account = await knex('account_plugin').where({ id }).then(success => {
     if(success.length) {
       return success[0];
     }
@@ -109,6 +119,7 @@ const editAccount = async (id, options) => {
   update.orderId = options.orderId;
   update.userId = options.userId;
   update.autoRemove = options.autoRemove;
+  update.autoRemoveDelay = options.autoRemoveDelay;
   update.multiServerFlow = options.multiServerFlow;
   if(options.hasOwnProperty('server')) {
     update.server = options.server ? JSON.stringify(options.server) : null;
@@ -126,9 +137,22 @@ const editAccount = async (id, options) => {
   }
   if(options.port) {
     update.port = +options.port;
+    if(+options.port !== account.port) {
+      const servers = await knex('server').where({});
+      servers.forEach(server => {
+        manager.send({
+          command: 'del',
+          port: account.port + server.shift,
+        }, {
+          host: server.host,
+          port: server.port,
+          password: server.password,
+        });
+      });
+    }
   }
   await knex('account_plugin').update(update).where({ id });
-  await checkAccount.checkServer();
+  await await accountFlow.edit(id);
   return;
 };
 
@@ -151,9 +175,7 @@ const editAccountTime = async (id, timeString, check) => {
   await knex('account_plugin').update({
     data: JSON.stringify(accountInfo.data)
   }).where({ id });
-  if(check) {
-    await checkAccount.deleteCheckAccountTimePort(accountInfo.port);
-  }
+  await accountFlow.edit(id);
 };
 
 const editAccountTimeForRef = async (id, timeString, check) => {
@@ -180,9 +202,7 @@ const editAccountTimeForRef = async (id, timeString, check) => {
   await knex('account_plugin').update({
     data: JSON.stringify(accountInfo.data)
   }).where({ id });
-  if(check) {
-    await checkAccount.deleteCheckAccountTimePort(accountInfo.port);
-  }
+  await accountFlow.edit(id);
 };
 
 const changePassword = async (id, password) => {
@@ -195,7 +215,7 @@ const changePassword = async (id, password) => {
   await knex('account_plugin').update({
     password,
   }).where({ id });
-  await checkAccount.changePassword(id, password);
+  await accountFlow.pwd(id, password);
   return;
 };
 
@@ -378,6 +398,7 @@ const setAccountLimit = async (userId, accountId, orderId) => {
       flow: orderInfo.flow,
       server: orderInfo.server,
       autoRemove: orderInfo.autoRemove ? 1 : 0,
+      autoRemoveDelay: orderInfo.autoRemoveDelay,
       multiServerFlow: orderInfo.multiServerFlow ? 1 : 0,
     });
     return;
@@ -416,7 +437,7 @@ const setAccountLimit = async (userId, accountId, orderId) => {
     autoRemove: orderInfo.autoRemove ? 1 : 0,
     multiServerFlow: orderInfo.multiServerFlow ? 1 : 0,
   }).where({ id: accountId });
-  await checkAccount.deleteCheckAccountTimePort(port);
+  await accountFlow.edit(accountId);
   return;
 };
 
@@ -584,7 +605,8 @@ const banAccount = async options => {
   const time = options.time;
   await knex('account_flow').update({
     status: 'ban',
-    nextCheckTime: Date.now() + time,
+    nextCheckTime: Date.now(),
+    autobanTime: Date.now() + time,
   }).where({
     serverId, accountId,
   });
@@ -594,7 +616,7 @@ const getBanAccount = async options => {
   const serverId = options.serverId;
   const accountId = options.accountId;
   const accountInfo = await knex('account_flow').select([
-    'nextCheckTime as banTime'
+    'autobanTime as banTime'
   ]).where({
     serverId, accountId, status: 'ban'
   });
