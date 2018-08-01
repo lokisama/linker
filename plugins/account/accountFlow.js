@@ -11,7 +11,7 @@ const add = async accountId => {
       serverId: server.id,
       accountId,
       port: accountInfo.port + server.shift,
-      nextCheckTime: Date.now(),
+      nextCheckTime: 0,
     });
   };
   await Promise.all(servers.map(server => {
@@ -53,7 +53,7 @@ const edit = async accountId => {
   await Promise.all(servers.map(server => {
     return knex('account_flow').update({
       port: accountInfo.port + server.shift,
-      nextCheckTime: Date.now(),
+      nextCheckTime: 0,
     }).where({
       serverId: server.id,
       accountId,
@@ -75,12 +75,12 @@ const server = async serverId => {
         serverId: server.id,
         accountId: account.id,
         port: account.port + server.shift,
-        nextCheckTime: Date.now(),
+        nextCheckTime: 0,
       });
     } else {
       await knex('account_flow').update({
         port: account.port + server.shift,
-        nextCheckTime: Date.now(),
+        nextCheckTime: 0,
       }).where({
         serverId: server.id,
         accountId: account.id,
