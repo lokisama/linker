@@ -61,7 +61,7 @@
                 </md-input-container>
                 <md-input-container class="md-block">
                     <label translate>密码</label>
-                    <input type="text" required name="password" ng-model="account.password">
+                    <input type="text" required disabled name="password" ng-model="account.password">
                     <div ng-messages="accountForm.password.$error">
                         <div ng-message="required">密码不能为空</div>
                     </div>
@@ -72,6 +72,10 @@
                     <div ng-messages="accountForm.flow.$error">
                         <div ng-message="required">流量不能为空</div>
                     </div>
+                </md-input-container>
+                <md-input-container class="md-block" ng-if="account.autoRemove">
+                    <label translate>自动删除延迟</label>
+                    <input type="text" required name="autoRemoveDelay" ng-model="account.autoRemoveDelayStr">
                 </md-input-container>
             </form>
             <div style="width: 100%;" layout="row" layout-align="space-between center">

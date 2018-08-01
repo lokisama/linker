@@ -1,4 +1,5 @@
 const knex = appRequire('init/knex').knex;
+const config = appRequire('services/config').all();
 
 const getOrders = async () => {
   return knex('webgui_order').where({});
@@ -31,6 +32,7 @@ const newOrder = async data => {
     refTime: data.refTime,
     server: data.server ? JSON.stringify(data.server) : null,
     autoRemove: data.autoRemove,
+    autoRemoveDelay: data.autoRemoveDelay,
     multiServerFlow: data.multiServerFlow,
     changeOrderType: data.changeOrderType,
   });
@@ -49,6 +51,7 @@ const editOrder = async data => {
     refTime: data.refTime,
     server: data.server ? JSON.stringify(data.server) : null,
     autoRemove: data.autoRemove,
+    autoRemoveDelay: data.autoRemoveDelay,
     multiServerFlow: data.multiServerFlow,
     changeOrderType: data.changeOrderType,
   }).where({
@@ -60,7 +63,8 @@ const editOrder = async data => {
 const deleteOrder = async orderId => {
   const hasAccount = await knex('account_plugin').where({ orderId });
   if(hasAccount.length) { return Promise.reject('account with this order exists'); }
-  const hasGiftcard = await knex('giftcard').where({ orderType: orderId, status: 'AVAILABLE' });
+  const isGiftCardOn = config.plugins.giftcard && config.plugins.giftcard.use;
+  const hasGiftcard = isGiftCardOn ? await knex('giftcard').where({ orderType: orderId, status: 'AVAILABLE' }) : [];
   if(hasGiftcard.length) { return Promise.reject('giftcard with this order exists'); }
   await knex('webgui_order').delete().where({ id: orderId });
   return;
