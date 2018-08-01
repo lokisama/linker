@@ -2,7 +2,8 @@ if(process.env.NODE_ENV !== 'production' && +process.versions.node[0] < 8) {
   console.log('use babel-core/register');
   require('babel-core/register');
 }
-
+ const start = Date.now();
+            
 require('./init/log');
 
 const log4js = require('log4js');
@@ -35,3 +36,7 @@ initDb().then(() => {
 }).catch(err => {
   logger.error(err);
 });
+
+
+const end = Date.now();
+console.log(`start in : ${end - start} ms`);

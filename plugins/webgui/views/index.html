@@ -17,6 +17,7 @@
     <link rel="shortcut icon" href="/favicon.png">
     <link rel="manifest" href="/manifest.json">
     <title><%= title%></title>
+	<script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="1ab0b393-8c49-409e-baf7-244aebb996f5";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
     <base href="/">
 </head>
 
@@ -49,6 +50,47 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
+	<div id="svBody">
+		<a id="svButtonOpen" href="http://svip.linkersocks.com:321/" target="_blank">节点状态</a>
+	</div>
+	<div id="adBody">
+		<div id="adButtonOpen" onClick="openAd();">猜你喜欢</div>
+		<div id="adButtonClose">
+			<span class="goback" style="" onclick="window.history.go(-1)">后退</span>
+			<span  onClick="closeAd();" >我不想看</span>
+		</div>
+		<iframe id="adFrame" style="display:none;"  src="https://xiaojiding.com/show/?app_id=demo_news" frameborder="0" width="300" height="500"></iframe>
+	<div>
+	<script>
+	function openAd(){
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news_video';
+		document.getElementById("adFrame").style.display = "block";
+		document.getElementById("adButtonOpen").style.display = "none";
+		document.getElementById("adButtonClose").style.display = "block";
+		document.getElementById("adBody").className = "active";
+	}
+	
+	function closeAd(){
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news';
+		document.getElementById("adFrame").style.display = "none";
+		document.getElementById("adButtonOpen").style.display = "block";
+		document.getElementById("adButtonClose").style.display = "none";
+		document.getElementById("adBody").className = "";
+	}
+	
+	</script>
+	<style>
+		#adBody,#svBody{z-index:100000;position:absolute;min-height:100px;bottom:60px;left:0px;overflow:hidden;}
+		#svBody{top:30%;}#svBody a{text-decoration:none;display:block;}
+		#adButtonOpen,#svButtonOpen{background:rgb(63,81,181);color:#fff;text-align:center;width:20px;padding:10px;line-height:20px;font-size:12px;cursor:pointer;border-top-right-radius:8px;border-bottom-right-radius:8px;}
+		#svButtonOpen{background-image: -webkit-linear-gradient(top,#5cb85c 0,#449d44 100%);background-image: linear-gradient(to bottom,#5cb85c 0,#449d44 100%);}
+		#adButtonClose{background:rgb(63,81,181);color:#fff;text-align:center;line-height:40px;font-size:12px;display:none;}
+		#adButtonClose .goback{float:left;margin-left:20px;}
+		#adButtonClose span{cursor:pointer;}
+		#adBody.active{bottom:0;background:#fff;}
+		.md-fab-bottom-right{right:auto!important;left:20px!important;z-index:100!important;}
+        #follow a{color: #666;text-decoration: none;}
+	</style>
 </body>
 
 </html>
