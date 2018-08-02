@@ -20,7 +20,7 @@ const randomInt = max => {
 const modifyAccountFlow = async (serverId, accountId, time) => {
   await knex('account_flow').update({
     checkTime: Date.now(),
-    nextCheckTime: 0,
+    nextCheckTime: Date.now(),
   }).where({ serverId, accountId });
 };
 
