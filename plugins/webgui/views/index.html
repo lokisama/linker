@@ -61,11 +61,11 @@
 			<span class="goback" style="" onclick="window.history.go(-1)">后退</span>
 			<span  onClick="closeAd();" >我不想看</span>
 		</div>
-		<iframe id="adFrame" style="display:none;"  src="https://xiaojiding.com/show/?app_id=demo_news" frameborder="0" width="300" height="500"></iframe>
+		<iframe id="adFrame" style="display:none;"  src="https://xiaojiding.com/show/?app_id=lingka" frameborder="0" width="300" height="500"></iframe>
 	<div>
 	<script>
 	function openAd(){
-		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news_video';
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/template/?app_id=lingka';
 		document.getElementById("adFrame").style.display = "block";
 		document.getElementById("adButtonOpen").style.display = "none";
 		document.getElementById("adButtonClose").style.display = "block";
@@ -73,7 +73,7 @@
 	}
 	
 	function closeAd(){
-		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=demo_news';
+		document.getElementById("adFrame").src = 'https://xiaojiding.com/show/?app_id=lingka';
 		document.getElementById("adFrame").style.display = "none";
 		document.getElementById("adButtonOpen").style.display = "block";
 		document.getElementById("adButtonClose").style.display = "none";
