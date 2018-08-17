@@ -84,7 +84,7 @@
                     </div>
                     <div flex layout-align="center center" layout="column">
                         <div class="flow_text">
-                            <span class="flow_text_plan" ng-bind="plan[flow.type].comment">SVIP</span>套餐
+                            <span class="flow_text_plan" ng-bind="plan[account[0].orderId].comment">SVIP</span>套餐
                         </div>
                         <div class="flow_text">
                             每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span>

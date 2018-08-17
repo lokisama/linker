@@ -201,7 +201,7 @@ app
           params: { accountId: $localStorage.user.accountInfo.data[0].id }
         }).then(success => {
           success.data.forEach((a, index) => {
-            $scope.plan[$localStorage.user.accountInfo.data[0].orderId] = a;
+            $scope.plan[a.id] = a;
           });
         });
 
