@@ -43,3 +43,4 @@ config/development.yml
 .vscode
 lib
 webgui.yml
+ss.sqlite

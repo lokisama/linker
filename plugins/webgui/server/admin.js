@@ -15,6 +15,7 @@ const rp = require('request-promise');
 const macAccount = appRequire('plugins/macAccount/index');
 const refOrder = appRequire('plugins/webgui_ref/order');
 const refUser = appRequire('plugins/webgui_ref/user');
+const flowPack = appRequire('plugins/webgui_order/flowPack');
 
 exports.getAccount = (req, res) => {
   const group = req.adminInfo.id === 1 ? -1 : req.adminInfo.group;
@@ -47,50 +48,51 @@ exports.getAccount = (req, res) => {
   });
 };
 
-exports.getAccountByPort = (req, res) => {
-  const port = +req.params.port;
-  account.getAccount({ port }).then(success => {
-    if(success.length) {
-      return success[0];
+exports.getAccountByPort = async (req, res) => {
+  try {
+    const port = +req.params.port;
+    const accountInfo = await account.getAccount({ port }).then(s => s[0]);
+    if(!accountInfo) { return Promise.reject('account not found'); }
+    if(accountInfo.data) {
+      accountInfo.data = JSON.parse(accountInfo.data);
     }
-    return Promise.reject('account not found');
-  }).then(success => {
-    res.send(success);
-  }).catch(err => {
+    res.send(accountInfo);
+  } catch(err) {
     console.log(err);
     res.status(403).end();
-  });
+  }
 };
 
-exports.getOneAccount = (req, res) => {
-  const accountId = +req.params.accountId;
-  account.getAccount({ id: accountId }).then(success => {
-    const accountInfo = success[0];
-    if(accountInfo) {
-      accountInfo.data = JSON.parse(accountInfo.data);
-      if(accountInfo.type >= 2 && accountInfo.type <= 5) {
-        const time = {
-          '2': 7 * 24 * 3600000,
-          '3': 30 * 24 * 3600000,
-          '4': 24 * 3600000,
-          '5': 3600000,
-        };
-        accountInfo.data.expire = accountInfo.data.create + accountInfo.data.limit * time[accountInfo.type];
-        accountInfo.data.from = accountInfo.data.create;
-        accountInfo.data.to = accountInfo.data.create + time[accountInfo.type];
-        while(accountInfo.data.to <= Date.now()) {
-          accountInfo.data.from = accountInfo.data.to;
-          accountInfo.data.to = accountInfo.data.from + time[accountInfo.type];
-        }
+exports.getOneAccount = async (req, res) => {
+  try {
+    const accountId = +req.params.accountId;
+    const accountInfo = await account.getAccount({ id: accountId }).then(s => s[0]);
+    if(!accountInfo) {
+      return Promise.reject('account not found');
+    }
+    accountInfo.data = JSON.parse(accountInfo.data);
+    if(accountInfo.type >= 2 && accountInfo.type <= 5) {
+      const time = {
+        '2': 7 * 24 * 3600000,
+        '3': 30 * 24 * 3600000,
+        '4': 24 * 3600000,
+        '5': 3600000,
+      };
+      accountInfo.data.expire = accountInfo.data.create + accountInfo.data.limit * time[accountInfo.type];
+      accountInfo.data.from = accountInfo.data.create;
+      accountInfo.data.to = accountInfo.data.create + time[accountInfo.type];
+      while(accountInfo.data.to <= Date.now()) {
+        accountInfo.data.from = accountInfo.data.to;
+        accountInfo.data.to = accountInfo.data.from + time[accountInfo.type];
       }
       accountInfo.server = accountInfo.server ? JSON.parse(accountInfo.server) : accountInfo.server;
-      return res.send(accountInfo);
+      accountInfo.data.flowPack = await flowPack.getFlowPack(accountId, accountInfo.data.from, accountInfo.data.to);
     }
-    return res.status(403).end();
-  }).catch(err => {
+    return res.send(accountInfo);
+  } catch(err) {
     console.log(err);
     res.status(403).end();
-  });
+  };
 };
 
 exports.addAccount = (req, res) => {
@@ -378,11 +380,39 @@ exports.getOrders = (req, res) => {
   options.pageSize = +req.query.pageSize || 20;
   options.search = req.query.search || '';
   options.sort = req.query.sort || 'alipay.createTime_desc';
+  options.start = req.query.start;
+  options.end = req.query.end;
   
   options.filter = req.query.filter || '';
   alipay.orderListAndPaging(options)
   .then(success => {
     res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.getCsvOrders = async (req, res) => {
+  const options = {};
+  if(req.adminInfo.id === 1) {
+    options.group = +req.query.group;
+  } else {
+    options.group = req.adminInfo.group;
+  }
+  options.search = req.query.search || '';
+  options.sort = req.query.sort || 'alipay.createTime_desc';
+  options.start = req.query.start;
+  options.end = req.query.end;
+  
+  options.filter = req.query.filter || '';
+  alipay.getCsvOrder(options)
+  .then(success => {
+    res.setHeader('Content-disposition', 'attachment; filename=download.csv');
+    res.setHeader('Content-type', 'text/csv');
+    res.send(success.map(m => {
+      return `${ m.orderId }, ${ m.amount }, ${ m.username }`;
+    }).join('\r\n'));
   }).catch(err => {
     console.log(err);
     res.status(403).end();
@@ -400,6 +430,8 @@ exports.getRefOrders = (req, res) => {
   options.pageSize = +req.query.pageSize || 20;
   options.search = req.query.search || '';
   options.sort = req.query.sort || 'webgui_ref_time.createTime_desc';
+  options.start = req.query.start;
+  options.end = req.query.end;
   
   options.filter = req.query.filter || '';
   refOrder.orderListAndPaging(options)
@@ -431,6 +463,9 @@ exports.getPaypalOrders = (req, res) => {
   options.pageSize = +req.query.pageSize || 20;
   options.search = req.query.search || '';
   options.sort = req.query.sort || 'paypal.createTime_desc';
+  options.start = req.query.start;
+  options.end = req.query.end;
+
   options.filter = req.query.filter || '';
   paypal.orderListAndPaging(options)
   .then(success => {
@@ -439,6 +474,10 @@ exports.getPaypalOrders = (req, res) => {
     console.log(err);
     res.status(403).end();
   });
+};
+
+exports.getPaypalCsvOrders = async (req, res) => {
+  res.send('PP');
 };
 
 exports.getUserPortLastConnect = (req, res) => {
@@ -683,4 +722,53 @@ exports.getRefUserById = (req, res) => {
     console.log(err);
     res.status(403).end();
   });
+};
+
+exports.getRefCodeById = (req, res) => {
+  const userId = +req.params.userId;
+  refUser.getRefCode(userId)
+  .then(success => {
+    res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.addRefCodeForUser = async (req, res) => {
+  try {
+    const userId = +req.params.userId;
+    const number = req.body.number;
+    const max = req.body.max;
+    for(let i = 0; i < number; i++) {
+      await refUser.addRefCode(userId, max);
+    }
+    res.send('success');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.deleteRefCode = async (req ,res) => {
+  try {
+    const code = req.params.code;
+    await refUser.deleteRefCode(code);
+    res.send('success');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.deleteRefUser = async (req ,res) => {
+  try {
+    const sourceUserId = +req.params.sourceUserId;
+    const refUserId = +req.params.refUserId;
+    await refUser.deleteRefUser(sourceUserId, refUserId);
+    res.send('success');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
 };
