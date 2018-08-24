@@ -77,12 +77,12 @@ const server = async serverId => {
         serverId: server.id,
         accountId: account.id,
         port: account.port + server.shift,
-        nextCheckTime: 0,
+        nextCheckTime: 1,
       });
     } else {
       await knex('account_flow').update({
         port: account.port + server.shift,
-        nextCheckTime: 0,
+        nextCheckTime: 1,
       }).where({
         serverId: server.id,
         accountId: account.id,
