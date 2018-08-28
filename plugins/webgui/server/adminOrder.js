@@ -1,8 +1,9 @@
 const orderPlugin = appRequire('plugins/webgui_order');
+const accountPlugin = appRequire('plugins/account');
 
 exports.getOrders = async (req, res) => {
   try {
-    const orders = await orderPlugin.getOrders();
+    const orders = await orderPlugin.getOrdersAndAccountNumber();
     res.send(orders);
   } catch(err) {
     console.log(err);
@@ -24,7 +25,9 @@ exports.getOneOrder = async (req, res) => {
 exports.newOrder = async (req, res) => {
   try {
     const data = {};
+    data.baseId = req.body.baseId || 0;
     data.name = req.body.name;
+    data.shortComment = req.body.shortComment;
     data.comment = req.body.comment;
     data.type = req.body.type;
     data.cycle = req.body.cycle;
@@ -35,6 +38,7 @@ exports.newOrder = async (req, res) => {
     data.server = req.body.server;
     data.autoRemove = req.body.autoRemove;
     data.autoRemoveDelay = req.body.autoRemoveDelay;
+    data.portRange = req.body.portRange;
     data.multiServerFlow = req.body.multiServerFlow;
     data.changeOrderType = req.body.changeOrderType;
     await orderPlugin.newOrder(data);
@@ -48,8 +52,10 @@ exports.newOrder = async (req, res) => {
 exports.editOrder = async (req, res) => {
   try {
     const data = {};
+    data.baseId = +req.body.baseId || 0;
     data.id = +req.params.orderId;
     data.name = req.body.name;
+    data.shortComment = req.body.shortComment;
     data.comment = req.body.comment;
     data.type = req.body.type;
     data.cycle = req.body.cycle;
@@ -60,9 +66,16 @@ exports.editOrder = async (req, res) => {
     data.server = req.body.server;
     data.autoRemove = req.body.autoRemove;
     data.autoRemoveDelay = req.body.autoRemoveDelay;
+    data.portRange = req.body.portRange;
     data.multiServerFlow = req.body.multiServerFlow;
     data.changeOrderType = req.body.changeOrderType;
     await orderPlugin.editOrder(data);
+    const changeCurrentAccount = req.body.changeCurrentAccount;
+    const update = {};
+    if(changeCurrentAccount.flow) { update.flow = data.flow; }
+    if(changeCurrentAccount.server) { update.server = data.server; }
+    if(changeCurrentAccount.autoRemove) { update.autoRemove = data.autoRemove; }
+    accountPlugin.editMultiAccounts(data.id, update);
     res.send('success');
   } catch(err) {
     console.log(err);

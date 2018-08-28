@@ -164,9 +164,8 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         $scope.lastConnect = success.lastConnect;
         let maxFlow = 0;
         if($scope.account.data) {
-          maxFlow = $scope.account.data.flow * ($scope.isMultiServerFlow ? 1 : server.scale);
+          server.isFlowOutOfLimit = (($scope.account.data.flow + $scope.account.data.flowPack) <= $scope.serverPortFlow);
         }
-        server.isFlowOutOfLimit = maxFlow ? ($scope.serverPortFlow >= maxFlow) : false;
       });
       $scope.getChartData(serverId);
       $scope.servers.forEach((server, index) => {
@@ -406,8 +405,8 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     $scope.setTitle('添加账号');
     $scope.setMenuButton('arrow_back', 'admin.account');
     $http.get('/api/admin/order').then(success => {
-      $scope.orders = success.data;
-      $scope.account.orderId = success.data[0].id;
+      $scope.orders = success.data.filter(f => !f.baseId);
+      $scope.account.orderId = $scope.orders[0].id;
     });
     $http.get('/api/admin/account/newPort').then(success => {
       $scope.account.port = success.data.port;
@@ -451,7 +450,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       $scope.account.multiServerFlow = orderInfo.multiServerFlow;
       $scope.account.accountServer = !!orderInfo.server;
       $scope.account.flowStr = $filter('flowNum2Str')($scope.account.flow);
-      $scope.account.autoRemoveDelayStr = $filter('timeNum2Str')($scope.account.autoRemoveDelay);
+      $scope.account.autoRemoveDelayStr = $filter('timeNum2Str')(orderInfo.autoRemoveDelay);
       if(orderInfo.server) {
         $scope.servers.forEach(server => {
           if(JSON.parse(orderInfo.server).indexOf(server.id) >= 0) {
@@ -521,14 +520,14 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     });
   }
 ])
-.controller('AdminEditAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'confirmDialog', 'alertDialog', '$filter',
-  ($scope, $state, $stateParams, $http, $mdBottomSheet, confirmDialog, alertDialog, $filter) => {
+.controller('AdminEditAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'confirmDialog', 'alertDialog', '$filter', '$q',
+  ($scope, $state, $stateParams, $http, $mdBottomSheet, confirmDialog, alertDialog, $filter, $q) => {
     $scope.setTitle('编辑账号');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.accountPage', { accountId: $stateParams.accountId });
     });
     $http.get('/api/admin/order').then(success => {
-      $scope.orders = success.data;
+      $scope.orders = success.data.filter(f => !f.baseId);
       $scope.account.orderId = success.data[0].id;
     });
     $scope.typeList = [
@@ -571,7 +570,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       $scope.account.multiServerFlow = orderInfo.multiServerFlow;
       $scope.account.accountServer = !!orderInfo.server;
       $scope.account.flowStr = $filter('flowNum2Str')($scope.account.flow);
-      $scope.account.autoRemoveDelayStr = $filter('timeNum2Str')($scope.account.autoRemoveDelay);
+      $scope.account.autoRemoveDelayStr = $filter('timeNum2Str')(orderInfo.autoRemoveDelay);
       if($scope.account.fixedExpire) {
         $scope.account.time = expire - $scope.timeLimit[$scope.account.type] * $scope.account.limit;
         while($scope.account.time >= Date.now()) {
@@ -589,32 +588,31 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         });
       }
     };
-    // $scope.$watch('account.orderId', selectOrder);
-    // $scope.$watch('account.fromOrder', selectOrder);
     const accountId = $stateParams.accountId;
-    $http.get('/api/admin/server').then(success => {
-      $scope.servers = success.data;
-      return $http.get(`/api/admin/account/${ accountId }`);
-    }).then(success => {
-      $scope.account.type = success.data.type;
-      if(success.data.orderId) {
+    $q.all([
+      $http.get('/api/admin/server'),
+      $http.get(`/api/admin/account/${ accountId }`),
+    ]).then(success => {
+      $scope.servers = success[0].data;
+      $scope.account.type = success[1].data.type;
+      if(success[1].data.orderId) {
         $scope.account.fromOrder = 1;
       }
-      $scope.account.orderId = success.data.orderId;
-      $scope.account.port = success.data.port;
-      $scope.account.password = success.data.password;
+      $scope.account.orderId = success[1].data.orderId;
+      $scope.account.port = success[1].data.port;
+      $scope.account.password = success[1].data.password;
       $scope.account.cleanFlow = false;
-      $scope.account.autoRemove = success.data.autoRemove;
-      $scope.account.autoRemoveDelay = success.data.autoRemoveDelay;
+      $scope.account.autoRemove = success[1].data.autoRemove;
+      $scope.account.autoRemoveDelay = success[1].data.autoRemoveDelay;
       $scope.account.autoRemoveDelayStr = $filter('timeNum2Str')($scope.account.autoRemoveDelay);;
-      $scope.account.multiServerFlow = success.data.multiServerFlow;
-      if(success.data.type >= 2 && success.data.type <= 5) {
-        $scope.account.time = success.data.data.create;
-        $scope.account.limit = success.data.data.limit;
-        $scope.account.flow = success.data.data.flow;
+      $scope.account.multiServerFlow = success[1].data.multiServerFlow;
+      if(success[1].data.type >= 2 && success[1].data.type <= 5) {
+        $scope.account.time = success[1].data.data.create;
+        $scope.account.limit = success[1].data.data.limit;
+        $scope.account.flow = success[1].data.data.flow;
         $scope.account.flowStr = $filter('flowNum2Str')($scope.account.flow);
       }
-      $scope.account.server = success.data.server;
+      $scope.account.server = success[1].data.server;
       $scope.account.accountServer = !!$scope.account.server;
       $scope.account.accountServerObj = {};
       if($scope.account.server) {
