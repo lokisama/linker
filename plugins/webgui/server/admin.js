@@ -4,7 +4,6 @@ const account = appRequire('plugins/account/index');
 const flow = appRequire('plugins/flowSaver/flow');
 const user = appRequire('plugins/user/index');
 const knex = appRequire('init/knex').knex;
-const moment = require('moment');
 const alipay = appRequire('plugins/alipay/index');
 const paypal = appRequire('plugins/paypal/index');
 const email = appRequire('plugins/email/index');
@@ -235,33 +234,6 @@ exports.getPaypalRecentOrders = (req, res) => {
     group,
   }).then(success => {
     return res.send(success.orders);
-  }).catch(err => {
-    console.log(err);
-    res.status(403).end();
-  });
-};
-
-exports.getOneUser = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userInfo = await user.getOne(userId);
-    const userAccount = await account.getAccount();
-    userInfo.account = userAccount.filter(f => {
-      return f.userId === +userId;
-    });
-    const ref = await refUser.getRefSourceUser(userId);
-    userInfo.ref = ref;
-    return res.send(userInfo);
-  } catch(err) {
-    console.log(err);
-    res.status(403).end();
-  }
-};
-
-exports.getOneAdmin = (req, res) => {
-  const userId = req.params.userId;
-  user.getOneAdmin(userId).then(success => {
-    return res.send(success);
   }).catch(err => {
     console.log(err);
     res.status(403).end();
