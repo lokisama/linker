@@ -41,6 +41,10 @@
             top:30px;*/
         }
         .flow_button button{
+            background: hsla(0, 0%, 100%, .2);
+            color:#fff!important;
+        }
+        .flow_button button.red{
             background: rgba(222,63,83, 1);
             color:#fff!important;
         }
@@ -93,7 +97,7 @@
                             <span style="font-size:0.8rem">(如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
                         </div>
                         <div class="flow_button" layout="row" flex>
-                            <md-button class="md-primary" ng-show="config.alipay || config.paypal || config.giftcard" ng-click="createOrder(flow.serverId)">{{ '新购或续费' | translate }}</md-button>
+                            <md-button class="md-primary red" ng-show="config.alipay || config.paypal || config.giftcard" ng-click="createOrder(flow.serverId)">{{ '新购或续费' | translate }}</md-button>
                             <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看详情' | translate }}</md-button>
                         </div>
                     </div>
