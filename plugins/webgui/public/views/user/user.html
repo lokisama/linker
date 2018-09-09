@@ -36,7 +36,7 @@
                         <i class="material-icons">{{menuButtonIcon || 'menu'}}</i>
                     </md-button>
                     <div>{{ title | translate }}</div>
-                    <span flex></span>
+                    <span flex style="text-align:right">{{'language' | translate}}</span>
                     <md-button aria-label="language menu" class="md-icon-button" ng-click="chooseLanguage()" ng-if="currentState === 'user.index'">
                         <md-icon class="material-icons">language</md-icon>
                     </md-button>

@@ -81,7 +81,7 @@
                         <div class="flow_circle_inner">
                             <div class="flow_circle_text">
                             <div class="flow_circle_flow">{{ flow.serverPortFlow | flow}}</div>
-                            <div>本月已用流量</div>
+                            <div>本月已使用</div>
                             </div>
                         </div>
                     </div>
@@ -90,8 +90,8 @@
                         <div class="flow_text">
                             <span class="flow_text_plan" ng-bind="plan[account[0].orderId].comment">SVIP</span>套餐
                         </div>
-                        <div class="flow_text">
-                            每月 {{flow.maxFlow | flowServer}} 流量 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} <span>
+                        <div class="flow_tex ">
+                            <span  style="color:#fffa7e;">{{flow.maxFlow | flowServer}}/月 有效期至 {{flow.expire | date : 'yyyy-MM-dd'}} </span>
                             <span ng-show="isAccountOutOfDate(account[0])" style="color: #a33;">&nbsp;{{ '已过期' | translate }}</span>
                             <br/>
                             <span style="font-size:0.8rem">(如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
@@ -109,18 +109,18 @@
     <div flex="50" flex-xs="100" id="follow">
         <md-card flex="100">
             <md-card-title>
-                <md-card-title-text><span class="sm-headline">{{ '教程' | translate }}</span></md-card-title-text>
+                <md-card-title-text><span class="sm-headline">{{ '视频教程' | translate }}</span></md-card-title-text>
             </md-card-title>
             <md-card-content>
                 <div class="ng-isolate-scope">
-<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-windows.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000352&sn=da21c6ce1ba082a0d0695874bb17b50b&vid=w1345ivt4tn&idx=1&vidsn=f78ad79b695c67bf24aa5ecaee4f15d5&fromid=1&scene=18#rd" target="_blank">Windows教程</a> |
-<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksR-dotnet4.0.exe" target="_blank">下载</a></p>
-<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-ios.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000348&sn=9509f7dd4b39236372c1e42a2428aab4&vid=o1345o7slv2&idx=1&vidsn=03c3574fe0f472f06b5c91fe5ea728c7&fromid=1&scene=18#rd" target="_blank">Iphone/Ipad教程</a> | 
-<a href="https://itunes.apple.com/cn/app/ssrconnectpro/id1272045249?mt=8" target="_blank">下载</a></p>
-<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-android.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000353&sn=1fe10776ecf0455c5c6cb9f37c02f878&vid=i1345v3zug9&idx=1&vidsn=0444563fb23238d83d3bdb7880eb82e0&fromid=1&scene=18#rd" target="_blank">Android教程</a> |
-<a href="https://www.linkersocks.com/libs/shadowsocks--4.6.1.apk" target="_blank">下载</a></p>
-<p><img width="50" height="50" src="https://www.lynca.tech/cdn/ico-mac.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000356&sn=e4aa255cd7f1fddb2cbef0bba0ec0614&vid=b1346p8mlif&idx=1&vidsn=beffee79290392706a868207589f47c6&fromid=1&scene=18#rd" target="_blank">Mac安装教程</a> |
-<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksX-2.6.3.dmg" target="_blank">下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-windows.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000352&sn=da21c6ce1ba082a0d0695874bb17b50b&vid=w1345ivt4tn&idx=1&vidsn=f78ad79b695c67bf24aa5ecaee4f15d5&fromid=1&scene=18#rd" target="_blank">Windows教程</a> |
+<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksR-dotnet4.0.exe" target="_blank">软件下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-ios.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000348&sn=9509f7dd4b39236372c1e42a2428aab4&vid=o1345o7slv2&idx=1&vidsn=03c3574fe0f472f06b5c91fe5ea728c7&fromid=1&scene=18#rd" target="_blank">Iphone/Ipad教程</a> | 
+<a href="https://itunes.apple.com/cn/app/ssrconnectpro/id1272045249?mt=8" target="_blank">软件下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-android.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000353&sn=1fe10776ecf0455c5c6cb9f37c02f878&vid=i1345v3zug9&idx=1&vidsn=0444563fb23238d83d3bdb7880eb82e0&fromid=1&scene=18#rd" target="_blank">Android教程</a> |
+<a href="https://www.linkersocks.com/libs/shadowsocks--4.6.1.apk" target="_blank">软件下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-mac.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000356&sn=e4aa255cd7f1fddb2cbef0bba0ec0614&vid=b1346p8mlif&idx=1&vidsn=beffee79290392706a868207589f47c6&fromid=1&scene=18#rd" target="_blank">Mac安装教程</a> |
+<a href="http://opub24jup.bkt.clouddn.com/ShadowsocksX-2.6.3.dmg" target="_blank">软件下载</a></p>
 </div>
             </md-card-content>
         </md-card>
@@ -130,7 +130,7 @@
         <md-card flex>
             <md-card-title>
                 <md-card-title-text>
-                    <span class="sm-headline">个人靓号[{{a.port}}]</span>
+                    <span class="sm-headline">个人靓号[{{a.port}}] （建议多添加几个备用）</span>
                 </md-card-title-text>
             </md-card-title>
             <md-card-content style="overflow: auto;height: 296px;">
