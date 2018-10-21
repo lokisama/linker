@@ -1,17 +1,11 @@
-<<<<<<< HEAD
+
 if(process.env.NODE_ENV !== 'production' && +process.versions.node[0] < 8) {
   console.log('use babel-core/register');
   require('babel-core/register');
 }
  const start = Date.now();
             
-=======
-// if(process.env.NODE_ENV !== 'production' && require('semver').lt(process.versions.node, '8.0.0')) {
-//   console.log('use @babel/register');
-//   require('@babel/register');
-// }
 
->>>>>>> 81ff38096b74bd913f048fafa27c8c849dbfab08
 require('./init/log');
 
 const log4js = require('log4js');
