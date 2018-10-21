@@ -11,8 +11,11 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('webgui');
 const ref = appRequire('plugins/webgui_ref/index');
 const refUser = appRequire('plugins/webgui_ref/user');
+const refOrder = appRequire('plugins/webgui_ref/order');
 const crypto = require('crypto');
 const flowPack = appRequire('plugins/webgui_order/flowPack');
+const alipayPlugin = appRequire('plugins/alipay/index');
+const macAccountPlugin = appRequire('plugins/macAccount/index');
 
 const alipay = appRequire('plugins/alipay/index');
 
@@ -584,6 +587,76 @@ exports.updateAccountSubscribe = async (req, res) => {
     });
     account.subscribe = subscribeToken;
     res.send(account);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.activeAccount = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const accountId = +req.params.accountId;
+    const accountInfo = await account.getAccount({ id: accountId, userId }).then(s => s[0]);
+    if(!accountInfo) { return Promise.reject('account not found'); }
+    await account.activeAccount(accountInfo.id);
+    res.send('success');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.getOrder = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    let orders = [];
+
+    if(config.plugins.alipay && config.plugins.alipay.use) {
+      const alipayOrders = await alipayPlugin.getUserFinishOrder(userId);
+      orders = [...orders, ...alipayOrders];
+    }
+
+    if(config.plugins.paypal && config.plugins.paypal.use) {
+      const paypalOrders = await paypal.getUserFinishOrder(userId);
+      orders = [...orders, ...paypalOrders];
+    }
+
+    const refOrders = await refOrder.getUserFinishOrder(userId);
+    orders = [...orders, ...refOrders];
+
+    if(config.plugins.giftcard && config.plugins.giftcard.use) {
+      const giftCardOrders = await giftcard.getUserFinishOrder(userId);
+      orders = [...orders, ...giftCardOrders];
+    }
+
+    orders = orders.sort((a, b) => {
+      return b.createTime - a.createTime;
+    });
+    res.send(orders);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.getMacAccount = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const accounts = await macAccountPlugin.getAccountByUserId(userId);
+    res.send(accounts);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.addMacAccount = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const { mac } = req.body;
+    await macAccountPlugin.userAddMacAccount(userId, mac);
+    res.send('success');
   } catch(err) {
     console.log(err);
     res.status(403).end();

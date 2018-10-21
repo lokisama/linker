@@ -44,6 +44,11 @@ app
       icon: 'account_circle',
       click: 'user.account'
     }, {
+      name: '订单',
+      icon: 'attach_money',
+      click: 'user.order',
+      hide: true,
+    }, {
       name: '设置',
       icon: 'settings',
       click: 'user.settings'
@@ -69,6 +74,12 @@ app
         $state.go($scope.menus[index].click);
       }
     };
+
+    $http.get('/api/user/order').then(success => {
+      if(success.data.length) {
+        $scope.menus[2].hide = false;
+      };
+    });
 
     $scope.menuButtonIcon = '';
     $scope.menuButtonClick = () => {};
@@ -378,6 +389,7 @@ app
             $scope.account[index].password = a.password;
             $scope.account[index].port = a.port;
             $scope.account[index].type = a.type;
+            $scope.account[index].active = a.active;
           });
         } else {
           $scope.account = success.account;
@@ -477,8 +489,8 @@ app
       payByGiftCardDialog.show(accountId).then(() => getUserAccountInfo());
     };
 
-    $scope.fontColor = (time) => {
-      if(time >= Date.now()) {
+    $scope.fontColor = account => {
+      if(account.data.expire >= Date.now()) {
         return {
           color: '#333',
         };
@@ -510,6 +522,18 @@ app
         background: `linear-gradient(90deg, rgba(0,0,0,0.12) ${ percent }%, rgba(0,0,0,0) 0%)`
       };
     };
+    $scope.activeAccount = account => {
+      $http.put(`/api/user/account/${ account.id }/active`).then(success => {
+        // account.active = 1;
+        getUserAccountInfo();
+      });
+    };
+    $scope.isBlur = account => {
+      if(account.active) { return {}; }
+      return {
+        filter: 'blur(4px)'
+      };
+    };
   }
 ])
 .controller('UserSettingsController', ['$scope', '$state',
@@ -523,6 +547,9 @@ app
     };
     $scope.toRef = () => {
       $state.go('user.ref');
+    };
+    $scope.toMac = () => {
+      $state.go('user.macAddress');
     };
   }
 ])
@@ -585,4 +612,36 @@ app
       $scope.toast('邀请链接已复制到剪贴板');
     };
   }
-]);
+])
+.controller('UserOrderController', ['$scope', '$http',
+  ($scope, $http) => {
+    $scope.setTitle('我的订单');
+    $http.get('/api/user/order').then(success => {
+      $scope.orders = success.data;
+    });
+  }
+])
+.controller('UserMacAddressController', ['$scope', '$state', '$http', 'addMacAccountDialog',
+  ($scope, $state, $http, addMacAccountDialog) => {
+    $scope.setTitle('MAC地址');
+    $scope.setMenuButton('arrow_back', 'user.settings');
+    const getMacAccount = () => {
+      $http.get('/api/user/account/mac').then(success => {
+        $scope.macAccounts = success.data;
+        if(!$scope.macAccounts.length) {
+          $scope.setFabButton(() => {
+            addMacAccountDialog.show().then(() => {
+              getMacAccount();
+            }).catch(err => {
+              getMacAccount();
+            });
+          });
+        } else {
+          $scope.setFabButton();
+        }
+      });
+    };
+    getMacAccount();
+  }
+])
+;
