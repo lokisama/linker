@@ -18,13 +18,13 @@ client.bind(mPort);
 
 const knex = appRequire('init/knex').knex;
 
-const moment = require('moment');
+// const moment = require('moment');
 
 let shadowsocksType = 'libev';
 let lastFlow;
 
 const sendPing = () => {
-  client.send(new Buffer('ping'), port, host);
+  client.send(new Buffer.from('ping'), port, host);
 };
 
 let existPort = [];
@@ -134,7 +134,7 @@ const sendMessage = (message) => {
 };
 
 const startUp = async () => {
-  client.send(new Buffer('ping'), port, host);
+  client.send(new Buffer.from('ping'), port, host);
   if(config.runShadowsocks === 'python') {
     sendMessage(`remove: {"server_port": 65535}`);
   }
@@ -269,8 +269,8 @@ const listAccount = async () => {
 
 const getFlow = async (options) => {
   try {
-    const startTime = moment(options.startTime || new Date(0)).toDate().getTime();
-    const endTime = moment(options.endTime || new Date()).toDate().getTime();
+    const startTime = options.startTime || 0;
+    const endTime = options.endTime || Date.now();
 
     const accounts = await knex('account').select([ 'port' ]);
     const flows = await knex('flow').select([ 'port' ])
@@ -338,9 +338,17 @@ const getVersion = () => {
 };
 
 const getIp = port => {
-  const cmd = `ss -an | grep ":${ port } " | grep ESTAB | awk '{print $6}' | cut -d: -f1 | grep -v 127.0.0.1 | uniq -d`;
+  let cmd = '';
+  let shell = '';
+  if (process.platform === 'win32') {
+    cmd = `netstat -an | sls -Pattern ':${ port } ' | sls -Pattern 'ESTABLISHED' | %{$_.Line.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries)[2]} | %{$_.Split(':')[0]} | sls -Pattern '127\\.0\\.0\\.1' -NotMatch | unique | %{$_.Line}`;
+    shell = 'powershell';
+  } else {
+    cmd = `ss -an | grep ':${ port } ' | grep ESTAB | awk '{print $6}' | cut -d: -f1 | grep -v 127.0.0.1 | uniq -d`;
+    shell = '/bin/sh';
+  }
   return new Promise((resolve, reject) => {
-    exec(cmd, function(err, stdout, stderr){
+    exec(cmd, {shell: shell}, function(err, stdout, stderr){
       if(err) {
         reject(stderr);
       } else {

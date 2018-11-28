@@ -90,10 +90,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     const accountFilter = () => {
       accountSortTool($scope.accountInfo, $scope.accountMethod);
       $scope.accountInfo.account = $scope.accountInfo.account.filter(f => {
-        return (f.port + (f.user ? f.user : '')).indexOf($scope.menuSearch.text) >= 0;
+        return (f.port + (f.user ? f.user : '') + f.password).indexOf($scope.menuSearch.text) >= 0;
       });
       $scope.macAccountInfo.account = $scope.macAccountInfo.originalAccount.filter(f => {
-        return (f.port + f.mac).indexOf($scope.menuSearch.text) >= 0;
+        return (f.port + f.mac).indexOf($scope.menuSearch.text.replace(/-/g, '').replace(/:/g, '').toLowerCase()) >= 0;
       });
     };
     $scope.$on('cancelSearch', () => {
@@ -147,6 +147,15 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         }
         return server;
       });
+      if($scope.account.server) {
+        $scope.servers.sort((a, b) => {
+          if($scope.account.server.indexOf(a.id) >= 0 && $scope.account.server.indexOf(b.id) < 0) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      }
       $scope.getServerPortData($scope.servers[0], $scope.accountId);
       $scope.isMultiServerFlow = !!$scope.account.multiServerFlow;
     }).catch(err => {
@@ -254,7 +263,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
               label: function(tooltipItem, data) {
                 const label = data.labels[tooltipItem.index];
                 const datasetLabel = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
-                return label + ': ' + scaleLabel(datasetLabel);
+                return [label, scaleLabel(datasetLabel)];
               }
             }
           },
@@ -296,6 +305,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         $scope.sumFlow = success[0].data.reduce((a, b) => {
           return a + b;
         }, 0);
+        $scope.sumFlowForAllServer = success[1].data.reduce((a, b) => {
+          return { flow: a.flow + b.flow };
+        }, { flow: 0 });
         setChart(success[0].data, success[1].data);
       });
       if($scope.flowType.value === 'hour') {
@@ -325,27 +337,27 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       if($mdMedia('xs')) {
         return {
           line: [ 320, 170 ],
-          pie: [ 170, 170 ],
+          pie: [ 180, 170 ],
         };
       } else if($mdMedia('sm')) {
         return {
           line: [ 360, 190 ],
-          pie: [ 190, 190 ],
+          pie: [ 205, 190 ],
         };
       } else if($mdMedia('md')) {
         return {
           line: [ 360, 180 ],
-          pie: [ 180, 180 ],
+          pie: [ 360, 180 ],
         };
       } else if($mdMedia('gt-md')) {
         return {
           line: [ 540, 240 ],
-          pie: [ 240, 240 ],
+          pie: [ 450, 240 ],
         };
       }
     };
-    $scope.fontColor = (time) => {
-      if(time >= Date.now()) {
+    $scope.fontColor = account => {
+      if(account.data.expire >= Date.now()) {
         return {
           color: '#333',
         };
@@ -414,9 +426,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     });
     $scope.typeList = [
       {key: '不限量', value: 1},
-      {key: '按周', value: 2},
-      {key: '按月', value: 3},
-      {key: '按天', value: 4},
+      {key: '月', value: 3},
+      {key: '周', value: 2},
+      {key: '天', value: 4},
       {key: '小时', value: 5},
     ];
     $scope.timeLimit = {
@@ -479,7 +491,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
           }
         });
       }
-      const server = Object.keys($scope.account.accountServerObj).map(m => +m);
+      const server = Object.keys($scope.account.accountServerObj).map(m => $scope.account.accountServerObj[m] ? +m : null).filter(f => f);
       $http.post('/api/admin/account', {
         type: +$scope.account.type,
         orderId: $scope.account.fromOrder ? +$scope.account.orderId : 0,
@@ -532,9 +544,9 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     });
     $scope.typeList = [
       {key: '不限量', value: 1},
-      {key: '按周', value: 2},
-      {key: '按月', value: 3},
-      {key: '按天', value: 4},
+      {key: '月', value: 3},
+      {key: '周', value: 2},
+      {key: '天', value: 4},
       {key: '小时', value: 5},
     ];
     $scope.timeLimit = {
@@ -634,13 +646,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       $scope.account.autoRemoveDelay = $filter('timeStr2Num')($scope.account.autoRemoveDelayStr);
       alertDialog.loading();
       $scope.account.flow = $filter('flowStr2Num')($scope.account.flowStr);
-      const server = Object.keys($scope.account.accountServerObj)
-      .map(m => {
-        if($scope.account.accountServerObj[m]) {
-          return +m;
-        }
-      })
-      .filter(f => f);
+      const server = Object.keys($scope.account.accountServerObj).map(m => $scope.account.accountServerObj[m] ? +m : null).filter(f => f);
       $http.put(`/api/admin/account/${ accountId }/data`, {
         type: +$scope.account.type,
         orderId: $scope.account.fromOrder ? +$scope.account.orderId : 0,

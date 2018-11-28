@@ -37,6 +37,10 @@ const isPortExists = async (server, account) => {
   }
 };
 
+const isAccountActive = (server, account) => {
+  return !!account.active;
+};
+
 const hasServer = (server, account) => {
   if(!account.server) { return true; }
   const serverList = JSON.parse(account.server);
@@ -56,7 +60,7 @@ const isExpired = (server, account) => {
     account.expireTime = expireTime;
     if(expireTime <= Date.now() || data.create >= Date.now()) {
       const nextCheckTime = 10 * 60 * 1000 + randomInt(30000);
-      if(account.autoRemove && expireTime + account.autoRemoveDelay < Date.now()) {
+      if(account.active && account.autoRemove && expireTime + account.autoRemoveDelay < Date.now()) {
         modifyAccountFlow(server.id, account.id, nextCheckTime > account.autoRemoveDelay ? account.autoRemoveDelay : nextCheckTime);
         knex('account_plugin').delete().where({ id: account.id }).then();
       } else {
@@ -150,7 +154,7 @@ const isOverFlow = async (server, account) => {
     }, { flow: data.flow }).flow;
   
     let nextCheckTime = (flowWithFlowPacks - sumFlow) / 200000000 * 60 * 1000 / server.scale;
-    if(nextCheckTime >= account.expireTime - Date.now() && account.expireTime - Date.now() > 0) { nextCheckTime = account.expireTime - Date.now() }
+    if(nextCheckTime >= account.expireTime - Date.now() && account.expireTime - Date.now() > 0) { nextCheckTime = account.expireTime - Date.now(); }
     if(nextCheckTime <= 0) { nextCheckTime = 600 * 1000; }
     if(nextCheckTime >= 3 * 60 * 60 * 1000) { nextCheckTime = 3 * 60 * 60 * 1000; }
     await writeFlow(server.id, account.id, realFlow, nextCheckTime);
@@ -201,7 +205,7 @@ const deleteExtraPorts = async serverInfo => {
     accounts.forEach(account => {
       accountObj[account.port] = account;
     });
-    for(let p of currentPorts) {
+    for(const p of currentPorts) {
       if(accountObj[p.port - serverInfo.shift]) { continue; }
       await sleep(sleepTime);
       deletePort(serverInfo, { port: p.port - serverInfo.shift });
@@ -226,6 +230,12 @@ const checkAccount = async (serverId, accountId) => {
 
     // 检查当前端口是否存在
     const exists = await isPortExists(serverInfo, accountInfo);
+
+    // 检查账号是否激活
+    if(!isAccountActive(serverInfo, accountInfo)) {
+      exists && deletePort(serverInfo, accountInfo);
+      return;
+    }
 
     // 检查账号是否包含该服务器
     if(!hasServer(serverInfo, accountInfo)) {
@@ -259,9 +269,10 @@ const checkAccount = async (serverId, accountId) => {
 };
 
 (async () => {
+  let time = 67;
   while(true) {
+    const start = Date.now();
     try {
-      const start = Date.now();
       await sleep(sleepTime);
       const servers = await knex('server').where({});
       for(const server of servers) {
@@ -277,16 +288,21 @@ const checkAccount = async (serverId, accountId) => {
         .on('account_flow.serverId', 'server.id')
         .on('account_flow.accountId', 'account_plugin.id');
       }).whereNull('account_flow.id');
-      for(let account of accounts) {
+      for(const account of accounts) {
         await sleep(sleepTime);
         await accountFlow.add(account.id);
       }
       const end = Date.now();
-      if(end - start <= 67 * 1000) {
-        await sleep(67 * 1000 - (end - start));
+      if(end - start <= time * 1000) {
+        await sleep(time * 1000 - (end - start));
       }
+      if(time <= 300) { time += 10; }
     } catch(err) {
       console.log(err);
+      const end = Date.now();
+      if(end - start <= time * 1000) {
+        await sleep(time * 1000 - (end - start));
+      }
     }
   }
 })();
@@ -322,24 +338,34 @@ const checkAccount = async (serverId, accountId) => {
       accounts = [...accounts, ...datas];
     } catch(err) { }
 
-    if(accounts.length <= 120) {
-      for(const account of accounts) {
-        const start = Date.now();
-        await checkAccount(account.serverId, account.accountId).catch();
-        const time = 60 * 1000 / accounts.length - (Date.now() - start);
-        await sleep((time <= 0 || time > sleepTime) ? sleepTime : time);
+    try {
+      if(accounts.length <= 120) {
+        for(const account of accounts) {
+          const start = Date.now();
+          await checkAccount(account.serverId, account.accountId).catch();
+          const time = 60 * 1000 / accounts.length - (Date.now() - start);
+          await sleep((time <= 0 || time > sleepTime) ? sleepTime : time);
+        }
+      } else {
+        await Promise.all(accounts.map((account, index) => {
+          return sleep(index * (60 + Math.ceil(accounts.length % 10)) * 1000 / accounts.length).then(() => {
+            return checkAccount(account.serverId, account.accountId).catch();
+          });
+        }));
       }
-    } else {
-      await Promise.all(accounts.map((account, index) => {
-        return sleep(index * (60 + Math.ceil(accounts.length % 10)) * 1000 / accounts.length).then(() => {
-          return checkAccount(account.serverId, account.accountId);
-        });
-      }));
-    }
-    if(accounts.length) {
-      logger.info(`check ${ accounts.length } accounts, ${ Date.now() - start } ms`);
-    } else {
-      await sleep(30 * 1000);
+      if(accounts.length) {
+        logger.info(`check ${ accounts.length } accounts, ${ Date.now() - start } ms`);
+        if(accounts.length < 30) {
+          await sleep((30 - accounts.length) * 1000);
+        }
+      } else {
+        await sleep(30 * 1000);
+      }
+    } catch (err) {
+      const end = Date.now();
+      if(end - start <= 60 * 1000) {
+        await sleep(60 * 1000 - (end - start));
+      }
     }
   }
 })();

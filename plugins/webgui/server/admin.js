@@ -47,6 +47,16 @@ exports.getAccount = (req, res) => {
   });
 };
 
+exports.getOnlineAccount = (req, res) => {
+  const serverId = +req.query.serverId;
+  account.getOnlineAccount(serverId).then(success => {
+    res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
 exports.getAccountByPort = async (req, res) => {
   try {
     const port = +req.params.port;
@@ -165,6 +175,7 @@ exports.changeAccountData = (req, res) => {
     autoRemoveDelay: +req.body.autoRemoveDelay,
     multiServerFlow: +req.body.multiServerFlow,
     server: req.body.server,
+    active: 1,
   }).then(success => {
     if(req.body.cleanFlow) {
       flow.cleanAccountFlow(accountId);
@@ -355,7 +366,7 @@ exports.getOrders = (req, res) => {
   options.start = req.query.start;
   options.end = req.query.end;
   
-  options.filter = req.query.filter || '';
+  options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
   alipay.orderListAndPaging(options)
   .then(success => {
     res.send(success);
@@ -376,8 +387,8 @@ exports.getCsvOrders = async (req, res) => {
   options.sort = req.query.sort || 'alipay.createTime_desc';
   options.start = req.query.start;
   options.end = req.query.end;
-  
-  options.filter = req.query.filter || '';
+
+  options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
   alipay.getCsvOrder(options)
   .then(success => {
     res.setHeader('Content-disposition', 'attachment; filename=download.csv');
@@ -733,12 +744,24 @@ exports.deleteRefCode = async (req ,res) => {
   }
 };
 
-exports.deleteRefUser = async (req ,res) => {
+exports.deleteRefUser = async (req, res) => {
   try {
     const sourceUserId = +req.params.sourceUserId;
     const refUserId = +req.params.refUserId;
     await refUser.deleteRefUser(sourceUserId, refUserId);
     res.send('success');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.alipayRefund = async (req, res) => {
+  try {
+    const orderId = req.body.orderId;
+    const amount = req.body.amount;
+    const result = await alipay.refund(orderId, amount);
+    res.send(result);
   } catch(err) {
     console.log(err);
     res.status(403).end();

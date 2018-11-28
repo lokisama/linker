@@ -89,6 +89,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
                   success.flow.forEach((number, index) => {
                     server.chart.data[0][index] = number;
                   });
+                  server.sumFlowOneHour = server.chart.data[0].reduce((a, b) => a + b);
                 });
               }, index * 1000);
             }
@@ -115,6 +116,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
                   success.flow.forEach((number, index) => {
                     server.chart.data[0][index] = number;
                   });
+                  server.sumFlowOneHour = server.chart.data[0].reduce((a, b) => a + b);
                 });
               }, index * 1000);
             }
@@ -148,6 +150,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     $scope.setTitle('服务器');
     $scope.setMenuButton('arrow_back', 'admin.server');
     const serverId = $stateParams.serverId;
+    $scope.onlineAccount = [];
     const getServerInfo = () => {
       $http.get(`/api/admin/server/${ serverId }`).then(success => {
         $scope.server = success.data;
@@ -159,6 +162,11 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
             exists: true,
           };
         });
+        return $http.get('/api/admin/account/online', {
+          params: { serverId }
+        });
+      }).then(success => {
+        $scope.onlineAccount = success.data;
         return adminApi.getAccount();
       }).then(accounts => {
         accounts.forEach(account => {
@@ -173,6 +181,9 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
             $scope.currentPorts[account.port + $scope.server.shift].id = account.id;
           }
         });
+        $scope.portNumber = Object.keys($scope.currentPorts).filter(f => {
+          return $scope.currentPorts[f].exists;
+        }).length;
       });
     };
     getServerInfo();
@@ -228,7 +239,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     };
     const setChart = (lineData, pieData) => {
       const pieDataSort = pieData.sort((a, b) => {
-        return a.flow >= b.flow;
+        return a.flow - b.flow;
       });
       $scope.pieChart = {
         data: pieDataSort.map(m => m.flow),
@@ -316,22 +327,22 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
       if($mdMedia('xs')) {
         return {
           line: [ 320, 170 ],
-          pie: [ 170, 170 ],
+          pie: [ 180, 170 ],
         };
       } else if($mdMedia('sm')) {
         return {
           line: [ 360, 190 ],
-          pie: [ 190, 190 ],
+          pie: [ 205, 190 ],
         };
       } else if($mdMedia('md')) {
         return {
           line: [ 360, 180 ],
-          pie: [ 180, 180 ],
+          pie: [ 360, 180 ],
         };
       } else if($mdMedia('gt-md')) {
         return {
           line: [ 540, 240 ],
-          pie: [ 240, 240 ],
+          pie: [ 450, 240 ],
         };
       }
     };
@@ -345,6 +356,14 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     $scope.matchPort = (port, passowrd, search) => {
       if(!search) { return true; }
       return port.toString().indexOf(search) >= 0 || passowrd.toString().indexOf(search) >= 0;
+    };
+    $scope.accountColor = account => {
+      if(account.exists === false) {
+        return { background: 'red-50' };
+      } else if($scope.onlineAccount.indexOf(account.id) >= 0) {
+        return { background: 'blue-50' };
+      }
+      return {};
     };
     // $scope.$on('cancelSearch', () => {
       
