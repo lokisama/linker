@@ -283,6 +283,7 @@ const cdn = config.plugins.webgui.cdn;
 const keywords = config.plugins.webgui.keywords || ' ';
 const description = config.plugins.webgui.description || ' ';
 const analytics = config.plugins.webgui.googleAnalytics || '';
+const crisp = config.plugins.webgui.crisp || '';
 const colors = [
   { value: 'red', color: '#F44336' },
   { value: 'pink', color: '#E91E63' },
@@ -324,6 +325,7 @@ const homePage = (req, res) => {
       keywords,
       description,
       analytics,
+      crisp,
       config: configForFrontend,
       paypal: !!(config.plugins.paypal && config.plugins.paypal.use),
     });
