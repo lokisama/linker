@@ -131,8 +131,8 @@ app
     };
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$sessionStorage', 'autopopDialog',
-  ($scope, $state, userApi, markdownDialog, $sessionStorage, autopopDialog) => {
+.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$sessionStorage', 'autopopDialog', '$localStorage',
+  ($scope, $state, userApi, markdownDialog, $sessionStorage, autopopDialog, $localStorage) => {
     $scope.setTitle('首页');
     userApi.getNotice().then(success => {
       $scope.notices = success;
@@ -156,6 +156,21 @@ app
     $scope.toRef = () => {
       $state.go('user.ref');
     };
+
+
+    $scope.servers = $localStorage.user.serverInfo.data;
+    $scope.account = $localStorage.user.accountInfo.data;
+
+    const setAccountServerList = (account, server) => {
+      account.forEach(a => {
+        a.serverList = $scope.servers.filter(f => {
+          return !a.server || a.server.indexOf(f.id) >= 0;
+        });
+      });
+    };
+    setAccountServerList($scope.account, $scope.servers);
+
+    console.log($scope.account);
   }
 ])
 .controller('UserAccountController', ['$scope', '$http', '$mdMedia', 'userApi', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog', 'payByGiftCardDialog', 'subscribeDialog', '$q', '$state',
