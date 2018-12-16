@@ -18,21 +18,25 @@ client.bind(mPort);
 
 const knex = appRequire('init/knex').knex;
 
-// const moment = require('moment');
-
 let shadowsocksType = 'libev';
+let isNewPython = false;
 let lastFlow;
 
 const sendPing = () => {
-  client.send(new Buffer.from('ping'), port, host);
+  sendMessage('ping');
+  sendMessage('list');
 };
 
 let existPort = [];
 let existPortUpdatedAt = Date.now();
 const setExistPort = flow => {
   existPort = [];
-  for(const f in flow) {
-    existPort.push(+f);
+  if(Array.isArray(flow)) {
+    existPort = flow.map(f => +f.server_port);
+  } else {
+    for(const f in flow) {
+      existPort.push(+f);
+    }
   }
   existPortUpdatedAt = Date.now();
 };
@@ -40,15 +44,21 @@ const setExistPort = flow => {
 let firstFlow = true;
 let portsForLibev = [];
 const connect = () => {
-  client.on('message', async (msg, rinfo) => {
+  client.on('message', async msg => {
     const msgStr = new String(msg);
     if(msgStr.substr(0, 4) === 'pong') {
       shadowsocksType = 'python';
-    } else if(msgStr.substr(0, 3) === '[\n\t') {
+    } else if(msgStr.substr(0, 2) === '[{') {
+      isNewPython = true;
       portsForLibev = JSON.parse(msgStr);
+      setExistPort(portsForLibev);
+    } else if(msgStr.substr(0, 3) === '[\n\t') {
+      shadowsocksType = 'libev';
+      portsForLibev = JSON.parse(msgStr);
+      setExistPort(portsForLibev);
     } else if(msgStr.substr(0, 5) === 'stat:') {
       let flow = JSON.parse(msgStr.substr(5));
-      setExistPort(flow);
+      !isNewPython && setExistPort(flow);
       const realFlow = compareWithLastFlow(flow, lastFlow);
 
       const getConnectedIp = port => {
@@ -80,7 +90,7 @@ const connect = () => {
         return f.flow > 0;
       });
       const accounts = await knex('account').select();
-      if(shadowsocksType === 'python') {
+      if(shadowsocksType === 'python' && !isNewPython) {
         insertFlow.forEach(fe => {
           const account = accounts.filter(f => {
             return fe.port === f.port;
@@ -97,22 +107,23 @@ const connect = () => {
           } else if (account.password !== f.password) {
             await sendMessage(`remove: {"server_port": ${ f.server_port }}`);
             await sendMessage(`add: {"server_port": ${ account.port }, "password": "${ account.password }"}`);
-          } else if (account.method && account.method !== f.method) {
-            await sendMessage(`remove: {"server_port": ${ f.server_port }}`);
-            await sendMessage(`add: {"server_port": ${ account.port }, "password": "${ account.password }"}`);
           }
+          // else if (account.method && account.method !== f.method) {
+          //   await sendMessage(`remove: {"server_port": ${ f.server_port }}`);
+          //   await sendMessage(`add: {"server_port": ${ account.port }, "password": "${ account.password }"}`);
+          // }
         });
       }
       if(insertFlow.length > 0) {
         if(firstFlow) {
           firstFlow = false;
         } else {
-          const insertPromises = [];
-          for(let i = 0; i < Math.ceil(insertFlow.length/50); i++) {
-            const insert = knex('flow').insert(insertFlow.slice(i * 50, i * 50 + 50));
-            insertPromises.push(insert);
+          // const insertPromises = [];
+          for(let i = 0; i < Math.ceil(insertFlow.length / 50); i++) {
+            await knex('flow').insert(insertFlow.slice(i * 50, i * 50 + 50));
+            // insertPromises.push(insert);
           }
-          Promise.all(insertPromises).then();
+          // Promise.all(insertPromises).then();
         }
       }
     };
@@ -121,27 +132,26 @@ const connect = () => {
   client.on('error', err => {
     logger.error(`client error: `, err);
   });
+
   client.on('close', () => {
     logger.error(`client close`);
   });
 };
 
-const sendMessage = (message) => {
-  const randomTraceNumber = Math.random().toString().substr(2,6);
-  // logger.info(`[${ randomTraceNumber }] Send to shadowsocks: ${ message }`);
+const sendMessage = message => {
   client.send(message, port, host);
   return Promise.resolve('ok');
 };
 
 const startUp = async () => {
-  client.send(new Buffer.from('ping'), port, host);
+  client.send(Buffer.from('ping'), port, host);
   if(config.runShadowsocks === 'python') {
     sendMessage(`remove: {"server_port": 65535}`);
   }
   const accounts = await knex('account').select([ 'port', 'password' ]);
-  accounts.forEach(f => {
-    sendMessage(`add: {"server_port": ${ f.port }, "password": "${ f.password }"}`);
-  });
+  for(const account of accounts) {
+    await sendMessage(`add: {"server_port": ${ account.port }, "password": "${ account.password }"}`);
+  }
 };
 
 const resend = async () => {
@@ -149,11 +159,11 @@ const resend = async () => {
     existPort = [];
   }
   const accounts = await knex('account').select([ 'port', 'password' ]);
-  accounts.forEach(f => {
-    if(existPort.indexOf(f.port) < 0) {
-      sendMessage(`add: {"server_port": ${ f.port }, "password": "${ f.password }"}`);
+  for(const account of accounts) {
+    if(!existPort.includes(account.port)) {
+      await sendMessage(`add: {"server_port": ${ account.port }, "password": "${ account.password }"}`);
     }
-  });
+  }
 };
 
 const compareWithLastFlow = (flow, lastFlow) => {
@@ -196,7 +206,7 @@ const checkPortRange = (port) => {
   const portRange = config.shadowsocks.portRange.split(',');
   let isInRange = false;
   portRange.forEach(f => {
-    if(f.indexOf('-') >= 0) {
+    if(f.includes('-')) {
       const range = f.trim().split('-');
       if(port >= +range[0] && port <= +range[1]) {
         isInRange = true;
@@ -213,11 +223,8 @@ const addAccount = async (port, password) => {
     if(!checkPortRange(port)) {
       return Promise.reject('error');
     }
-    const insertAccount = await knex('account').insert({
-      port,
-      password,
-    });
     await sendMessage(`add: {"server_port": ${ port }, "password": "${ password }"}`);
+    await knex('account').insert({ port, password });
     return { port, password };
   } catch(err) {
     return Promise.reject('error');
