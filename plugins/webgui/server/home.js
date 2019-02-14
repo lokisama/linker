@@ -114,18 +114,36 @@ exports.signup = async (req, res) => {
         });
       };
       const port = await getNewPort();
-      await account.addAccount(newUserAccount.type || 5, {
-        user: userId,
-        orderId: 0,
-        port,
-        password: Math.random().toString().substr(2,10),
-        time: Date.now(),
-        limit: newUserAccount.limit || 8,
-        flow: (newUserAccount.flow ? newUserAccount.flow : 350) * 1000000,
-        server: newUserAccount.server ? JSON.stringify(newUserAccount.server): null,
-        autoRemove: newUserAccount.autoRemove ? 1 : 0,
-        multiServerFlow: newUserAccount.multiServerFlow ? 1 : 0,
-      });
+      if(newUserAccount.fromOrder) {
+        const orderInfo = await knex('webgui_order').where({ id: newUserAccount.type }).then(s => s[0]);
+        if(orderInfo) {
+          await account.addAccount(orderInfo.type || 5, {
+            user: userId,
+            orderId: orderInfo.id,
+            port,
+            password: Math.random().toString().substr(2,10),
+            time: Date.now(),
+            limit: orderInfo.cycle,
+            flow: orderInfo.flow,
+            server: orderInfo.server,
+            autoRemove: orderInfo.autoRemove ? 1 : 0,
+            multiServerFlow: orderInfo.multiServerFlow ? 1 : 0,
+          });
+        }
+      } else {
+        await account.addAccount(newUserAccount.type || 5, {
+          user: userId,
+          orderId: 0,
+          port,
+          password: Math.random().toString().substr(2,10),
+          time: Date.now(),
+          limit: newUserAccount.limit || 8,
+          flow: (newUserAccount.flow ? newUserAccount.flow : 350) * 1000000,
+          server: newUserAccount.server ? JSON.stringify(newUserAccount.server): null,
+          autoRemove: newUserAccount.autoRemove ? 1 : 0,
+          multiServerFlow: newUserAccount.multiServerFlow ? 1 : 0,
+        });
+      }
     }
     logger.info(`[${ req.body.email }] signup success`);
     push.pushMessage('注册', {
@@ -249,6 +267,7 @@ exports.status = async (req, res) => {
     let email;
     let subscribe;
     let multiAccount;
+    let simple;
     if(status) {
       email = (await knex('user').select(['email']).where({ id }).then(s => s[0])).email;
       alipay = config.plugins.alipay && config.plugins.alipay.use;
@@ -268,6 +287,12 @@ exports.status = async (req, res) => {
         success[0].value = JSON.parse(success[0].value);
         return success[0].value;
       })).subscribe;
+      simple = (await knex('webguiSetting').select().where({
+        key: 'account',
+      }).then(success => {
+        success[0].value = JSON.parse(success[0].value);
+        return success[0].value;
+      })).simple;
     }
     if(status === 'normal') {
       knex('user').update({ lastLogin: Date.now() }).where({ id }).then();
@@ -292,9 +317,10 @@ exports.status = async (req, res) => {
       refCode,
       subscribe,
       multiAccount,
+      simple,
     });
   } catch(err) {
-    console.log(err);
+    logger.error(err);
     delete req.session.user;
     delete req.session.type;
     return res.status(403).end();

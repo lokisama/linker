@@ -35,15 +35,34 @@ const pwd = async (accountId, password) => {
     });
   }
   accountServers.forEach(server => {
-    manager.send({
-      command: 'pwd',
-      port: accountInfo.port + server.shift,
-      password,
-    }, {
-      host: server.host,
-      port: server.port,
-      password: server.password,
-    });
+    if(server.type === 'WireGuard') {
+      let publicKey = accountInfo.key;
+      if(!publicKey) {
+        return;
+      }
+      if(publicKey.includes(':')) {
+        publicKey = publicKey.split(':')[0];
+      }
+      manager.send({
+        command: 'pwd',
+        port: accountInfo.port + server.shift,
+        password: publicKey,
+      }, {
+        host: server.host,
+        port: server.port,
+        password: server.password,
+      });
+    } else {
+      manager.send({
+        command: 'pwd',
+        port: accountInfo.port + server.shift,
+        password,
+      }, {
+        host: server.host,
+        port: server.port,
+        password: server.password,
+      });
+    }
   });
 };
 
@@ -89,9 +108,25 @@ const server = async serverId => {
   }
 };
 
+const updateFlow = async (serverId, accountId, flow) => {
+  const exists = await knex('account_flow').where({
+    serverId,
+    accountId,
+  }).then(success => success[0]);
+  if(!exists) { return; }
+  await knex('account_flow').update({
+    flow: exists.flow + flow,
+    updateTime: Date.now(),
+  }).where({
+    serverId,
+    accountId,
+  });
+};
+
 exports.add = add;
 exports.del = del;
 exports.pwd = pwd;
 exports.edit = edit;
 exports.addServer = server;
 exports.editServer = server;
+exports.updateFlow = updateFlow;

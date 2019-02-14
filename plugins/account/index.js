@@ -23,7 +23,7 @@ const addAccount = async (type, options) => {
       autoRemove: 0,
     });
     await accountFlow.add(accountId);
-    return;
+    return accountId;
   } else if (type >= 2 && type <= 5) {
     const [ accountId ] = await knex('account_plugin').insert({
       type,
@@ -44,7 +44,7 @@ const addAccount = async (type, options) => {
       active: options.active,
     });
     await accountFlow.add(accountId);
-    return;
+    return accountId;
   }
 };
 
@@ -75,6 +75,7 @@ const getAccount = async (options = {}) => {
     'account_plugin.server',
     'account_plugin.port',
     'account_plugin.password',
+    'account_plugin.key',
     'account_plugin.data',
     'account_plugin.status',
     'account_plugin.autoRemove',
@@ -768,13 +769,15 @@ const getAccountForSubscribe = async (token, ip) => {
   if(account.server) {
     account.server = JSON.parse(account.server);
   }
-  const servers = await serverManager.list({ status: false });
+  const servers = (await serverManager.list({ status: false })).filter(server => server.type === 'Shadowsocks');
   const validServers = servers.filter(server => {
     if(!account.server) { return true; }
     return account.server.indexOf(server.id) >= 0;
   });
   return { server: validServers, account };
 };
+
+const sleep = time => new Promise(resolve => setTimeout(resolve, time));
 
 const editMultiAccounts = async (orderId, update) => {
   const accounts = await knex('account_plugin').where({ orderId });
@@ -794,6 +797,7 @@ const editMultiAccounts = async (orderId, update) => {
     if(Object.keys(updateData).length === 0) { break; }
     await knex('account_plugin').update(updateData).where({ id: account.id });
     await accountFlow.edit(account.id);
+    await sleep(500);
   }
 };
 
@@ -806,6 +810,122 @@ const activeAccount = async accountId => {
     accountData.create = Date.now();
     await knex('account_plugin').update({ data: JSON.stringify(accountData) }).where({ id: accountInfo.id });
   }
+};
+
+const getAccountAndPaging = async (opt) => {
+  const search = opt.search || '';
+  const page = opt.page || 1;
+  const pageSize = opt.pageSize || 20;
+  const sort = opt.sort || 'port_asc';
+  const filter = opt.filter;
+
+  const where = {};
+  if(filter.orderId) {
+    where['account_plugin.orderId'] = +filter.orderId;
+  }
+  
+  let account = knex('account_plugin').select([
+    'account_plugin.id',
+    'account_plugin.type',
+    'account_plugin.orderId',
+    'account_plugin.userId',
+    'account_plugin.server',
+    'account_plugin.port',
+    'account_plugin.password',
+    'account_plugin.key',
+    'account_plugin.data',
+    'account_plugin.status',
+    'account_plugin.autoRemove',
+    'account_plugin.autoRemoveDelay',
+    'account_plugin.multiServerFlow',
+    'account_plugin.active',
+    'user.id as userId',
+    'user.email as user',
+  ])
+  .leftJoin('user', 'user.id', 'account_plugin.userId')
+  .orderBy('account_plugin.port', 'ASC')
+  .where(where);
+
+  if(!filter.hasUser && filter.noUser) {
+    account = await account.whereNull('user.id');
+  } else if(filter.hasUser && !filter.noUser) {
+    account = await account.whereNotNull('user.id');
+  } else {
+    account = await account;
+  }
+
+  account.forEach(a => {
+    if(a.data) {
+      a.data = JSON.parse(a.data);
+      const time = {
+        '2': 7 * 24 * 3600000,
+        '3': 30 * 24 * 3600000,
+        '4': 24 * 3600000,
+        '5': 3600000,
+      };
+      a.data.expire = a.data.create + a.data.limit * time[a.type];
+    }
+  });
+  if(filter.mac) {
+    const macAccounts = await macAccount.getAllAccount();
+    account.splice(account.length, 0, ...macAccounts);
+  }
+  if(search) {
+    account = account.filter(f => {
+      return (
+        (f.user && f.user.includes(search)) ||
+        (f.port && f.port.toString().includes(search)) ||
+        (f.password && f.password.includes(search)) ||
+        (f.mac && f.mac.includes(search))
+      );
+    });
+  }
+  account = account.filter(f => {
+    let show = true;
+    if(!filter.unlimit && f.type === 1) {
+      show = false;
+    }
+    if(!filter.expired && f.data && f.data.expire >= Date.now()) {
+      show = false;
+    }
+    if(!filter.unexpired && f.data && f.data.expire <= Date.now()) {
+      show = false;
+    }
+    return show;
+  });
+  account = account.sort((a, b) => {
+    if(a.mac && !b.mac) {
+      return 1;
+    } else if(!a.mac && b.mac) {
+      return -1;
+    } else if(sort === 'port_asc') {
+      return a.port >= b.port ? 1 : -1;
+    } else if (sort === 'port_desc') {
+      return a.port <= b.port ? 1 : -1;
+    } else if (sort === 'expire_desc') {
+      if(!a.data) { return -1; }
+      if(!b.data) { return 1; }
+      return a.data.expire <= b.data.expire ? 1 : -1;
+    } else if (sort === 'expire_asc') {
+      if(!a.data) { return 1; }
+      if(!b.data) { return -1; }
+      return a.data.expire >= b.data.expire ? 1 : -1;
+    }
+  });
+
+  const count = account.length;
+  const start = pageSize * (page - 1);
+  const end = start + pageSize;
+  const result = account.slice(start, end);
+  
+  const maxPage = Math.ceil(count / pageSize);
+  return {
+    total: count,
+    page,
+    maxPage,
+    pageSize,
+    account: result,
+  };
 };
 
 exports.addAccount = addAccount;
@@ -832,3 +952,5 @@ exports.editMultiAccounts = editMultiAccounts;
 
 exports.activeAccount = activeAccount;
 exports.getOnlineAccount = getOnlineAccount;
+
+exports.getAccountAndPaging = getAccountAndPaging;

@@ -1,7 +1,7 @@
 const app = angular.module('app');
 
-app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$http', 'accountSortDialog','$interval', 'adminApi', '$localStorage', 'accountSortTool',
-  ($scope, $state, $stateParams, $http, accountSortDialog, $interval, adminApi, $localStorage, accountSortTool) => {
+app.controller('AdminAccountController', ['$scope', '$state', '$mdMedia', '$http', 'accountSortDialog','$timeout', 'adminApi', '$localStorage',
+  ($scope, $state, $mdMedia, $http, accountSortDialog, $timeout, adminApi, $localStorage) => {
     $scope.setTitle('账号');
     $scope.setMenuRightButton('sort_by_alpha');
     $scope.setMenuSearchButton('search');
@@ -13,101 +13,90 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
           unexpired: true,
           unlimit: true,
           mac: true,
+          orderId: 0,
         },
       };
     }
-    $scope.accountMethod = $localStorage.admin.accountFilterSettings;
-    $scope.accountInfo = {};
-    $scope.macAccountInfo = {};
-    $scope.sortAndFilter = () => {
-      accountSortTool($scope.accountInfo, $scope.accountMethod);
+    $scope.accountFilter = $localStorage.admin.accountFilterSettings;
+    $scope.currentPage = 1;
+    $scope.isAccountLoading = false;
+    $scope.isAccountPageFinish = false;
+    $scope.account = [];
+    const getPageSize = () => {
+      if($mdMedia('xs')) { return 30; }
+      if($mdMedia('sm')) { return 30; }
+      if($mdMedia('md')) { return 60; }
+      if($mdMedia('gt-md')) { return 80; }
     };
-    if(!$localStorage.admin.accountInfo) {
-      $localStorage.admin.accountInfo = {
-        time: Date.now(),
-        data: [],
-      };
-    }
-    if(!$localStorage.admin.macAccountInfo) {
-      $localStorage.admin.macAccountInfo = {
-        time: Date.now(),
-        data: [],
-      };
-    }
-    $scope.accountInfo.originalAccount = $localStorage.admin.accountInfo.data;
-    $scope.accountInfo.account = angular.copy($scope.accountInfo.originalAccount);
-    $scope.macAccountInfo.originalAccount = $localStorage.admin.macAccountInfo.data;
-    $scope.macAccountInfo.account = angular.copy($scope.macAccountInfo.originalAccount);
-    $scope.sortAndFilter();
-    const getAccountInfo = () => {
-      adminApi.getAccount().then(accounts => {
-        $localStorage.admin.accountInfo = {
-          time: Date.now(),
-          data: accounts,
-        };
-        $scope.accountInfo.originalAccount = accounts;
-        $scope.accountInfo.account = angular.copy($scope.accountInfo.originalAccount);
-        $scope.sortAndFilter();
-        return adminApi.getMacAccount();
-      }).then(macAccounts => {
-        $localStorage.admin.macAccountInfo = {
-          time: Date.now(),
-          data: macAccounts,
-        };
-        // $scope.macAccount = macAccounts;
-        $scope.macAccountInfo.originalAccount = macAccounts;
-        $scope.macAccountInfo.account = angular.copy($scope.macAccountInfo.originalAccount);
+    $scope.getAccount = (search) => {
+      $scope.isAccountLoading = true;
+      $http.post('/api/admin/accountWithPage', {
+        page: $scope.currentPage,
+        pageSize: getPageSize(),
+        search,
+        sort: $scope.accountFilter.sort,
+        filter: $scope.accountFilter.filter,
+      }).then(success => {
+        $scope.total = success.data.total;
+        if(!search && $scope.menuSearch.text) { return; }
+        if(search && search !== $scope.menuSearch.text) { return; }
+        success.data.account.forEach(f => {
+          $scope.account.push(f);
+        });
+        if(success.data.maxPage > $scope.currentPage) {
+          $scope.currentPage++;
+        } else {
+          $scope.isAccountPageFinish = true;
+        }
+        $scope.isAccountLoading = false;
+      }).catch(() => {
+        if($state.current.name !== 'admin.account') { return; }
+        $timeout(() => {
+          $scope.getAccount(search);
+        }, 5000);
       });
     };
-    getAccountInfo();
-    $scope.$on('visibilitychange', (event, status) => {
-      if(status === 'visible') {
-        if($localStorage.admin.accountInfo && Date.now() - $localStorage.admin.accountInfo.time >= 20 * 1000) {
-          getAccountInfo();
-        }
-      }
+    $scope.view = (inview) => {
+      if(!inview || $scope.isAccountLoading || $scope.isAccountPageFinish) { return; }
+      $scope.getAccount();
+    };
+    const accountFilter = () => {
+      $scope.account = [];
+      $scope.currentPage = 1;
+      $scope.isAccountPageFinish = false;
+      $scope.getAccount($scope.menuSearch.text);
+    };
+    $scope.$on('cancelSearch', () => {
+      accountFilter();
     });
-    $scope.setInterval($interval(() => {
-      if($localStorage.admin.accountInfo && Date.now() - $localStorage.admin.accountInfo.time >= 90 * 1000) {
-        getAccountInfo();
-      }
-    }, 15 * 1000));
+    let timeoutPromise;
+    $scope.$watch('menuSearch.text', () => {
+      if(!$scope.menuSearch.text) { return; }
+      timeoutPromise && $timeout.cancel(timeoutPromise);
+      timeoutPromise = $timeout(() => {
+        accountFilter();
+      }, 500);
+    });
     $scope.setFabButton($scope.id === 1 ? () => {
       $state.go('admin.addAccount');
     } : null);
-    $scope.toAccount = id => {
-      $state.go('admin.accountPage', { accountId: id });
-    };
-    $scope.toMacAccount = userId => {
-      $state.go('admin.userPage', { userId });
+    $scope.toAccount = account => {
+      if(account.mac) {
+        $state.go('admin.userPage', { userId: account.userId });
+      } else {
+        $state.go('admin.accountPage', { accountId: account.id });
+      }
     };
     $scope.sortAndFilterDialog = () => {
-      accountSortDialog.show($scope.accountMethod, $scope.accountInfo);
+      return accountSortDialog.show();
     };
     $scope.$on('RightButtonClick', () => {
-      $scope.sortAndFilterDialog();
-    });
-    const accountFilter = () => {
-      accountSortTool($scope.accountInfo, $scope.accountMethod);
-      $scope.accountInfo.account = $scope.accountInfo.account.filter(f => {
-        return (f.port + (f.user ? f.user : '') + f.password).indexOf($scope.menuSearch.text) >= 0;
+      $scope.sortAndFilterDialog().then(() => {
+        $scope.account = [];
+        $scope.currentPage = 1;
+        $scope.isAccountPageFinish = false;
+        $scope.getAccount();
       });
-      $scope.macAccountInfo.account = $scope.macAccountInfo.originalAccount.filter(f => {
-        return (f.port + f.mac).indexOf($scope.menuSearch.text.replace(/-/g, '').replace(/:/g, '').toLowerCase()) >= 0;
-      });
-    };
-    $scope.$on('cancelSearch', () => {
-      accountSortTool($scope.accountInfo, $scope.accountMethod);
-    });
-    $scope.$watch('menuSearch.text', () => {
-      if(!$scope.menuSearch.input) {
-        return;
-      }
-      if(!$scope.menuSearch.text) {
-        accountSortTool($scope.accountInfo, $scope.accountMethod);
-        return;
-      }
-      accountFilter();
     });
     $scope.accountColor = account => {
       if(account.type === 1) {
@@ -127,8 +116,8 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     };
   }
 ])
-.controller('AdminAccountPageController', ['$scope', '$state', '$stateParams', '$http', '$mdMedia', '$q', 'adminApi', '$timeout', '$interval', 'qrcodeDialog', 'ipDialog', '$mdBottomSheet',
-  ($scope, $state, $stateParams, $http, $mdMedia, $q, adminApi, $timeout, $interval, qrcodeDialog, ipDialog, $mdBottomSheet) => {
+.controller('AdminAccountPageController', ['$scope', '$state', '$stateParams', '$http', '$mdMedia', '$q', 'adminApi', '$timeout', '$interval', 'qrcodeDialog', 'ipDialog', '$mdBottomSheet', 'wireGuardConfigDialog',
+  ($scope, $state, $stateParams, $http, $mdMedia, $q, adminApi, $timeout, $interval, qrcodeDialog, ipDialog, $mdBottomSheet, wireGuardConfigDialog) => {
     $scope.setTitle('账号');
     $scope.setMenuButton('arrow_back', 'admin.account');
     $scope.accountId = +$stateParams.accountId;
@@ -158,8 +147,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
       }
       $scope.getServerPortData($scope.servers[0], $scope.accountId);
       $scope.isMultiServerFlow = !!$scope.account.multiServerFlow;
-    }).catch(err => {
-      console.log(err);
+    }).catch(() => {
       $state.go('admin.account');
     });
     let currentServerId;
@@ -202,12 +190,27 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         return String.fromCharCode('0x' + p1);
       }));
     };
-    $scope.createQrCode = (method, password, host, port, serverName) => {
-      return 'ss://' + base64Encode(method + ':' + password + '@' + host + ':' + port);
+    $scope.createQrCode = (server, account) => {
+      if(server.type === 'WireGuard') {
+        const a = account.port % 254;
+        const b = (account.port - a) / 254;
+        return [
+          '[Interface]',
+          `Address = ${ server.net.split('.')[0] }.${ server.net.split('.')[1] }.${ b }.${ a + 1 }/32`,
+          `PrivateKey = ${ account.privateKey }`,
+          'DNS = 8.8.8.8',
+          '[Peer]',
+          `PublicKey = ${ server.key }`,
+          `Endpoint = ${ server.host }:${ server.wgPort }`,
+          `AllowedIPs = 0.0.0.0/0`,
+        ].join('\n');
+      } else {
+        return 'ss://' + base64Encode(server.method + ':' + account.password + '@' + server.host + ':' + (account.port + server.shift));
+      }
     };
-    $scope.showQrcodeDialog = (method, password, host, port, serverName) => {
-      const ssAddress = $scope.createQrCode(method, password, host, port, serverName);
-      qrcodeDialog.show(serverName, ssAddress);
+    $scope.showQrcodeDialog = (server, account) => {
+      const ssAddress = $scope.createQrCode(server, account);
+      qrcodeDialog.show(server.name, ssAddress);
     };
     $scope.editAccount = id => {
       $state.go('admin.editAccount', { accountId: id });
@@ -410,6 +413,13 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         });
       });
     };
+    $scope.clipboardSuccess = event => {
+      $scope.toast('二维码链接已复制到剪贴板');
+    };
+    $scope.isWG = server => server.type === 'WireGuard';
+    $scope.showWireGuard = (server, account) => {
+      wireGuardConfigDialog.show(server, account);
+    };
   }
 ])
 .controller('AdminAddAccountController', ['$scope', '$state', '$stateParams', '$http', '$mdBottomSheet', 'alertDialog', '$filter',
@@ -503,10 +513,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         autoRemove: $scope.account.autoRemove ? 1 : 0,
         autoRemoveDelay: $scope.account.autoRemoveDelay,
         multiServerFlow: $scope.account.multiServerFlow ? 1 : 0,
-        server: $scope.account.accountServer ? server : null,
+        server: ($scope.account.accountServer && +$scope.account.type > 1) ? server : null,
       }).then(success => {
         alertDialog.show('添加账号成功', '确定');
-        $state.go('admin.account');
+        $state.go('admin.accountPage', { accountId: success.data.id });
       }).catch(() => {
         alertDialog.show('添加账号失败', '确定');
       });
@@ -537,10 +547,6 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     $scope.setTitle('编辑账号');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.accountPage', { accountId: $stateParams.accountId });
-    });
-    $http.get('/api/admin/order').then(success => {
-      $scope.orders = success.data.filter(f => !f.baseId);
-      $scope.account.orderId = success.data[0].id;
     });
     $scope.typeList = [
       {key: '不限量', value: 1},
@@ -604,7 +610,10 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
     $q.all([
       $http.get('/api/admin/server'),
       $http.get(`/api/admin/account/${ accountId }`),
+      $http.get('/api/admin/order'),
     ]).then(success => {
+      $scope.orders = success[2].data.filter(f => !f.baseId);
+      $scope.account.orderId = success[2].data[0].id;
       $scope.servers = success[0].data;
       $scope.account.type = success[1].data.type;
       if(success[1].data.orderId) {
@@ -659,7 +668,7 @@ app.controller('AdminAccountController', ['$scope', '$state', '$stateParams', '$
         autoRemove: $scope.account.autoRemove ? 1 : 0,
         autoRemoveDelay: $scope.account.autoRemoveDelay,
         multiServerFlow: $scope.account.multiServerFlow ? 1 : 0,
-        server: $scope.account.accountServer ? server : null,
+        server: ($scope.account.accountServer && +$scope.account.type > 1) ? server : null,
       }).then(success => {
         alertDialog.show('修改账号成功', '确定');
         $state.go('admin.accountPage', { accountId: $stateParams.accountId });
