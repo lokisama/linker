@@ -5,13 +5,7 @@ const flow = appRequire('plugins/flowSaver/flow');
 const dns = require('dns');
 const net = require('net');
 const config = appRequire('services/config').all();
-
-const getFlow = async (serverId, accountId) => {
-  const where = { accountId };
-  if(serverId) { where.serverId = serverId; }
-  const result = await knex('account_flow').sum('flow as sumFlow').groupBy('accountId').where(where).then(s => s[0]);
-  return result ? result.sumFlow : -1;
-};
+const redis = appRequire('init/redis').redis;
 
 const formatMacAddress = mac => mac.replace(/-/g, '').replace(/:/g, '').toLowerCase();
 
@@ -151,6 +145,7 @@ const getAccountForUser = async (mac, ip, opt) => {
   const accountData = (await accountPlugin.getAccount({ id: myAccountId }))[0];
   accountData.data = JSON.parse(accountData.data);
   let startTime = 0;
+  let endTime;
   let expire = 0;
   if(accountData.type >= 2 && accountData.type <= 5) {
     let timePeriod = 0;
@@ -162,6 +157,7 @@ const getAccountForUser = async (mac, ip, opt) => {
     while(startTime + timePeriod <= Date.now()) {
       startTime += timePeriod;
     }
+    endTime = startTime + timePeriod;
     expire = accountData.data.create + accountData.data.limit * timePeriod;
   }
   const isMultiServerFlow = account.multiServerFlow;
@@ -197,7 +193,7 @@ const getAccountForUser = async (mac, ip, opt) => {
       return serverInfo;
     }).then(success => {
       if(startTime && !noFlow) {
-        return getFlow(isMultiServerFlow ? null : success.id, account.accountId);
+        return flow.getServerPortFlowWithScale(success.id, account.accountId, [startTime, endTime], isMultiServerFlow).then(s => s[0]);
       } else {
         return -1;
       }
@@ -246,6 +242,7 @@ const getAccountForUser = async (mac, ip, opt) => {
       password: account.password,
       method: server.method,
       comment: server.comment,
+      currentFlow: await flow.getServerPortFlowWithScale(server.id, account.accountId, [startTime, endTime], isMultiServerFlow).then(s => s[0]),
     },
     servers: serverReturn,
   };
@@ -273,14 +270,20 @@ const deleteAccount = id => {
 };
 
 const login = async (mac, ip) => {
-  if(scanLoginLog(ip)) {
-    return Promise.reject('ip is in black list');
+  // if(scanLoginLog(ip)) {
+  //   return Promise.reject('ip is in black list');
+  // }
+  const failNumber = await redis.scard(`Temp:MacLoginFail:${ ip }`);
+  if(+failNumber >= 10) {
+    return Promise.reject('mac login out of limit');
   }
   const account = await knex('mac_account').where({
     mac: formatMacAddress(mac)
   }).then(success => success[0]);
   if(!account) {
-    loginFail(mac, ip);
+    // loginFail(mac, ip);
+    await redis.sadd(`Temp:MacLoginFail:${ ip }`, mac);
+    await redis.expire(`Temp:MacLoginFail:${ ip }`, 120);
     return Promise.reject('mac account not found');
   } else {
     return account;
