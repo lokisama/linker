@@ -88,7 +88,7 @@
             </md-card-content>
         </md-card>
     </div>
-    <div flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
+    <div ng-if="account && account.length > 0" flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
         <md-card  flex class="flow_container">
             <md-card-title>
                 <md-card-title-text><span class="sm-headline">{{ '零卡加速' | translate }} [{{account[accountIndex].port}}]</span></md-card-title-text>
