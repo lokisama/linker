@@ -178,8 +178,8 @@
                     <md-divider></md-divider>
                     <md-list-item ng-repeat-start="server in a.serverList track by server.id" 
                     
-                    ng-click="showQrcodeDialog(a.serverInfo.method, a.password, server.host, a.port + a.serverInfo.shift, server.name)" size="getQrCodeSize()"
-                         text="createQrCode(a.serverInfo.method, a.password, server.host, a.port + a.serverInfo.shift, server.name)">
+                    ng-click="showQrcodeDialog(a.serverInfo, a)" size="getQrCodeSize()"
+                         text="createQrCode(a.serverInfo, a)">
                         <div flex layout="row" layout-md="column" layout-xs="column" layout-sm="column" layout-align="space-between left">
                             <div class="font12">服务器：{{server.host}}</div>
                             <div class="font12">备注：{{server.comment}}</div>
