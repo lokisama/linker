@@ -131,8 +131,8 @@ app
     };
   }
 ])
-.controller('UserIndexController', ['$scope', '$state', 'userApi', 'markdownDialog', '$sessionStorage', 'autopopDialog', '$localStorage',
-  ($scope, $state, userApi, markdownDialog, $sessionStorage, autopopDialog, $localStorage) => {
+.controller('UserIndexController', ['$scope','$http', '$state', 'userApi', 'markdownDialog', '$sessionStorage', 'autopopDialog', 'alertDialog', 'payDialog', 'qrcodeDialog', '$interval', '$localStorage', 'changePasswordDialog', 'payByGiftCardDialog', 'subscribeDialog', '$q',
+  ($scope, $http, $state, userApi, markdownDialog, $sessionStorage, autopopDialog, alertDialog, payDialog, qrcodeDialog, $interval, $localStorage, changePasswordDialog, payByGiftCardDialog, subscribeDialog, $q) => {
     $scope.setTitle('首页');
     userApi.getNotice().then(success => {
       $scope.notices = success;
@@ -157,10 +157,51 @@ app
       $state.go('user.ref');
     };
 
+    $scope.accountIndex = 0;
+    $scope.plan = {};
+    $scope.accountPlan = [];
 
+   
+   if(!$localStorage.user.serverInfo) {
+      $localStorage.user.serverInfo = {
+        time: Date.now(),
+        data: [],
+      };
+    }
     $scope.servers = $localStorage.user.serverInfo.data;
+    if(!$localStorage.user.accountInfo) {
+      $localStorage.user.accountInfo = {
+        time: Date.now(),
+        data: [],
+      };
+    }
     $scope.account = $localStorage.user.accountInfo.data;
+    if($scope.account.length >= 2) {
+      $scope.flexGtSm = 50;
+    }
 
+    $scope.goPrev = (account) =>{
+
+      if($scope.accountIndex <= 0 ){
+        $scope.accountIndex=0;
+        return;
+      }
+
+      $scope.accountIndex--;
+    }
+
+    $scope.goNext = (account) => {
+      
+      console.log(account)
+      if($scope.accountIndex >= account.length -1){
+        $scope.accountIndex = account.length -1;
+        return;
+      }
+
+      $scope.accountIndex++;
+
+    }
+    
     const setAccountServerList = (account, server) => {
       account.forEach(a => {
         a.serverList = $scope.servers.filter(f => {
@@ -170,6 +211,226 @@ app
     };
     setAccountServerList($scope.account, $scope.servers);
 
+    const getUserAccountInfo = () => {
+      userApi.getUserAccount().then(success => {
+        $scope.servers = success.servers;
+        success.account.forEach((a, index) => {
+            const serverId = $scope.servers.filter((server, index) => {
+              if(!a.server) { return index === 0; }
+              return a.server.indexOf(server.id) >= 0;
+            })[0].id
+            $scope.setServerPortData(a, serverId, index);
+        });
+
+        if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
+          success.account.forEach((a, index) => {
+            $scope.account[index].data = a.data;
+            $scope.account[index].password = a.password;
+            $scope.account[index].port = a.port;
+            $scope.account[index].type = a.type;
+            $scope.account[index].active = a.active;
+          });
+        } else {
+          $scope.account = success.account;
+          $scope.account.forEach(f => {
+            const serverId = $scope.servers.filter((server, index) => {
+              if(!f.server) { return index === 0; }
+              return f.server.indexOf(server.id) >= 0;
+            })[0].id;
+          });
+        }
+        setAccountServerList($scope.account, $scope.servers);
+        $localStorage.user.serverInfo.data = success.servers;
+        $localStorage.user.serverInfo.time = Date.now();
+        $localStorage.user.accountInfo.data = success.account;
+        $localStorage.user.accountInfo.time = Date.now();
+
+        $http.get('/api/user/order/price', {
+          params: { accountId: $localStorage.user.accountInfo.data[0].id }
+        }).then(success => {
+          success.data.forEach((a, index) => {
+            $scope.plan[a.id] = a;
+          });
+          console.log($scope.plan)
+        });
+
+        if($scope.account.length >= 2) {
+          $scope.flexGtSm = 50;
+        }
+      });
+    };
+    getUserAccountInfo();
+
+    const base64Encode = str => {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+      }));
+    };
+    $scope.createQrCode = (server, account) => {
+      if(!server) { return ''; }
+      if(server.type === 'WireGuard') {
+        const a = account.port % 254;
+        const b = (account.port - a) / 254;
+        return [
+          '[Interface]',
+          `Address = ${ server.net.split('.')[0] }.${ server.net.split('.')[1] }.${ b }.${ a + 1 }/32`,
+          `PrivateKey = ${ account.privateKey }`,
+          'DNS = 8.8.8.8',
+          '[Peer]',
+          `PublicKey = ${ server.key }`,
+          `Endpoint = ${ server.host }:${ server.wgPort }`,
+          `AllowedIPs = 0.0.0.0/0`,
+        ].join('\n');
+      } else {
+        return 'ss://' + base64Encode(server.method + ':' + account.password + '@' + server.host + ':' + (account.port + server.shift));
+      }
+    };
+
+    $scope.setServerPortData = (account, serverId, index) => {
+      account.currentServerId = serverId;
+      $scope.accountPlan[index] = {};
+      // const server = $scope.servers.filter(f => f.id === serverId);
+      // const scale = server[0] ? server[0].scale : 1;
+      if(!account.isFlowOutOfLimit) { account.isFlowOutOfLimit = {}; }
+      userApi.getServerPortData(account, serverId).then(success => {
+        
+        $scope.accountPlan[index].type = account.type;
+        $scope.accountPlan[index].limit = account.data.limit;
+        $scope.accountPlan[index].expire = account.data.expire;
+        $scope.accountPlan[index].serverPortFlow = success.flow == '<' ? '已过期': success.flow ;
+        $scope.accountPlan[index].maxFlow = (account.data.flow + account.data.flowPack);
+        $scope.accountPlan[index].serverId = serverId;
+
+        console.log("$scope.accountPlan",index,$scope.accountPlan[index]);
+      });
+      account.serverInfo = $scope.servers.filter(f => {
+        return f.id === serverId;
+      })[0];
+    };
+
+    $scope.getServerPortData = (account, serverId) => {
+      account.currentServerId = serverId;
+      account.flow = {};
+      // const server = $scope.servers.filter(f => f.id === serverId);
+      // const scale = server[0] ? server[0].scale : 1;
+      if(!account.isFlowOutOfLimit) { account.isFlowOutOfLimit = {}; }
+      userApi.getServerPortData(account, serverId).then(success => {
+        account.lastConnect = success.lastConnect;
+        account.serverPortFlow = success.flow;
+        if(account.data) {
+          account.isFlowOutOfLimit[serverId] = ((account.data.flow + account.data.flowPack) <= account.serverPortFlow);
+        }
+      });
+      account.serverInfo = $scope.servers.filter(f => {
+        return f.id === serverId;
+      })[0];
+    };
+
+    $scope.$on('visibilitychange', (event, status) => {
+      if(status === 'visible') {
+        if($localStorage.user.accountInfo && Date.now() - $localStorage.user.accountInfo.time >= 10 * 1000) {
+          // $q.all($scope.account.map(a => {
+          //   return $scope.getServerPortData(a, a.currentServerId);
+          // }));
+          getUserAccountInfo();
+        }
+      }
+    });
+    $scope.setInterval($interval(() => {
+      if(Date.now() - $localStorage.user.accountInfo.time <= 15 * 1000) { return; }
+      getUserAccountInfo();
+      // userApi.updateAccount($scope.account)
+      // .then(() => {
+      //   setAccountServerList($scope.account, $scope.servers);
+      // });
+      $scope.account.forEach(a => {
+        const currentServerId = a.currentServerId;
+        userApi.getServerPortData(a, a.currentServerId, a.port).then(success => {
+          if(currentServerId !== a.currentServerId) { return; }
+          a.lastConnect = success.lastConnect;
+          a.serverPortFlow = success.flow;
+        });
+      });
+    }, 60 * 1000));
+
+    $scope.getQrCodeSize = () => {
+      if($mdMedia('xs')) {
+        return 230;
+      }
+      return 180;
+    };
+    $scope.showChangePasswordDialog = (accountId, password) => {
+      changePasswordDialog.show(accountId, password).then(() => {
+        getUserAccountInfo();
+      });
+    };
+    $scope.subscribe = accountId => {
+      subscribeDialog.show(accountId);
+    };
+    $scope.createOrder = account => {
+      payDialog.choosePayType(account).then(success => {
+        getUserAccountInfo();
+      });
+    };
+    $scope.useGiftCard = (accountId) => {
+      payByGiftCardDialog.show(accountId).then(() => getUserAccountInfo());
+    };
+
+    $scope.fontColor = account => {
+      if(account.data.expire >= Date.now()) {
+        return {
+          color: '#333',
+        };
+      }
+      return {
+        color: '#a33',
+      };
+    };
+    $scope.isAccountOutOfDate = account => {
+      if(account.type >=2 && account.type <= 5) {
+        return Date.now() >= account.data.expire;
+      } else {
+        return false;
+      }
+    };
+    $scope.showQrcodeDialog = (server, account) => {
+      const ssAddress = $scope.createQrCode(server, account);
+      qrcodeDialog.show(server.name, ssAddress);
+    };
+    $scope.cycleStyle = account => {
+      let percent = 0;
+      if(account.type !== 1) {
+        percent = ((Date.now() - account.data.from) / (account.data.to - account.data.from) * 100).toFixed(0);
+      }
+      if(percent > 100) {
+        percent = 100;
+      }
+      return {
+        background: `linear-gradient(90deg, rgba(0,0,0,0.12) ${ percent }%, rgba(0,0,0,0) 0%)`
+      };
+    };
+    $scope.activeAccount = account => {
+      $http.put(`/api/user/account/${ account.id }/active`).then(success => {
+        // account.active = 1;
+        getUserAccountInfo();
+      });
+    };
+    $scope.isBlur = account => {
+      if(account.active) { return {}; }
+      return {
+        filter: 'blur(4px)'
+      };
+    };
+    $scope.clipboardSuccess = event => {
+      $scope.toast('二维码链接已复制到剪贴板');
+    };
+    $scope.isWG = server => {
+      return (server && server.type === 'WireGuard');
+    };
+    $scope.showWireGuard = (server, account) => {
+      wireGuardConfigDialog.show(server, account);
+    };
+    
     console.log($scope.account);
   }
 ])
@@ -211,6 +472,7 @@ app
       userApi.getUserAccount().then(success => {
         $scope.servers = success.servers;
         if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
+          console.log(success.account.map(m => m.id).join(''),true)
           success.account.forEach((a, index) => {
             $scope.account[index].data = a.data;
             $scope.account[index].password = a.password;
@@ -219,6 +481,7 @@ app
             $scope.account[index].active = a.active;
           });
         } else {
+          console.log(success.account.map(m => m.id).join(''),false)
           $scope.account = success.account;
           $scope.account.forEach(f => {
             const serverId = $scope.servers.filter((server, index) => {
