@@ -70,6 +70,13 @@
             top:45%;
             cursor:pointer;
         }
+        .adv-cards{
+
+        }
+        .adv-cards .adv{
+            padding:4px;
+            padding-bottom:0px;
+        }
     </style>
     <div flex ng-if="account && !account.length">
         <md-card>
@@ -87,7 +94,7 @@
                 <md-card-title-text><span class="sm-headline">{{ '零卡加速' | translate }} [{{account[accountIndex].port}}]</span></md-card-title-text>
             </md-card-title>
             <md-card-content >
-                <div style="margin:0 auto 50px;" layout="row" layout-md="row" layout-xs="column" layout-sm="row">
+                <div style="margin:0 auto 10px;" layout="row" layout-md="row" layout-xs="column" layout-sm="row">
                     <div flex layout-align="center center" layout="row">
                     <div class="flow_circle">
                         <div class="flow_circle_inner">
@@ -120,7 +127,20 @@
             </md-card-content>
         </md-card>
     </div>
-
+    <div flex="100" layout="row" layout-xs="row" layout-wrap class="adv-cards">
+        <md-card flex="20" flex-xs="40" >
+            <a href="javascript:;" class="adv"><img src="http://www.lynca.tech/images/adv03.jpg" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a  href="javascript:;" class="adv"><img src="https://www.linkersocks.com/libs/adv01.png" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a  href="javascript:;" class="adv"><img src="https://www.linkersocks.com/libs/adv04.png" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a  href="javascript:;" class="adv"><img src="https://www.linkersocks.com/libs/adv07.png" width="100%"/></a>
+        </md-card>
+    </div>
     <div flex="50" flex-xs="100" id="follow">
         <md-card flex="100">
             <md-card-title>
@@ -141,11 +161,11 @@
         </md-card>
     </div>
     
-    <div flex="50" flex-xs="100"  ng-repeat="a in account track by a.id">
+    <div flex="50" flex-xs="100"  ng-repeat="a in [account[accountIndex]] track by a.id">
         <md-card flex>
             <md-card-title>
                 <md-card-title-text>
-                    <span class="sm-headline">个人靓号[{{a.port}}] （建议多添加几个线路备用）</span>
+                    <span class="sm-headline">个人靓号[{{a.port}}] （点击以下服务器添加线路）</span>
                 </md-card-title-text>
             </md-card-title>
             <md-card-content style="overflow: auto;height: 296px;">
