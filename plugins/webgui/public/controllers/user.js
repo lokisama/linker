@@ -393,9 +393,10 @@ app
         return false;
       }
     };
-    $scope.showQrcodeDialog = (server, account) => {
-      const ssAddress = $scope.createQrCode(server, account);
-      qrcodeDialog.show(server.name, ssAddress);
+    $scope.showQrcodeDialog = (serverId,server, account) => {
+      $scope.getServerPortData(account,serverId);
+      const ssAddress = $scope.createQrCode(account.serverInfo, account);
+      qrcodeDialog.show(account.serverInfo.name, ssAddress);
     };
     $scope.cycleStyle = account => {
       let percent = 0;
