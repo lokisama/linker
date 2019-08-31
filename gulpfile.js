@@ -68,11 +68,7 @@ gulp.task('webguiBuild', () => {
                 '@babel/env', {
                   targets: {
                     browsers: [
-                      'Chrome >= 57',
-                      'FireFox >= 50',
-                      'Safari >= 7',
-                      'ie >= 9',
-                      'last 4 Edge versions'
+                      'last 3 versions'
                     ]
                   }
                 }
@@ -86,6 +82,7 @@ gulp.task('webguiBuild', () => {
       minimizer: [new UglifyJsPlugin()],
     },
     mode: 'production',
+    performance: { hints: false },
   }))
   .pipe(gulp.dest('plugins/webgui/libs'));
 });

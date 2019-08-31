@@ -59,6 +59,11 @@ app.post('/api/home/code', home.sendCode);
 app.post('/api/home/ref/:refCode', home.visitRef);
 app.post('/api/home/signup', home.signup);
 app.post('/api/home/login', home.login);
+app.post('/api/home/googleLogin', home.googleLogin);
+app.post('/api/home/facebookLogin', home.facebookLogin);
+app.post('/api/home/githubLogin', home.githubLogin);
+app.get('/api/home/twitterLogin', home.getTwitterLoginUrl);
+app.post('/api/home/twitterLogin', home.twitterLogin);
 app.post('/api/home/macLogin', home.macLogin);
 app.post('/api/home/logout', home.logout);
 app.post('/api/home/password/sendEmail', home.sendResetPasswordEmail);
@@ -193,6 +198,7 @@ app.delete('/api/admin/order/:orderId(\\d+)', isAdmin, isSuperAdmin, adminOrder.
 
 app.get('/api/user/notice', isUser, user.getNotice);
 app.get('/api/user/account', isUser, user.getAccount);
+app.get('/api/user/usage', isUser, user.getAccountUsage);
 app.get('/api/user/account/mac', isUser, user.getMacAccount);
 app.post('/api/user/account/mac', isUser, user.addMacAccount);
 app.get('/api/user/account/:accountId(\\d+)', isUser, user.getOneAccount);
@@ -239,6 +245,12 @@ if (config.plugins.webgui_telegram && config.plugins.webgui_telegram.use) {
 if (config.plugins.webgui.gcmAPIKey && config.plugins.webgui.gcmSenderId) {
   app.post('/api/push/client', push.client);
   app.delete('/api/push/client', push.deleteClient);
+}
+
+if (config.plugins.webgui_crisp && config.plugins.webgui_crisp.use) {
+  const crisp = appRequire('plugins/webgui_crisp/index');
+  app.get('/api/user/crisp', isUser, crisp.getUserToken);
+  app.post('/api/user/crisp', isUser, crisp.setUserToken);
 }
 
 app.get('/favicon.png', (req, res) => {
@@ -309,6 +321,14 @@ const colors = [
   { value: 'grey', color: '#9E9E9E' },
 ];
 const homePage = (req, res) => {
+  res.set({
+    Link: [
+      '</libs/style.css>; rel=preload; as=style,',
+      '</libs/angular-material.min.css>; rel=preload; as=style,',
+      '</libs/lib.js>; rel=preload; as=script,',
+      '</libs/bundle.js>; rel=preload; as=script',
+    ].join(' ')
+  });
   return knex('webguiSetting').where({
     key: 'base',
   }).then(success => {

@@ -1,5 +1,4 @@
 <div layout="row" layout-xs="column" layout-wrap>
-    
     <style>
         .flow_container{
             position:relative;
@@ -127,7 +126,7 @@
             </md-card-content>
         </md-card>
     </div>
-    <div flex="100" layout="row" layout-xs="row" layout-wrap class="adv-cards">
+    <!--<div flex="100" layout="row" layout-xs="row" layout-wrap class="adv-cards">
         <md-card flex="20" flex-xs="40" >
             <a href="https://www.linkersocks.com/libs/adv03.jpg" target="_blank" class="adv">
             <img src="https://www.linkersocks.com/libs/adv03.jpg" width="100%"/></a>
@@ -143,6 +142,25 @@
         <md-card flex="20" flex-xs="40">
             <a href="https://www.linkersocks.com/libs/adv07.png" target="_blank" class="adv">
             <img src="https://www.linkersocks.com/libs/adv07.png" width="100%"/></a>
+        </md-card>
+    </div>-->
+    <div flex="100" flex-xs="100">
+        <md-card flex="100">
+            <md-card-title>
+                <md-card-title-text><span class="sm-headline">{{ '公告' | translate }}</span></md-card-title-text>
+            </md-card-title>
+            <md-card-content>
+                <div ng-show="notices.length === 0">{{ '暂无公告' | translate }}</div>
+                <md-list ng-show="notices.length > 0">
+                    <md-divider></md-divider>
+                    <md-list-item ng-repeat-start="notice in notices" ng-click="showNotice(notice)">
+                        <div flex layout="row" layout-align="space-between center">
+                            <div>{{notice.title}}</div>
+                        </div>
+                    </md-list-item>
+                    <md-divider ng-repeat-end></md-divider>
+                </md-list>
+            </md-card-content>
         </md-card>
     </div>
     <div flex="50" flex-xs="100" id="follow">
@@ -192,26 +210,9 @@
             </md-card-content>
         </md-card>
     </div>
+    
 
-    <div flex="100" flex-xs="100">
-        <md-card flex="100">
-            <md-card-title>
-                <md-card-title-text><span class="sm-headline">{{ '公告' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div ng-show="notices.length === 0">{{ '暂无公告' | translate }}</div>
-                <md-list ng-show="notices.length > 0">
-                    <md-divider></md-divider>
-                    <md-list-item ng-repeat-start="notice in notices" ng-click="showNotice(notice)">
-                        <div flex layout="row" layout-align="space-between center">
-                            <div>{{notice.title}}</div>
-                        </div>
-                    </md-list-item>
-                    <md-divider ng-repeat-end></md-divider>
-                </md-list>
-            </md-card-content>
-        </md-card>
-    </div>
+    
     <div flex="100" style="height: 30px;"></div>
     <div flex="100" style="text-align: center;"><ga></ga></div>
 </div>

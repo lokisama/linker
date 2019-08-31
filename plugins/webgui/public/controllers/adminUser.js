@@ -7,11 +7,15 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
     $scope.setFabButton(() => {
       $state.go('admin.addUser');
     });
+    $scope.addUser = () => {
+      $state.go('admin.addUser');
+    };
     if(!$localStorage.admin.userSortSettings) {
       $localStorage.admin.userSortSettings = {
         sort: 'id_asc',
         type: {
           normal: true,
+          admin: true,
         },
         group: -1,
       };
@@ -38,7 +42,8 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
         type: $scope.userSort.type,
         group: $scope.userSort.group,
       }).then(success => {
-        $scope.total = success.total;
+        // $scope.total = success.total;
+        $scope.setFabNumber(success.total);
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }
         success.users.forEach(f => {

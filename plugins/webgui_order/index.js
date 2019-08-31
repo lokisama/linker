@@ -49,7 +49,7 @@ const getOneOrderByAccountId = async accountId => {
 };
 
 const newOrder = async data => {
-  await knex('webgui_order').insert({
+  const [ id ] = await knex('webgui_order').insert({
     baseId: data.baseId,
     name: data.name,
     shortComment: data.shortComment,
@@ -68,7 +68,7 @@ const newOrder = async data => {
     changeOrderType: data.changeOrderType,
     active: data.active,
   });
-  return;
+  return id;
 };
 
 const editOrder = async data => {
@@ -97,12 +97,19 @@ const editOrder = async data => {
 };
 
 const deleteOrder = async orderId => {
-  const hasAccount = await knex('account_plugin').where({ orderId });
-  if(hasAccount.length) { return Promise.reject('account with this order exists'); }
-  const isGiftCardOn = config.plugins.giftcard && config.plugins.giftcard.use;
-  const hasGiftcard = isGiftCardOn ? await knex('giftcard').where({ orderType: orderId, status: 'AVAILABLE' }) : [];
-  if(hasGiftcard.length) { return Promise.reject('giftcard with this order exists'); }
-  await knex('webgui_order').delete().where({ id: orderId });
+  const orderInfo = await knex('webgui_order').where({ id: orderId }).then(s => s[0]);
+  if(orderInfo.baseId) {
+    await knex('webgui_order').delete().where({ id: orderId });
+  } else {
+    const hasAccount = await knex('account_plugin').where({ orderId });
+    if(hasAccount.length) { return Promise.reject('account with this order exists'); }
+    const isGiftCardOn = config.plugins.giftcard && config.plugins.giftcard.use;
+    const hasGiftcard = isGiftCardOn ? await knex('giftcard').where({ orderType: orderId, status: 'AVAILABLE' }) : [];
+    if(hasGiftcard.length) { return Promise.reject('giftcard with this order exists'); }
+    const hasFlowPackOrder = await knex('webgui_order').where({ baseId: orderId });
+    if(hasFlowPackOrder.length) { return Promise.reject('flowpack order exists'); }
+    await knex('webgui_order').delete().where({ id: orderId });
+  }
   return;
 };
 

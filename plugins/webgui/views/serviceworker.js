@@ -1,4 +1,4 @@
-const ONLINE_CACHE_NAME = '2019-03-11 15:11:33 <%= serviceWorkerTime%>';
+const ONLINE_CACHE_NAME = '2019-08-27 22:20:16 <%= serviceWorkerTime%>';
 const isSWOpen = JSON.parse('<%= serviceWorker%>');
 
 const emptyCacheUrl = [];
@@ -14,12 +14,20 @@ const onlineCacheUrl = [
   '/libs/MaterialIcons-Regular.woff',
   '/libs/MaterialIcons-Regular.woff2',
 
+  '/libs/facebook-brands.svg',
+  '/libs/github-brands.svg',
+  '/libs/google-brands.svg',
+  '/libs/twitter-brands.svg',
+
   '/libs/style.css',
   
   '/public/views/skin/bing.html',
   '/public/views/skin/default.html',
   '/public/views/skin/fs_bing.html',
 
+  '/public/views/home/facebook.html',
+  '/public/views/home/github.html',
+  '/public/views/home/google.html',
   '/public/views/home/home.html',
   '/public/views/home/index.html',
   '/public/views/home/login.html',
@@ -28,11 +36,15 @@ const onlineCacheUrl = [
   '/public/views/home/refInput.html',
   '/public/views/home/resetPassword.html',
   '/public/views/home/signup.html',
+  '/public/views/home/social.html',
   '/public/views/home/telegramLogin.html',
+  '/public/views/home/twitter.html',
 
   '/public/views/user/account.html',
   '/public/views/user/changePassword.html',
   '/public/views/user/index.html',
+  '/public/views/user/macAddress.html',
+  '/public/views/user/notice.html',
   '/public/views/user/order.html',
   '/public/views/user/qrcodeDialog.html',
   '/public/views/user/ref.html',
@@ -98,6 +110,8 @@ const onlineCacheUrl = [
   '/public/views/dialog/pay.html',
   '/public/views/dialog/payByGiftCard.html',
   '/public/views/dialog/serverChart.html',
+  '/public/views/dialog/setAccountServer.html',
+  '/public/views/dialog/setCurrentAccount.html',
   '/public/views/dialog/setEmail.html',
   '/public/views/dialog/setUserGroup.html',
   '/public/views/dialog/subscribe.html',

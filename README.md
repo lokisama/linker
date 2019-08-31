@@ -17,11 +17,11 @@ If you want to use the old version, please switch to [this branch](https://githu
 
 ## WebGUI Demo:
 
-[https://shadowghost.app](https://ssmgr.gyteng.com)
+[https://shadowghost.app](https://2young.2simple.dev)
 
 ## FreeAccount Demo:
 
-[https://free.gyteng.com](https://free1.gyteng.com)
+[https://free.gyteng.com](https://free2.gyteng.com)
 
 
 ## Dependencies

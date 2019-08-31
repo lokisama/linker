@@ -148,6 +148,9 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     $scope.setFabButton($scope.id === 1 ? () => {
       $state.go('admin.addServer');
     } : null);
+    $scope.addServer = () => {
+      $state.go('admin.addServer');
+    };
     $scope.showServer = serverName => {
       if(!$scope.menuSearch.text) { return true; }
       return serverName.toString().includes($scope.menuSearch.text);
@@ -166,6 +169,7 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
     }
     $scope.accountFilter = $localStorage.admin.serverPortFilter;
     $scope.onlineAccount = [];
+    $scope.getServerInfoError = false;
     const getServerInfo = () => {
       $http.get(`/api/admin/server/${ serverId }`).then(success => {
         $scope.server = success.data;
@@ -200,6 +204,9 @@ app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', 
         $scope.portNumber = Object.keys($scope.currentPorts).filter(f => {
           return $scope.currentPorts[f].exists;
         }).length;
+        $scope.getServerInfoError = false;
+      }).catch(() => {
+        $scope.getServerInfoError = true;
       });
     };
     getServerInfo();

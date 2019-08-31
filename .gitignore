@@ -49,3 +49,4 @@ plugins/webgui/libs/lib.js
 plugins/webgui/libs/style.css
 *.yml
 *.sqlite
+dump.rdb

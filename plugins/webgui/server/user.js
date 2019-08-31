@@ -1,6 +1,7 @@
 const user = appRequire('plugins/user/index');
 const account = appRequire('plugins/account/index');
 const flow = appRequire('plugins/flowSaver/flow');
+const moment = require('moment');
 const knex = appRequire('init/knex').knex;
 const emailPlugin = appRequire('plugins/email/index');
 const orderPlugin = appRequire('plugins/webgui_order');
@@ -56,6 +57,39 @@ exports.getAccount = async (req, res) => {
       await accountFlow.edit(account.id);
     }
     res.send(accounts);
+  } catch (err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.getAccountUsage = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const accounts = await account.getAccount({ userId });
+    const servers = await knex('server').where({}).then(s => s.map(m => m.id));
+    const day = [
+      moment().hour(0).minute(0).second(0).millisecond(0).toDate().valueOf(),
+      moment().hour(24).minute(0).second(0).millisecond(0).toDate().valueOf(),
+    ];
+    const week = [
+      moment().day(0).hour(0).minute(0).second(0).millisecond(0).toDate().valueOf(),
+      moment().day(7).hour(0).minute(0).second(0).millisecond(0).toDate().valueOf(),
+    ];
+    const month = [
+      moment().date(0).hour(0).minute(0).second(0).millisecond(0).toDate().valueOf(),
+      moment().date(31).hour(0).minute(0).second(0).millisecond(0).toDate().valueOf(),
+    ];
+    const dayFlow = await Promise.all(accounts.map(m => {
+      return flow.getServerPortFlowWithScale(null, m.id, day, true).then(s => s[0]);
+    })).then(s => s.reduce((a, b) => a + b, 0));
+    const weekFlow = await Promise.all(accounts.map(m => {
+      return flow.getServerPortFlowWithScale(null, m.id, week, true).then(s => s[0]);
+    })).then(s => s.reduce((a, b) => a + b, 0));
+    const monthFlow = await Promise.all(accounts.map(m => {
+      return flow.getServerPortFlowWithScale(null, m.id, month, true).then(s => s[0]);
+    })).then(s => s.reduce((a, b) => a + b, 0));
+    res.send([dayFlow, weekFlow, monthFlow]);
   } catch (err) {
     console.log(err);
     res.status(403).end();
@@ -310,15 +344,21 @@ exports.getPrice = async (req, res) => {
 exports.getNotice = async (req, res) => {
   try {
     const userId = req.session.user;
-    const groupInfo = await knex('user').select([
-      'group.id as id',
-      'group.showNotice as showNotice',
-    ]).innerJoin('group', 'user.group', 'group.id').where({
-      'user.id': userId,
-    }).then(s => s[0]);
-    const group = [groupInfo.id];
-    if(groupInfo.showNotice) { group.push(-1); }
-    const notices = await knex('notice').select().whereIn('group', group).orderBy('time', 'desc');
+    const noticesWithoutGroup = await knex('notice').where({ group: 0 });
+    const noticesWithGroup = await knex('notice').select([
+      'notice.id as id',
+      'notice.title as title',
+      'notice.content as content',
+      'notice.time as time',
+      'notice.group as group',
+      'notice.autopop as autopop',
+    ])
+    .innerJoin('notice_group', 'notice.id', 'notice_group.noticeId')
+    .innerJoin('user', 'user.group', 'notice_group.groupId')
+    .where('notice.group', '>', 0)
+    .where({ 'user.id': userId })
+    .groupBy('notice.id');
+    const notices = [...noticesWithoutGroup, ...noticesWithGroup ].sort((a, b) => b.time - a.time);
     return res.send(notices);
   } catch (err) {
     console.log(err);

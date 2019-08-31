@@ -16,7 +16,7 @@ const sessionParser = session({
   rolling: true,
   resave: true,
   saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true, maxAge: 7 * 24 * 3600 * 1000 },
+  cookie: { secure: false, httpOnly: false, maxAge: 7 * 24 * 3600 * 1000 },
   store,
 });
 const bodyParser = require('body-parser');
@@ -25,7 +25,8 @@ const expressValidator = require('express-validator');
 const app = express();
 const cors = require('cors');
 
-app.set('trust proxy', 'loopback');
+//app.set('trust proxy', 'loopback');
+app.set('trust proxy', 1)
 app.use(log4js.connectLogger(expressLogger, {
   level: 'auto',
   format: '[:req[host]] [:req[x-real-ip]] :method :status :response-timems :url',
@@ -38,6 +39,7 @@ if(config.plugins.webgui.cors) {
     methods: ['GET', 'PUT', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true,
+    optionsSuccessStatus: 200
   };
   app.use(cors(corsOptions));
 }
@@ -58,6 +60,7 @@ app.use('/public', express.static(path.resolve('./plugins/webgui/public')));
 app.use('/public/views/skin', express.static(path.resolve(os.homedir(), './.ssmgr/skin')));
 
 app.use('/api/*', (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Surrogate-Control', 'no-store');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');

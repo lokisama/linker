@@ -46,6 +46,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       name: '订单',
       icon: 'attach_money',
       click: 'admin.pay',
+      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '设置',
       icon: 'settings',
@@ -85,6 +86,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.title = '';
     $scope.setTitle = str => { $scope.title = str; };
     $scope.fabButton = false;
+    $scope.fabNumber = null;
     $scope.fabButtonIcon = '';
     $scope.fabButtonClick = () => {};
     $scope.setFabButton = (fn, icon = '') => {
@@ -96,6 +98,9 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       }
       $scope.fabButton = true;
       $scope.fabButtonClick = fn;
+    };
+    $scope.setFabNumber = number => {
+      $scope.fabNumber = number;
     };
     $scope.menuButtonIcon = '';
     $scope.menuButtonClick = () => {};
@@ -154,6 +159,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     };
     $scope.$on('$stateChangeStart', function(event, toUrl, fromUrl) {
       $scope.fabButton = false;
+      $scope.fabNumber = null;
       $scope.fabButtonIcon = '';
       $scope.title = '';
       $scope.menuButtonIcon = '';
@@ -286,6 +292,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         group: $scope.orderFilter.group,
         filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
       }).then(success => {
+        $scope.setFabNumber(success.total);
         if(oldTabSwitchTime !== tabSwitchTime) { return; }
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }

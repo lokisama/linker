@@ -5,9 +5,16 @@ const dns = require('dns');
 const net = require('net');
 const crypto = require('crypto');
 const config = appRequire('services/config').all();
-const host = config.manager.address.split(':')[0];
-const port = +config.manager.address.split(':')[1];
-const password = config.manager.password;
+let host;
+let port;
+let password;
+try {
+  const host = config.manager.address.split(':')[0];
+  const port = +config.manager.address.split(':')[1];
+  const password = config.manager.password;
+} catch(err) {
+
+}
 
 const pack = (data, password) => {
   const message = JSON.stringify(data);
@@ -146,7 +153,16 @@ const send = async (data, options) => {
           successMark = false;
         }
       });
-      ret.version = versions.join(',');
+      if(versions.length === 1) {
+        ret.version = versions[0];
+      } else {
+        const diff = versions.some((ele, index, arr) => index > 0 && ele !== arr[index - 1]);
+        if(diff) {
+          ret.version = versions.join(',');
+        } else {
+          ret.version = versions[0] + ' x ' + versions.length;
+        }
+      }
       return successMark ? ret : Promise.reject();
     } else if(data.command === 'flow') {
       let successMark = false;
