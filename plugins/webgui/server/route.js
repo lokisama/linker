@@ -1,3 +1,5 @@
+const log4js = require('log4js');
+const logger = log4js.getLogger('webgui');
 const app = appRequire('plugins/webgui/index').app;
 // const wss = appRequire('plugins/webgui/index').wss;
 const sessionParser = appRequire('plugins/webgui/index').sessionParser;
@@ -12,6 +14,7 @@ const adminNotice = appRequire('plugins/webgui/server/adminNotice');
 const adminAccount = appRequire('plugins/webgui/server/adminAccount');
 const adminGiftCard = appRequire('plugins/webgui/server/adminGiftCard');
 const adminGroup = appRequire('plugins/webgui/server/adminGroup');
+const adminOrder = appRequire('plugins/webgui/server/adminOrder');
 const push = appRequire('plugins/webgui/server/push');
 const os = require('os');
 const path = require('path');
@@ -20,10 +23,13 @@ const config = appRequire('services/config').all();
 
 const isUser = (req, res, next) => {
   if (req.session.type === 'normal') {
-    knex('user').update({
-      lastLogin: Date.now(),
-    }).where({ id: req.session.user }).then();
-    return next();
+    knex('user').where({ id: req.session.user, type: 'normal' }).then(s => s[0]).then(user => {
+      if(!user) { return res.status(401).end(); }
+      req.userInfo = user;
+      return next();
+    }).catch(err => {
+      return res.status(401).end();
+    });
   } else {
     return res.status(401).end();
   }
@@ -34,7 +40,9 @@ const isAdmin = (req, res, next) => {
     knex('user').where({ id: req.session.user, type: 'admin' }).then(s => s[0]).then(user => {
       if(!user) { return res.status(401).end(); }
       req.adminInfo = user;
-      next();
+      return next();
+    }).catch(err => {
+      return res.status(401).end();
     });
   } else {
     return res.status(401).end();
@@ -51,6 +59,11 @@ app.post('/api/home/code', home.sendCode);
 app.post('/api/home/ref/:refCode', home.visitRef);
 app.post('/api/home/signup', home.signup);
 app.post('/api/home/login', home.login);
+app.post('/api/home/googleLogin', home.googleLogin);
+app.post('/api/home/facebookLogin', home.facebookLogin);
+app.post('/api/home/githubLogin', home.githubLogin);
+app.get('/api/home/twitterLogin', home.getTwitterLoginUrl);
+app.post('/api/home/twitterLogin', home.twitterLogin);
 app.post('/api/home/macLogin', home.macLogin);
 app.post('/api/home/logout', home.logout);
 app.post('/api/home/password/sendEmail', home.sendResetPasswordEmail);
@@ -64,6 +77,8 @@ app.put('/api/admin/server/:serverId(\\d+)', isAdmin, isSuperAdmin, adminServer.
 app.delete('/api/admin/server/:serverId(\\d+)', isAdmin, isSuperAdmin, adminServer.deleteServer);
 
 app.get('/api/admin/account', isAdmin, admin.getAccount);
+app.post('/api/admin/accountWithPage', isAdmin, admin.getAccountAndPaging);
+app.get('/api/admin/account/online', isAdmin, isSuperAdmin, admin.getOnlineAccount);
 app.get('/api/admin/macAccount', isAdmin, admin.getAllMacAccount);
 app.get('/api/admin/account/port/:port(\\d+)', isAdmin, admin.getAccountByPort);
 app.get('/api/admin/account/:accountId(\\d+)', isAdmin, admin.getOneAccount);
@@ -73,6 +88,7 @@ app.post('/api/admin/account/:serverId(\\d+)/:accountId(\\d+)/ban', isSuperAdmin
 app.get('/api/admin/account/ip/:ip', isAdmin, admin.getAccountIpInfo);
 app.get('/api/admin/account/:accountId(\\d+)/ip', isAdmin, admin.getAccountIpFromAllServer);
 app.post('/api/admin/account', isAdmin, isSuperAdmin, admin.addAccount);
+app.get('/api/admin/account/newPort', isAdmin, isSuperAdmin, admin.newPortForAddAccount);
 app.put('/api/admin/account/:accountId(\\d+)/port', isAdmin, isSuperAdmin, admin.changeAccountPort);
 app.put('/api/admin/account/:accountId(\\d+)/data', isAdmin, isSuperAdmin, admin.changeAccountData);
 app.put('/api/admin/account/:accountId(\\d+)/time', isAdmin, isSuperAdmin, admin.changeAccountTime);
@@ -85,6 +101,7 @@ app.put('/api/admin/account/mac', isAdmin, adminAccount.editMacAccount);
 app.delete('/api/admin/account/mac', isAdmin, adminAccount.deleteMacAccount);
 
 app.get('/api/user/account/mac/:macAddress', adminAccount.getMacAccountForUser);
+app.get('/api/user/account/subscribe/:token', adminAccount.getSubscribeAccountForUser);
 app.get('/api/user/notice/mac/:macAddress', adminAccount.getNoticeForUser);
 
 app.get('/api/admin/flow/:serverId(\\d+)', isAdmin, adminFlow.getServerFlow);
@@ -101,20 +118,28 @@ app.get('/api/admin/user/recentSignUp', isAdmin, admin.getRecentSignUpUsers);
 app.get('/api/admin/user/recentLogin', isAdmin, admin.getRecentLoginUsers);
 
 app.get('/api/admin/user/account', isAdmin, admin.getUserAccount);
-app.get('/api/admin/user/:userId(\\d+)', isAdmin, admin.getOneUser);
-app.get('/api/admin/admin/:userId(\\d+)', isAdmin, admin.getOneAdmin);
+app.get('/api/admin/user/:userId(\\d+)', isAdmin, adminUser.getOneUser);
+app.get('/api/admin/admin/:userId(\\d+)', isAdmin, adminUser.getOneAdmin);
 app.post('/api/admin/user/:userId(\\d+)/sendEmail', isAdmin, admin.sendUserEmail);
 app.put('/api/admin/user/:userId(\\d+)/:accountId(\\d+)', isAdmin, admin.setUserAccount);
 app.delete('/api/admin/user/:userId(\\d+)', isAdmin, admin.deleteUser);
 app.delete('/api/admin/user/:userId(\\d+)/:accountId(\\d+)', isAdmin, admin.deleteUserAccount);
 app.get('/api/admin/user/:accountId(\\d+)/lastConnect', isAdmin, admin.getUserPortLastConnect);
+app.put('/api/admin/user/:userId(\\d+)/comment', isAdmin, isSuperAdmin, adminUser.editUserComment);
 
 app.get('/api/admin/alipay', isAdmin, admin.getOrders);
+app.get('/api/admin/alipay/csv', isAdmin, isSuperAdmin, admin.getCsvOrders);
 app.get('/api/admin/alipay/recentOrder', isAdmin, admin.getRecentOrders);
 app.get('/api/admin/alipay/:userId(\\d+)', isAdmin, admin.getUserOrders);
 app.get('/api/admin/paypal', isAdmin, admin.getPaypalOrders);
+app.get('/api/admin/paypal/csv', isAdmin, isSuperAdmin, admin.getPaypalCsvOrders);
 app.get('/api/admin/paypal/recentOrder', isAdmin, admin.getPaypalRecentOrders);
 app.get('/api/admin/paypal/:userId(\\d+)', isAdmin, admin.getPaypalUserOrders);
+
+app.post('/api/admin/alipay/refund', isAdmin, isSuperAdmin, admin.alipayRefund);
+
+app.get('/api/admin/refOrder', isAdmin, admin.getRefOrders);
+app.get('/api/admin/refOrder/:userId(\\d+)', isAdmin, admin.getUserRefOrders);
 
 app.get('/api/admin/notice', isAdmin, isSuperAdmin, adminNotice.getNotice);
 app.get('/api/admin/notice/:noticeId(\\d+)', isAdmin, isSuperAdmin, adminNotice.getOneNotice);
@@ -124,7 +149,7 @@ app.delete('/api/admin/notice/:noticeId(\\d+)', isAdmin, isSuperAdmin, adminNoti
 
 app.get('/api/admin/setting/payment', isAdmin, isSuperAdmin, adminSetting.getPayment);
 app.put('/api/admin/setting/payment', isAdmin, isSuperAdmin, adminSetting.modifyPayment);
-app.get('/api/admin/setting/account', isAdmin, isSuperAdmin, adminSetting.getAccount);
+app.get('/api/admin/setting/account', isAdmin, adminSetting.getAccount);
 app.put('/api/admin/setting/account', isAdmin, isSuperAdmin, adminSetting.modifyAccount);
 app.get('/api/admin/setting/base', isAdmin, isSuperAdmin, adminSetting.getBase);
 app.put('/api/admin/setting/base', isAdmin, isSuperAdmin, adminSetting.modifyBase);
@@ -136,14 +161,25 @@ app.get('/api/admin/setting/ref/code', isAdmin, isSuperAdmin, adminSetting.getRe
 app.get('/api/admin/setting/ref/code/:id(\\d+)', isAdmin, isSuperAdmin, adminSetting.getOneRefCode);
 app.put('/api/admin/setting/ref/code/:id(\\d+)', isAdmin, isSuperAdmin, adminSetting.editOneRefCode);
 app.get('/api/admin/setting/ref/user', isAdmin, isSuperAdmin, adminSetting.getRefUser);
+app.post('/api/admin/setting/ref/searchSourceUser', isAdmin, isSuperAdmin, adminSetting.searchSourceUser);
+app.post('/api/admin/setting/ref/searchRefUser', isAdmin, isSuperAdmin, adminSetting.searchRefUser);
+app.post('/api/admin/setting/ref/:sourceUserId(\\d+)/:refUserId(\\d+)/:code', isAdmin, isSuperAdmin, adminSetting.setRefForUser);
 app.get('/api/admin/ref/code', isAdmin, user.getRefCode);
 app.get('/api/admin/ref/user', isAdmin, user.getRefUser);
+app.get('/api/admin/ref/user/:userId(\\d+)', isAdmin, admin.getRefUserById);
+app.get('/api/admin/ref/code/:userId(\\d+)', isAdmin, admin.getRefCodeById);
+app.post('/api/admin/ref/code/:userId(\\d+)', isAdmin, admin.addRefCodeForUser);
+app.delete('/api/admin/ref/:sourceUserId(\\d+)/:refUserId(\\d+)', isAdmin, admin.deleteRefUser);
+app.delete('/api/admin/ref/:code', isAdmin, isSuperAdmin, admin.deleteRefCode);
+
 
 app.get('/api/admin/giftcard', isAdmin, adminGiftCard.getOrders);
+app.get('/api/admin/giftcard/:userId(\\d+)', isAdmin, adminGiftCard.getUserOrders);
 app.get('/api/admin/giftcard/list', isAdmin, adminGiftCard.listBatch);
 app.get('/api/admin/giftcard/details/:batchNumber(\\d+)', isAdmin, adminGiftCard.getBatchDetails);
 app.post('/api/admin/giftcard/revoke', isAdmin, adminGiftCard.revokeBatch);
 app.post('/api/admin/giftcard/add', isAdmin, adminGiftCard.addGiftCard);
+app.post('/api/admin/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGiftCardForUser);
 
 app.get('/api/admin/group', isAdmin, adminGroup.getGroups);
 app.get('/api/admin/group/:id(\\d+)', isAdmin, adminGroup.getOneGroup);
@@ -154,9 +190,21 @@ app.post('/api/admin/group/:groupId(\\d+)/:userId(\\d+)', isAdmin, isSuperAdmin,
 
 app.post('/api/admin/setting/changePassword', isAdmin, adminSetting.changePassword);
 
+app.get('/api/admin/order', isAdmin, isSuperAdmin, adminOrder.getOrders);
+app.get('/api/admin/order/:orderId(\\d+)', isAdmin, isSuperAdmin, adminOrder.getOneOrder);
+app.post('/api/admin/order', isAdmin, isSuperAdmin, adminOrder.newOrder);
+app.put('/api/admin/order/:orderId(\\d+)', isAdmin, isSuperAdmin, adminOrder.editOrder);
+app.delete('/api/admin/order/:orderId(\\d+)', isAdmin, isSuperAdmin, adminOrder.deleteOrder);
+
 app.get('/api/user/notice', isUser, user.getNotice);
 app.get('/api/user/account', isUser, user.getAccount);
+app.get('/api/user/usage', isUser, user.getAccountUsage);
+app.get('/api/user/account/mac', isUser, user.getMacAccount);
+app.post('/api/user/account/mac', isUser, user.addMacAccount);
 app.get('/api/user/account/:accountId(\\d+)', isUser, user.getOneAccount);
+app.put('/api/user/account/:accountId(\\d+)/active', isUser, user.activeAccount);
+app.get('/api/user/account/:accountId(\\d+)/subscribe', isUser, user.getAccountSubscribe);
+app.put('/api/user/account/:accountId(\\d+)/subscribe', isUser, user.updateAccountSubscribe);
 app.get('/api/user/server', isUser, user.getServers);
 app.get('/api/user/flow/:serverId(\\d+)/:accountId(\\d+)', isUser, user.getServerPortFlow);
 app.get('/api/user/flow/:serverId(\\d+)/:accountId(\\d+)/lastConnect', isUser, user.getServerPortLastConnect);
@@ -182,6 +230,8 @@ app.post('/api/user/changePassword', isUser, user.changePassword);
 app.get('/api/user/ref/code', isUser, user.getRefCode);
 app.get('/api/user/ref/user', isUser, user.getRefUser);
 
+app.get('/api/user/order', isUser, user.getOrder);
+
 if (config.plugins.webgui_telegram && config.plugins.webgui_telegram.use) {
   const telegram = appRequire('plugins/webgui_telegram/account');
   app.get('/api/user/telegram/code', isUser, user.getTelegramCode);
@@ -195,6 +245,12 @@ if (config.plugins.webgui_telegram && config.plugins.webgui_telegram.use) {
 if (config.plugins.webgui.gcmAPIKey && config.plugins.webgui.gcmSenderId) {
   app.post('/api/push/client', push.client);
   app.delete('/api/push/client', push.deleteClient);
+}
+
+if (config.plugins.webgui_crisp && config.plugins.webgui_crisp.use) {
+  const crisp = appRequire('plugins/webgui_crisp/index');
+  app.get('/api/user/crisp', isUser, crisp.getUserToken);
+  app.post('/api/user/crisp', isUser, crisp.setUserToken);
 }
 
 app.get('/favicon.png', (req, res) => {
@@ -236,11 +292,13 @@ app.get('/manifest.json', (req, res) => {
   });
 });
 
-const version = appRequire('package').version;
 const configForFrontend = {};
 
 const cdn = config.plugins.webgui.cdn;
+const keywords = config.plugins.webgui.keywords || ' ';
+const description = config.plugins.webgui.description || ' ';
 const analytics = config.plugins.webgui.googleAnalytics || '';
+const crisp = config.plugins.webgui.crisp || '';
 const colors = [
   { value: 'red', color: '#F44336' },
   { value: 'pink', color: '#E91E63' },
@@ -263,7 +321,15 @@ const colors = [
   { value: 'grey', color: '#9E9E9E' },
 ];
 const homePage = (req, res) => {
-  return knex('webguiSetting').select().where({
+  res.set({
+    Link: [
+      '</libs/style.css>; rel=preload; as=style,',
+      '</libs/angular-material.min.css>; rel=preload; as=style,',
+      '</libs/lib.js>; rel=preload; as=script,',
+      '</libs/bundle.js>; rel=preload; as=script',
+    ].join(' ')
+  });
+  return knex('webguiSetting').where({
     key: 'base',
   }).then(success => {
     if (!success.length) {
@@ -279,7 +345,10 @@ const homePage = (req, res) => {
     return res.render('index', {
       title: success.title,
       cdn,
+      keywords,
+      description,
       analytics,
+      crisp,
       config: configForFrontend,
       paypal: !!(config.plugins.paypal && config.plugins.paypal.use),
     });
@@ -290,22 +359,23 @@ app.get(/^\/home\//, homePage);
 app.get(/^\/admin\//, homePage);
 app.get(/^\/user\//, homePage);
 
-app.get('/serviceworker.js', (req, res) => {
-  return knex('webguiSetting').select().where({
-    key: 'base',
-  }).then(success => {
-    if (!success.length) {
-      return Promise.reject('settings not found');
-    }
-    success[0].value = JSON.parse(success[0].value);
-    return success[0].value;
-  }).then(success => {
+app.get('/serviceworker.js', async (req, res) => {
+  try {
+    const setting = await knex('webguiSetting').select().where({
+      key: 'base',
+    }).then(success => {
+      success[0].value = JSON.parse(success[0].value);
+      return success[0].value;
+    });
     res.header('Content-Type', 'text/javascript');
     res.render('serviceworker.js', {
-      serviceWorker: !!success.serviceWorker,
-      serviceWorkerTime: success.serviceWorkerTime,
+      serviceWorker: !!setting.serviceWorker,
+      serviceWorkerTime: setting.serviceWorkerTime,
     });
-  });
+  } catch(err) {
+    logger.error(err);
+    res.status(500).end();
+  }
 });
 
 app.get('*', (req, res) => {

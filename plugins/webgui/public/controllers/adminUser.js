@@ -7,11 +7,15 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
     $scope.setFabButton(() => {
       $state.go('admin.addUser');
     });
+    $scope.addUser = () => {
+      $state.go('admin.addUser');
+    };
     if(!$localStorage.admin.userSortSettings) {
       $localStorage.admin.userSortSettings = {
         sort: 'id_asc',
         type: {
           normal: true,
+          admin: true,
         },
         group: -1,
       };
@@ -28,7 +32,7 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
       if($mdMedia('md')) { return 60; }
       if($mdMedia('gt-md')) { return 80; }
     };
-    $scope.getUsers = (search) => {
+    $scope.getUsers = search => {
       $scope.isUserLoading = true;
       adminApi.getUser({
         page: $scope.currentPage,
@@ -38,7 +42,8 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
         type: $scope.userSort.type,
         group: $scope.userSort.group,
       }).then(success => {
-        $scope.total = success.total;
+        // $scope.total = success.total;
+        $scope.setFabNumber(success.total);
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }
         success.users.forEach(f => {
@@ -109,8 +114,8 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
     };
   }
 ])
-.controller('AdminUserPageController', ['$scope', '$state', '$stateParams', '$http', '$mdDialog', 'adminApi', 'orderDialog', 'confirmDialog', 'emailDialog', 'addAccountDialog', 'setGroupDialog',
-  ($scope, $state, $stateParams, $http, $mdDialog, adminApi, orderDialog, confirmDialog, emailDialog, addAccountDialog, setGroupDialog) => {
+.controller('AdminUserPageController', ['$scope', '$state', '$stateParams', '$http', 'editUserCommentDialog', 'adminApi', 'orderDialog', 'confirmDialog', 'emailDialog', 'addAccountDialog', 'setGroupDialog',
+  ($scope, $state, $stateParams, $http, editUserCommentDialog, adminApi, orderDialog, confirmDialog, emailDialog, addAccountDialog, setGroupDialog) => {
     $scope.setTitle('用户信息');
     $scope.setMenuButton('arrow_back', 'admin.user');
     const userId = $stateParams.userId;
@@ -121,6 +126,10 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
         $scope.server = success.server;
         $scope.alipayOrders = success.alipayOrders;
         $scope.paypalOrders = success.paypalOrders;
+        $scope.giftCardOrders = success.giftCardOrders;
+        $scope.refOrders = success.refOrders;
+        $scope.refUsers = success.refUsers;
+        $scope.refCodes = success.refCodes;
         $scope.user.account.forEach(f => {
           adminApi.getUserPortLastConnect(f.id).then(success => {
             f.lastConnect = success.lastConnect;
@@ -206,6 +215,40 @@ app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'admi
         $scope.groupInfo[f.id] = { name: f.name, comment: f.comment };
       });
     });
+    $scope.toRefUser = userId => {
+      $state.go('admin.userPage', { userId });
+    };
+    $scope.deleteRefUser = refUserId => {
+      confirmDialog.show({
+        text: '删除该邀请关系？',
+        cancel: '取消',
+        confirm: '删除',
+        error: '删除邀请关系失败',
+        fn: function () { return $http.delete(`/api/admin/ref/${ userId }/${ refUserId }`); },
+      }).then(() => {
+        getUserData();
+      }).catch(() => {
+
+      });
+    };
+    $scope.deleteRefCode = code => {
+      confirmDialog.show({
+        text: '删除该邀请码？\n注意，邀请码对应的邀请关系也会一并删除',
+        cancel: '取消',
+        confirm: '删除',
+        error: '删除邀请码失败',
+        fn: function () { return $http.delete(`/api/admin/ref/${ code }`); },
+      }).then(() => {
+        getUserData();
+      }).catch(() => {
+
+      });
+    };
+    $scope.editComment = () => {
+      editUserCommentDialog.show($scope.user.id, $scope.user.comment).then(() => {
+        getUserData();
+      });
+    };
   }
 ])
 .controller('AdminAddUserController', ['$scope', '$state', '$stateParams', '$http', 'alertDialog',

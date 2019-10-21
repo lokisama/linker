@@ -5,14 +5,14 @@ const logger = log4js.getLogger('webgui');
 
 exports.addGiftCard = async (req, resp) => {
   const count = Number(req.body.count);
-  const type = Number(req.body.type);
+  const orderId = Number(req.body.orderId);
   const comment = req.body.comment;
-  if (count === NaN || type === NaN || count === 0) {
+  if (count === NaN || orderId === NaN || count === 0) {
     resp.status(400).send('Bad parameters').end();
     return;
   }
   try {
-    const batchNumber = await giftcard.generateGiftCard(count, type, comment);
+    const batchNumber = await giftcard.generateGiftCard(count, orderId, comment);
     resp.send({ batchNumber: batchNumber });
   } catch (err) {
     logger.error(`添加充值码失败：${err.toString()}`);
@@ -35,12 +35,12 @@ exports.revokeBatch = async (req, resp) => {
   }
 };
 
-exports.listBatch = async (req, resp) => {
+exports.listBatch = async (req, res) => {
   try {
-    resp.send(await giftcard.listBatch());
+    res.send(await giftcard.listBatch());
   } catch (err) {
     logger.error(`无法列出充值码：${err.toString()}`);
-    resp.status(500).end();
+    res.status(500).end();
   }
 };
 
@@ -62,7 +62,7 @@ exports.getBatchDetails = async (req, resp) => {
   }
 };
 
-exports.getOrders = async (req, resp) => {
+exports.getOrders = async (req, res) => {
   try {
     const options = {};
     if(req.adminInfo.id === 1) {
@@ -70,10 +70,38 @@ exports.getOrders = async (req, resp) => {
     } else {
       options.group = req.adminInfo.group;
     }
+    options.page = +req.query.page;
+    options.pageSize = +req.query.pageSize;
+    options.start = req.query.start;
+    options.end = req.query.end;
     const details = await giftcard.orderListAndPaging(options);
-    resp.send(details);
+    res.send(details);
   } catch (err) {
     logger.error(err);
-    resp.status(500).end();
+    res.status(500).end();
+  }
+};
+
+exports.getUserOrders = async (req, res) => {
+  try {
+    const userId = +req.params.userId;
+    const details = await giftcard.getUserOrders(userId);
+    res.send(details);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).end();
+  }
+};
+
+exports.useGiftCardForUser = async (req, res) => {
+  try {
+    const password = req.body.password;
+    const userId = +req.body.userId;
+    const accountId = req.body.accountId ? +req.body.accountId : null;
+    const result = await giftcard.processOrder(userId, accountId, password);
+    res.send(result);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).end();
   }
 };

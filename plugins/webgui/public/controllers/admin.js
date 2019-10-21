@@ -3,11 +3,10 @@ const app = angular.module('app');
 app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state', '$http', '$document', '$interval', '$timeout', '$localStorage', 'configManager',
   ($scope, $mdMedia, $mdSidenav, $state, $http, $document, $interval, $timeout, $localStorage, configManager) => {
     const config = configManager.getConfig();
-    console.log(config);
     if(config.status === 'normal') {
-      $state.go('user.index');
+      return $state.go('user.index');
     } else if(!config.status) {
-      $state.go('home.index');
+      return $state.go('home.index');
     } else {
       $scope.setMainLoading(false);
     }
@@ -47,6 +46,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       name: '订单',
       icon: 'attach_money',
       click: 'admin.pay',
+      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '设置',
       icon: 'settings',
@@ -86,6 +86,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.title = '';
     $scope.setTitle = str => { $scope.title = str; };
     $scope.fabButton = false;
+    $scope.fabNumber = null;
     $scope.fabButtonIcon = '';
     $scope.fabButtonClick = () => {};
     $scope.setFabButton = (fn, icon = '') => {
@@ -97,6 +98,9 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       }
       $scope.fabButton = true;
       $scope.fabButtonClick = fn;
+    };
+    $scope.setFabNumber = number => {
+      $scope.fabNumber = number;
     };
     $scope.menuButtonIcon = '';
     $scope.menuButtonClick = () => {};
@@ -155,6 +159,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     };
     $scope.$on('$stateChangeStart', function(event, toUrl, fromUrl) {
       $scope.fabButton = false;
+      $scope.fabNumber = null;
       $scope.fabButtonIcon = '';
       $scope.title = '';
       $scope.menuButtonIcon = '';
@@ -176,8 +181,8 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     });
   }
 ])
-.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog', '$http',
-  ($scope, $state, adminApi, $localStorage, $interval, orderDialog, $http) => {
+.controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog',
+  ($scope, $state, adminApi, $localStorage, $interval, orderDialog) => {
     $scope.setTitle('首页');
     if($localStorage.admin.indexInfo) {
       $scope.signupUsers = $localStorage.admin.indexInfo.data.signup;
@@ -240,6 +245,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     if($scope.config.alipay) { $scope.payTypes.push({ name: '支付宝' }); }
     if($scope.config.paypal) { $scope.payTypes.push({ name: 'Paypal' }); }
     if($scope.config.giftcard) { $scope.payTypes.push({ name: '充值码' }); }
+    if($scope.config.refCode) { $scope.payTypes.push({ name: '邀请码' }); }
     if($scope.payTypes.length) { $scope.myPayType = $scope.payTypes[0].name; }
     $scope.selectPayType = type => {
       tabSwitchTime = Date.now();
@@ -277,6 +283,8 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       const oldTabSwitchTime = tabSwitchTime;
       $scope.isOrderLoading = true;
       adminApi.getOrder($scope.myPayType, {
+        start: $scope.orderFilter.start,
+        end: $scope.orderFilter.end,
         page: $scope.currentPage,
         pageSize: getPageSize(),
         search,
@@ -284,6 +292,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         group: $scope.orderFilter.group,
         filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
       }).then(success => {
+        $scope.setFabNumber(success.total);
         if(oldTabSwitchTime !== tabSwitchTime) { return; }
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }
@@ -339,6 +348,14 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.$on('RightButtonClick', () => {
       $scope.orderFilterDialog();
     });
+    $scope.setFabButton(() => {
+      adminApi.getCsvOrder($scope.myPayType, {
+        start: $scope.orderFilter.start,
+        end: $scope.orderFilter.end,
+        group: $scope.orderFilter.group,
+        filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
+      });
+    }, 'get_app');
   }
 ]);
 

@@ -3,6 +3,7 @@ const logger = log4js.getLogger('webgui');
 const expressLogger = log4js.getLogger('express');
 
 const config = appRequire('services/config').all();
+const os = require('os');
 const path = require('path');
 const express = require('express');
 // const WebSocketServer = require('ws').Server;
@@ -15,19 +16,33 @@ const sessionParser = session({
   rolling: true,
   resave: true,
   saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true, maxAge: 7 * 24 * 3600 * 1000 },
+  cookie: { secure: false, httpOnly: false, maxAge: 7 * 24 * 3600 * 1000 },
   store,
 });
 const bodyParser = require('body-parser');
 const compression = require('compression');
 const expressValidator = require('express-validator');
 const app = express();
+const cors = require('cors');
 
-app.set('trust proxy', 'loopback');
+//app.set('trust proxy', 'loopback');
+app.set('trust proxy', 1)
 app.use(log4js.connectLogger(expressLogger, {
   level: 'auto',
-  format: '[:req[x-real-ip]] :method :status :response-timems :url',
+  format: '[:req[host]] [:req[x-real-ip]] :method :status :response-timems :url',
 }));
+
+if(config.plugins.webgui.cors) {
+  const whitelist = config.plugins.webgui.cors;
+  const corsOptions = {
+    origin: whitelist,
+    methods: ['GET', 'PUT', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true,
+    optionsSuccessStatus: 200
+  };
+  app.use(cors(corsOptions));
+}
 
 app.use(bodyParser.json());
 app.use(expressValidator());
@@ -42,6 +57,16 @@ app.set('views', path.resolve('./plugins/webgui/views'));
 
 app.use('/libs', express.static(path.resolve('./plugins/webgui/libs')));
 app.use('/public', express.static(path.resolve('./plugins/webgui/public')));
+app.use('/public/views/skin', express.static(path.resolve(os.homedir(), './.ssmgr/skin')));
+
+app.use('/api/*', (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 const port = config.plugins.webgui.port || 8080;
 const host = config.plugins.webgui.host || '0.0.0.0';
@@ -67,13 +92,11 @@ app.listen(port, host, () => {
 //   }
 // });
 
-app.use((err, req, res, next) => {
-  return res.render('error');
-});
+app.use((err, req, res, next) => res.render('error'));
 
 exports.app = app;
 // exports.wss = wss;
 // exports.sessionParser = sessionParser;
-exports.dependence = ['webgui_ref', 'group', 'macAccount'];
+// exports.dependence = ['webgui_ref', 'group', 'macAccount', 'webgui_order'];
 
 appRequire('plugins/webgui/server/route');

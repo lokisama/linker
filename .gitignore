@@ -42,3 +42,11 @@ config/development.yml
 
 .vscode
 lib
+webgui.yml
+ss.sqlite
+plugins/webgui/libs/bundle.js
+plugins/webgui/libs/lib.js
+plugins/webgui/libs/style.css
+*.yml
+*.sqlite
+dump.rdb

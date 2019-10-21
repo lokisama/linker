@@ -47,11 +47,42 @@ app.config(['$stateProvider', $stateProvider => {
       controller: 'HomeResetPasswordController',
       templateUrl: `${ cdn }/public/views/home/resetPassword.html`,
     })
+    .state('home.refInput', {
+      url: '/ref',
+      controller: 'HomeRefInputController',
+      templateUrl: `${ cdn }/public/views/home/refInput.html`,
+    })
     .state('home.ref', {
       url: '/ref/:refId',
       controller: 'HomeRefController',
       templateUrl: `${ cdn }/public/views/home/ref.html`,
-    });
+    })
+    .state('home.social', {
+      url: '/social',
+      controller: 'HomeSocialLoginController',
+      templateUrl: `${ cdn }/public/views/home/social.html`,
+    })
+    .state('home.google', {
+      url: '/google',
+      controller: 'HomeGoogleLoginController',
+      templateUrl: `${ cdn }/public/views/home/google.html`,
+    })
+    .state('home.facebook', {
+      url: '/facebook',
+      controller: 'HomeFacebookLoginController',
+      templateUrl: `${ cdn }/public/views/home/facebook.html`,
+    })
+    .state('home.github', {
+      url: '/github',
+      controller: 'HomeGithubLoginController',
+      templateUrl: `${ cdn }/public/views/home/github.html`,
+    })
+    .state('home.twitter', {
+      url: '/twitter',
+      controller: 'HomeTwitterLoginController',
+      templateUrl: `${ cdn }/public/views/home/twitter.html`,
+    })
+    ;
   }
 ]);
 

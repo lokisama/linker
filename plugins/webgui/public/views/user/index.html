@@ -1,53 +1,218 @@
 <div layout="row" layout-xs="column" layout-wrap>
-    <div flex="100">
+    <style>
+        .flow_container{
+            position:relative;
+            background: #68b1e6;
+            color:#fff;
+        }
+        .flow_circle{
+            position:relative;
+            /*top:2px;
+            right:35%;*/
+            background: #fff;
+            width:160px;
+            height:160px;
+            border-radius: 160px;
+        }
+        .flow_circle_inner{
+            position:absolute;
+            left:10px;
+            top:10px;
+            background: #68b1e6;
+            width:140px;
+            height:140px;
+            border-radius: 140px;
+
+        }
+        .flow_circle_text{
+            margin-top:50px;
+            color:#fff;
+            font-size:12px;
+            text-align: center;
+        }
+        .flow_circle_flow{
+            font-size:18px;
+            font-weight: bold;
+        }
+        .flow_button{
+            /*position:absolute;
+            right:10px;
+            top:30px;*/
+        }
+        .flow_button button{
+            background: hsla(0, 0%, 100%, .2);
+            color:#fff!important;
+        }
+        .flow_button button.red{
+            background: rgba(222,63,83, 1);
+            color:#fff!important;
+        }
+        .flow_text{
+            margin-left:8px;
+        }
+        .flow_text_plan{
+            font-size:2em;
+            line-height: 2em;
+        }
+        .font12{
+            font-size:12px!important;
+        }
+        .page-prev{
+            position:absolute;
+            left:10px;
+            top:45%;
+            cursor:pointer;
+        }
+        .page-next{
+            position:absolute;
+            right:10px;
+            top:45%;
+            cursor:pointer;
+        }
+        .adv-cards{
+
+        }
+        .adv-cards .adv{
+            padding:4px;
+            padding-bottom:0px;
+        }
+    </style>
+    <div ng-if="account && !account.length" flex="100" flex-xs="100">
+        <md-card>
+            <md-card-content>
+                <div style="margin-top: 30px; margin-bottom: 30px;" translate>目前该用户没有分配账号，请联系管理员处理</div>
+                <div ng-show="config.alipay || config.paypal" ng-click="createOrder()" style="margin-bottom: 30px;">{{ '或' | translate }}
+                    <span><md-button class="md-primary">{{ '点击这里' | translate }}</md-button></span>
+                {{ '付款立即开通帐号' | translate }}</div>
+            </md-card-content>
+        </md-card>
+    </div>
+    <div ng-if="account && account.length > 0" flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
+        <md-card  flex class="flow_container">
+            <md-card-title>
+                <md-card-title-text><span class="sm-headline">{{ '零卡加速' | translate }} [{{account[accountIndex].port}}]</span></md-card-title-text>
+            </md-card-title>
+            <md-card-content >
+                <div style="margin:0 auto 10px;" layout="row" layout-md="row" layout-xs="column" layout-sm="row">
+                    <div flex layout-align="center center" layout="row">
+                    <div class="flow_circle">
+                        <div class="flow_circle_inner">
+                            <div class="flow_circle_text">
+                            <div class="flow_circle_flow">{{ accountPlan[accountIndex].serverPortFlow | flow}}</div>
+                            <div>本月已使用</div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div flex layout-align="center center" layout="column">
+                        <span class="page-prev" ng-click="goPrev(account)" ng-if="account.length > 1"> << </span>
+                        <div class="flow_text">
+                            <span class="flow_text_plan" ng-bind="plan[account[accountIndex].orderId].comment">SVIP</span>套餐
+                        </div>
+                        <div class="flow_tex ">
+                            <span  style="color:#fffa7e;">{{accountPlan[accountIndex].maxFlow | flowServer}}/月 有效期至 {{accountPlan[accountIndex].expire | date : 'yyyy-MM-dd'}} </span>
+                            <span ng-show="isAccountOutOfDate(account[accountIndex])" style="color: #a33;">&nbsp;{{ '已过期' | translate }}</span>
+                            <br/>
+                            <span style="font-size:0.8rem">(如信息不准请联系客服核对,微信:248769011)</span><br/><br/>
+                        </div>
+                        <div class="flow_button" layout="row" flex>
+                            <md-button class="md-primary red" ng-show="config.alipay || config.paypal || config.giftcard" ng-click="createOrder(account[accountIndex])">{{ '新购或续费' | translate }}</md-button>
+                            <md-button class="md-primary" ng-click="toMyAccount()">{{ '查看详情' | translate }}</md-button>
+                        </div>
+
+                        <span class="page-next" ng-click="goNext(account)" ng-if="account.length > 1"> >> </span>
+                    </div>
+                </div>
+            </md-card-content>
+        </md-card>
+    </div>
+    <!--<div flex="100" layout="row" layout-xs="row" layout-wrap class="adv-cards">
+        <md-card flex="20" flex-xs="40" >
+            <a href="https://www.linkersocks.com/libs/adv03.jpg" target="_blank" class="adv">
+            <img src="https://www.linkersocks.com/libs/adv03.jpg" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a href="https://www.linkersocks.com/libs/adv01.png" target="_blank" class="adv">
+            <img src="https://www.linkersocks.com/libs/adv01.png" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a href="https://www.linkersocks.com/libs/adv04.png" target="_blank" class="adv">
+            <img src="https://www.linkersocks.com/libs/adv04.png" width="100%"/></a>
+        </md-card>
+        <md-card flex="20" flex-xs="40">
+            <a href="https://www.linkersocks.com/libs/adv07.png" target="_blank" class="adv">
+            <img src="https://www.linkersocks.com/libs/adv07.png" width="100%"/></a>
+        </md-card>
+    </div>-->
+    <div flex="100" flex-xs="100">
         <md-card flex="100">
             <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '公告' | translate }}</span></md-card-title-text>
+                <md-card-title-text><span class="sm-headline">{{ '公告' | translate }}</span></md-card-title-text>
             </md-card-title>
             <md-card-content>
                 <div ng-show="notices.length === 0">{{ '暂无公告' | translate }}</div>
-                <md-list>
+                <md-list ng-show="notices.length > 0">
                     <md-divider></md-divider>
-                    <md-list-item ng-repeat="notice in notices" ng-click="showNotice(notice)">
+                    <md-list-item ng-repeat-start="notice in notices" ng-click="showNotice(notice)">
                         <div flex layout="row" layout-align="space-between center">
                             <div>{{notice.title}}</div>
                         </div>
-                        <md-divider></md-divider>
                     </md-list-item>
+                    <md-divider ng-repeat-end></md-divider>
                 </md-list>
             </md-card-content>
         </md-card>
     </div>
-    <div flex="100" layout="row" layout-xs="column" layout-sm="column" layout-wrap>
-        <md-card ng-click="toMyAccount()" flex>
+    <div flex="50" flex-xs="100" id="follow">
+        <md-card flex="100">
             <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '账号' | translate }}</span></md-card-title-text>
+                <md-card-title-text><span class="sm-headline">{{ '视频教程' | translate }}</span></md-card-title-text>
             </md-card-title>
             <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
-            </md-card-content>
-        </md-card>
-        <md-card ng-click="toTelegram()" flex ng-if="config.telegram">
-            <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '绑定Telegram' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
-            </md-card-content>
-        </md-card>
-        <md-card ng-click="toRef()" flex ng-if="config.refCode">
-            <md-card-title>
-                <md-card-title-text><span class="md-headline">{{ '邀请码' | translate }}</span></md-card-title-text>
-            </md-card-title>
-            <md-card-content>
-                <div style="text-align: right;">
-                    <md-button class="md-primary">{{ '点击进入' | translate }}&gt;&gt;</md-button>
-                </div>
+                <div class="ng-isolate-scope">
+<p><img width="50" height="50" src="/libs/ico-windows.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000352&sn=da21c6ce1ba082a0d0695874bb17b50b&vid=w1345ivt4tn&idx=1&vidsn=f78ad79b695c67bf24aa5ecaee4f15d5&fromid=1&scene=18#rd" target="_blank">Windows教程</a> |
+<a href="https://www.linkersocks.com/libs/linker-windows.exe" target="_blank">软件下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-ios.jpg"> <a href="https://mp.weixin.qq.com/s/X7xYXVeCkRtv6tKoRJt6uA
+" target="_blank">Iphone/Ipad教程</a> | 
+<a href="javascript:alert('请阅读教程或加微信咨询：248769011')" target="_blank">换美区ID下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-android.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000353&sn=1fe10776ecf0455c5c6cb9f37c02f878&vid=i1345v3zug9&idx=1&vidsn=0444563fb23238d83d3bdb7880eb82e0&fromid=1&scene=18#rd" target="_blank">Android教程</a> |
+<a href="https://www.linkersocks.com/libs/linker-android.apk" target="_blank">软件下载</a></p>
+<p><img width="50" height="50" src="/libs/ico-mac.jpg"> <a href="http://mp.weixin.qq.com/mp/video?__biz=MzI4NDUxNDUzNg==&mid=100000356&sn=e4aa255cd7f1fddb2cbef0bba0ec0614&vid=b1346p8mlif&idx=1&vidsn=beffee79290392706a868207589f47c6&fromid=1&scene=18#rd" target="_blank">Mac安装教程</a> |
+<a href="https://www.linkersocks.com/libs/linker-mac.dmg" target="_blank">软件下载</a></p>
+</div>
             </md-card-content>
         </md-card>
     </div>
+    
+    <div flex="50" flex-xs="100"  ng-repeat="a in [account[accountIndex]] track by a.id">
+        <md-card flex>
+            <md-card-title>
+                <md-card-title-text>
+                    <span class="sm-headline">我的账号[{{a.port}}] （点击以下服务器添加线路）</span>
+                </md-card-title-text>
+            </md-card-title>
+            <md-card-content style="overflow: auto;height: 296px;">
+                <div ng-show="account.length === 0">{{ '暂无节点' | translate }}</div>
+                <md-list ng-show="account.length > 0">
+                    <md-divider></md-divider>
+                    <md-list-item ng-repeat-start="server in a.serverList track by server.id" 
+                    
+                    ng-click="showQrcodeDialog(server.id,a.serverInfo, a)" size="getQrCodeSize()"
+                         text="createQrCode(a.serverInfo, a)">
+                        <div flex layout="row" layout-md="column" layout-xs="column" layout-sm="column" layout-align="space-between left">
+                            <div class="font12">服务器：{{server.host}}</div>
+                            <div class="font12">备注：{{server.comment}}</div>
+                            <div class="font12">网络状态：<span>畅通</span></div>
+                        </div>
+                    </md-list-item>
+                    <md-divider ng-repeat-end></md-divider>
+                </md-list>
+            </md-card-content>
+        </md-card>
+    </div>
+    
+
+    
+    <div flex="100" style="height: 30px;"></div>
+    <div flex="100" style="text-align: center;"><ga></ga></div>
 </div>

@@ -5,17 +5,9 @@ const flow = appRequire('plugins/flowSaver/flow');
 const dns = require('dns');
 const net = require('net');
 const config = appRequire('services/config').all();
+const redis = appRequire('init/redis').redis;
 
-const getFlow = async (serverId, accountId) => {
-  const where = { accountId };
-  if(serverId) { where.serverId = serverId; }
-  const result = await knex('account_flow').sum('flow as sumFlow').groupBy('accountId').where(where).then(s => s[0]);
-  return result ? result.sumFlow : -1;
-};
-
-const formatMacAddress = mac => {
-  return mac.replace(/-/g, '').replace(/:/g, '').toLowerCase();
-};
+const formatMacAddress = mac => mac.replace(/-/g, '').replace(/:/g, '').toLowerCase();
 
 const loginLog = {};
 const scanLoginLog = ip => {
@@ -108,21 +100,38 @@ const getNoticeForUser = async (mac, ip) => {
     return Promise.reject('mac account not found');
   }
   const userId = macAccount.userId;
-  const groupInfo = await knex('user').select([
-    'group.id as id',
-    'group.showNotice as showNotice',
-  ]).innerJoin('group', 'user.group', 'group.id').where({
-    'user.id': userId,
-  }).then(s => s[0]);
-  const group = [groupInfo.id];
-  if(groupInfo.showNotice) { group.push(-1); }
-  const notices = await knex('notice').select().whereIn('group', group).orderBy('time', 'desc');
+  // const groupInfo = await knex('user').select([
+  //   'group.id as id',
+  //   'group.showNotice as showNotice',
+  // ]).innerJoin('group', 'user.group', 'group.id').where({
+  //   'user.id': userId,
+  // }).then(s => s[0]);
+  // const group = [groupInfo.id];
+  // if(groupInfo.showNotice) { group.push(-1); }
+  // const notices = await knex('notice').select().whereIn('group', group).orderBy('time', 'desc');
+  const noticesWithoutGroup = await knex('notice').where({ group: 0 });
+  const noticesWithGroup = await knex('notice').select([
+    'notice.id as id',
+    'notice.title as title',
+    'notice.content as content',
+    'notice.time as time',
+    'notice.group as group',
+    'notice.autopop as autopop',
+  ])
+  .innerJoin('notice_group', 'notice.id', 'notice_group.noticeId')
+  .innerJoin('user', 'user.group', 'notice_group.groupId')
+  .where('notice.group', '>', 0)
+  .where({ 'user.id': userId })
+  .groupBy('notice.id');
+  const notices = [...noticesWithoutGroup, ...noticesWithGroup ].sort((a, b) => b.time - a.time);
   return notices;
 };
 
 const getAccountForUser = async (mac, ip, opt) => {
   const noPassword = opt.noPassword;
   const noFlow = opt.noFlow;
+  let type = opt.type;
+  if(type !== 'WireGuard') { type = 'Shadowsocks'; }
   if(scanLoginLog(ip)) {
     return Promise.reject('ip is in black list');
   }
@@ -141,6 +150,7 @@ const getAccountForUser = async (mac, ip, opt) => {
     'account_plugin.port',
     'account_plugin.password',
     'account_plugin.multiServerFlow as multiServerFlow',
+    'account_plugin.key',
   ])
   .leftJoin('user', 'mac_account.userId', 'user.id')
   .leftJoin('account_plugin', 'mac_account.userId', 'account_plugin.userId');
@@ -150,6 +160,7 @@ const getAccountForUser = async (mac, ip, opt) => {
   const accountData = (await accountPlugin.getAccount({ id: myAccountId }))[0];
   accountData.data = JSON.parse(accountData.data);
   let startTime = 0;
+  let endTime;
   let expire = 0;
   if(accountData.type >= 2 && accountData.type <= 5) {
     let timePeriod = 0;
@@ -161,10 +172,11 @@ const getAccountForUser = async (mac, ip, opt) => {
     while(startTime + timePeriod <= Date.now()) {
       startTime += timePeriod;
     }
+    endTime = startTime + timePeriod;
     expire = accountData.data.create + accountData.data.limit * timePeriod;
   }
   const isMultiServerFlow = account.multiServerFlow;
-  const servers = await serverPlugin.list({ status: false });
+  const servers = (await serverPlugin.list({ status: false })).filter(server => server.type === type);
   let server = servers.filter(s => {
     return s.id === myServerId;
   })[0];
@@ -189,12 +201,14 @@ const getAccountForUser = async (mac, ip, opt) => {
         port: account.port + f.shift,
         method: f.method,
         comment: f.comment,
+        endpointPort: f.wgPort,
+        publicKey: f.key,
+        gateway: f.net,
       };
       return serverInfo;
     }).then(success => {
       if(startTime && !noFlow) {
-        return getFlow(isMultiServerFlow ? null : success.id, account.accountId);
-        // return flow.getFlowFromSplitTime(isMultiServerFlow ? null : success.id, account.accountId, startTime, Date.now());
+        return flow.getServerPortFlowWithScale(success.id, account.accountId, [startTime, endTime], isMultiServerFlow).then(s => s[0]);
       } else {
         return -1;
       }
@@ -215,13 +229,27 @@ const getAccountForUser = async (mac, ip, opt) => {
       });
     }).then(success => {
       serverInfo.status = success;
+      if(f.type === 'Shadowsocks') {
+        serverInfo.base64 = 'ss://' + Buffer.from(server.method + ':' + server.password + '@' + serverInfo.address + ':' + account.port).toString('base64');
+      } else {
+        let privateKey = account.key || '';
+        if(privateKey.includes(':')) {
+          privateKey = privateKey.split(':')[1];
+        }
+        const a = account.port % 254;
+        const b = (account.port - a) / 254;
+        const address = `${ f.net.split('.')[0] }.${ f.net.split('.')[1] }.${ b }.${ a + 1 }`;
+        serverInfo.endpointHost = serverInfo.address;
+        serverInfo.address = address;
+        serverInfo.base64 = `wg://${ serverInfo.address }:${ f.wgPort }?prikey=${ privateKey }&pubkey=${ f.key }&gateway=${ f.net }&address=${ address }#${ serverInfo.name }`;
+      }
       return serverInfo;
     });
   });
   const serverReturn = await Promise.all(serverList);
   const data = {
     default: {
-      site: config.plugins.macAccount.site || config.plugins.webgui.site,
+      site: (config.plugins.macAccount ? config.plugins.macAccount.site : null) || config.plugins.webgui.site,
       id: server.id,
       name: server.name,
       address,
@@ -229,9 +257,13 @@ const getAccountForUser = async (mac, ip, opt) => {
       password: account.password,
       method: server.method,
       comment: server.comment,
+      currentFlow: await flow.getServerPortFlowWithScale(server.id, account.accountId, [startTime, endTime], isMultiServerFlow).then(s => s[0]),
     },
     servers: serverReturn,
   };
+  if(accountData.key) {
+    data.default.privateKey = accountData.key.includes(':') ? accountData.key.split(':')[1] : accountData.key;
+  }
   if(noPassword) {
     delete data.default.password;
   }
@@ -253,14 +285,20 @@ const deleteAccount = id => {
 };
 
 const login = async (mac, ip) => {
-  if(scanLoginLog(ip)) {
-    return Promise.reject('ip is in black list');
+  // if(scanLoginLog(ip)) {
+  //   return Promise.reject('ip is in black list');
+  // }
+  const failNumber = await redis.scard(`Temp:MacLoginFail:${ ip }`);
+  if(+failNumber >= 10) {
+    return Promise.reject('mac login out of limit');
   }
   const account = await knex('mac_account').where({
     mac: formatMacAddress(mac)
   }).then(success => success[0]);
   if(!account) {
-    loginFail(mac, ip);
+    // loginFail(mac, ip);
+    await redis.sadd(`Temp:MacLoginFail:${ ip }`, mac);
+    await redis.expire(`Temp:MacLoginFail:${ ip }`, 120);
     return Promise.reject('mac account not found');
   } else {
     return account;
@@ -315,6 +353,69 @@ const removeInvalidMacAccount = async () => {
 };
 removeInvalidMacAccount();
 
+const isMacAddress = mac => mac.match(/^[0-9,a-f]{12}$/);
+
+const userAddMacAccount = async (userId, mac) => {
+  const macAddress = formatMacAddress(mac);
+  if(!isMacAddress(macAddress)) { return Promise.reject(); }
+  const currentMacAccount = await knex('mac_account').where({ userId });
+  const insertData = {
+    mac: macAddress,
+    userId,
+  };
+  if(currentMacAccount.length) { return Promise.reject(); }
+  const userAccount = await knex('account_plugin').where({ userId });
+  if(userAccount.length) {
+    insertData.accountId = userAccount[0].id;
+  }
+  await knex('mac_account').insert(insertData);
+  return;
+};
+
+const getMacAccountForSubscribe = async (mac, ip) => {
+  if(scanLoginLog(ip)) {
+    return Promise.reject('ip is in black list');
+  }
+  const macAccount = await knex('mac_account').where({ mac }).then(success => success[0]);
+  if(!macAccount) {
+    loginFail(mac, ip);
+    return Promise.reject('mac account not found');
+  }
+  await getAccount(macAccount.userId);
+  const myAccountId = macAccount.accountId;
+  const accounts = await knex('mac_account').select([
+    'mac_account.id',
+    'mac_account.mac',
+    'account_plugin.id as accountId',
+  ])
+  .leftJoin('user', 'mac_account.userId', 'user.id')
+  .leftJoin('account_plugin', 'mac_account.userId', 'account_plugin.userId');
+  const myAccount = accounts.filter(a => {
+    return a.accountId === myAccountId;
+  })[0];
+  const account = await knex('account_plugin').where({
+    id: myAccount.accountId
+  }).then(s => s[0]);
+  if(!account) {
+    loginFail(mac, ip);
+    return Promise.reject('can not find account');
+  }
+  if(account.data) {
+    account.data = JSON.parse(account.data);
+  } else {
+    account.data = {};
+  }
+  if(account.server) {
+    account.server = JSON.parse(account.server);
+  }
+  const servers = (await serverPlugin.list({ status: false })).filter(server => server.type === 'Shadowsocks');
+  const validServers = servers.filter(server => {
+    if(!account.server) { return true; }
+    return account.server.indexOf(server.id) >= 0;
+  });
+  return { server: validServers, account };
+};
+
 exports.editAccount = editAccount;
 exports.newAccount = newAccount;
 exports.getAccount = getAccount;
@@ -325,3 +426,6 @@ exports.login = login;
 exports.getAccountByAccountId = getAccountByAccountId;
 exports.getAllAccount = getAllAccount;
 exports.getAccountByUserId = getAccountByUserId;
+
+exports.userAddMacAccount = userAddMacAccount;
+exports.getMacAccountForSubscribe = getMacAccountForSubscribe;

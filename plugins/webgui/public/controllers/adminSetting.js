@@ -1,7 +1,7 @@
 const app = angular.module('app');
 
-app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$state',
-  ($scope, $http, $timeout, $state) => {
+app.controller('AdminSettingsController', ['$scope', '$state',
+  ($scope, $state) => {
     $scope.setTitle('设置');
     $scope.toSetting = path => { $state.go(path); };
     if($scope.id === 1) {
@@ -19,8 +19,8 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
           to: 'admin.groupSetting',
         },
         {
-          name: '支付设置',
-          to: 'admin.paymentList',
+          name: '订单设置',
+          to: 'admin.order',
         },
         {
           name: '邮件设置',
@@ -64,52 +64,8 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       ];
     }
   }
-]).controller('AdminPaymentSettingController', ['$scope', '$http', '$timeout', '$state',
-  ($scope, $http, $timeout, $state) => {
-    $scope.setTitle('支付设置');
-    $scope.setMenuButton('arrow_back', 'admin.settings');
-    $scope.time = [{
-      id: 'hour',
-      name: '小时',
-    }, {
-      id: 'day',
-      name: '天',
-    }, {
-      id: 'week',
-      name: '周',
-    }, {
-      id: 'month',
-      name: '月',
-    }, {
-      id: 'season',
-      name: '季',
-    }, {
-      id: 'year',
-      name: '年',
-    }];
-    let lastSave = 0;
-    let lastSavePromise = null;
-    const saveTime = 2000;
-    $scope.saveSetting = () => {
-      if(Date.now() - lastSave <= saveTime) {
-        lastSavePromise && $timeout.cancel(lastSavePromise);
-      }
-      const timeout = Date.now() - lastSave >= saveTime ? 0 : saveTime - Date.now() + lastSave;
-      lastSave = Date.now();
-      lastSavePromise = $timeout(() => {
-        $http.put('/api/admin/setting/payment', {
-          data: $scope.paymentData,
-        });
-      }, timeout);
-    };
-    $http.get('/api/admin/setting/payment').then(success => {
-      $scope.paymentData = success.data;
-      $scope.$watch('paymentData', () => {
-        $scope.saveSetting();
-      }, true);
-    });
-  }
-]).controller('AdminAccountSettingController', ['$scope', '$http', '$timeout', '$state',
+])
+.controller('AdminAccountSettingController', ['$scope', '$http', '$timeout', '$state',
   ($scope, $http, $timeout, $state) => {
     $scope.setTitle('账号设置');
     $scope.setMenuButton('arrow_back', 'admin.settings');
@@ -140,7 +96,10 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
     };
     $scope.setServerForNewUser = false;
     $scope.accountServerObj = {};
-    $http.get('/api/admin/setting/account').then(success => {
+    $http.get('/api/admin/order').then(success => {
+      $scope.orders = success.data.filter(f => !f.baseId);
+      return $http.get('/api/admin/setting/account');
+    }).then(success => {
       $scope.accountData = success.data;
       if($scope.accountData.accountForNewUser.server) {
         $scope.setServerForNewUser = true;
@@ -160,6 +119,12 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       $scope.$watch('accountServerObj', () => {
         $scope.saveSetting();
       }, true);
+      return $http.get('/api/admin/group');
+    }).then(success => {
+      $scope.groups = success.data;
+      if(!($scope.accountData.defaultGroup >= 0)) {
+        $scope.accountData.defaultGroup = 0;
+      }
     });
   }
 ]).controller('AdminBaseSettingController', ['$scope', '$http', '$timeout', '$state', '$q',
@@ -428,6 +393,7 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
     $http.get('/api/admin/setting/payment').then(success => {
       $scope.payment = success.data;
       $scope.paymentData = $scope.payment[$scope.paymentType];
+      if(!$scope.paymentData.refTime) { $scope.paymentData.refTime = '0h'; }
       if($scope.paymentData.server) {
         $scope.setServerForPayment = true;
         $scope.paymentData.server.forEach(f => {
@@ -447,83 +413,6 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
         $scope.saveSetting();
       }, true);
     });
-  }
-]).controller('AdminGroupSettingController', ['$scope', '$http', '$timeout', '$state',
-  ($scope, $http, $timeout, $state) => {
-    $scope.setTitle('群组管理');
-    $scope.setMenuButton('arrow_back', function() {
-      $state.go('admin.settings');
-    });
-    $scope.setFabButton(() => {
-      $state.go('admin.addGroup');
-    });
-    $http.get('/api/admin/group').then(success => {
-      $scope.groups = success.data;
-    });
-    $scope.editGroup = id => { $state.go('admin.editGroup', { groupId: id }); };
-  }
-]).controller('AdminAddGroupController', ['$scope', '$http', '$timeout', '$state', 'alertDialog',
-  ($scope, $http, $timeout, $state, alertDialog) => {
-    $scope.setTitle('新增群组');
-    $scope.setMenuButton('arrow_back', 'admin.groupSetting');
-    $scope.group = {};
-    $scope.confirm = () => {
-      alertDialog.loading();
-      $http.post('/api/admin/group', {
-        name: $scope.group.name,
-        comment: $scope.group.comment,
-        showNotice: $scope.group.showNotice,
-      }, {
-        timeout: 15000,
-      }).then(success => {
-        alertDialog.show('添加群组成功', '确定');
-        $state.go('admin.groupSetting');
-      }).catch(() => {
-        alertDialog.show('添加群组失败', '确定');
-      });
-    };
-    $scope.cancel = () => {
-      $state.go('admin.groupSetting');
-    };
-  }
-]).controller('AdminEditGroupController', ['$scope', '$http', '$timeout', '$state', '$stateParams', 'alertDialog',
-  ($scope, $http, $timeout, $state, $stateParams, alertDialog) => {
-    $scope.setTitle('修改群组');
-    $scope.setMenuButton('arrow_back', 'admin.groupSetting');
-    $scope.groupId = +$stateParams.groupId;
-    $scope.group = {};
-    $http.get(`/api/admin/group/${ $scope.groupId }`).then(success => {
-      $scope.group = success.data;
-    });
-    $scope.confirm = () => {
-      alertDialog.loading();
-      $http.put(`/api/admin/group/${ $scope.groupId }`, {
-        name: $scope.group.name,
-        comment: $scope.group.comment,
-        showNotice: $scope.group.showNotice,
-      }, {
-        timeout: 15000,
-      }).then(success => {
-        alertDialog.show('修改群组成功', '确定');
-        $state.go('admin.groupSetting');
-      }).catch(() => {
-        alertDialog.show('修改群组失败', '确定');
-      });
-    };
-    $scope.cancel = () => {
-      $state.go('admin.groupSetting');
-    };
-    $scope.delete = () => {
-      alertDialog.loading();
-      $http.delete(`/api/admin/group/${ $scope.groupId }`, {
-        timeout: 15000,
-      }).then(success => {
-        alertDialog.show('删除群组成功', '确定');
-        $state.go('admin.groupSetting');
-      }).catch(() => {
-        alertDialog.show('删除群组失败', '确定');
-      });
-    };
   }
 ]).controller('AdminRefSettingController', ['$scope', '$http', '$timeout', '$state',
   ($scope, $http, $timeout, $state) => {
@@ -570,6 +459,7 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
 ]).controller('AdminRefCodeListController', ['$scope', '$http', '$timeout', '$state', '$mdMedia',
   ($scope, $http, $timeout, $state, $mdMedia) => {
     $scope.setTitle('邀请码列表');
+    $scope.setMenuSearchButton('search');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.refSetting');
     });
@@ -583,13 +473,17 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       if($mdMedia('md')) { return 60; }
       if($mdMedia('gt-md')) { return 80; }
     };
-    $scope.getCode = () => {
+    $scope.getCode = search => {
       $scope.isCodeLoading = true;
       $http.get('/api/admin/setting/ref/code', { params: {
         page: $scope.currentPage,
         pageSize: getPageSize(),
-      } }).then(success => success.data).then(success => {
+        search,
+      } }).then(success => success.data)
+      .then(success => {
         $scope.total = success.total;
+        if(!search && $scope.menuSearch.text) { return; }
+        if(search && search !== $scope.menuSearch.text) { return; }
         success.code.forEach(f => {
           $scope.code.push(f);
         });
@@ -602,10 +496,28 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       }).catch(err => {
         if($state.current.name !== 'admin.refCodeList') { return; }
         $timeout(() => {
-          $scope.getCode();
+          $scope.getCode(search);
         }, 5000);
       });
     };
+
+    $scope.$on('cancelSearch', () => {
+      $scope.code = [];
+      $scope.currentPage = 1;
+      $scope.isCodePageFinish = false;
+      $scope.getCode();
+    });
+    let timeoutPromise;
+    $scope.$watch('menuSearch.text', () => {
+      if(!$scope.menuSearch.text) { return; }
+      timeoutPromise && $timeout.cancel(timeoutPromise);
+      timeoutPromise = $timeout(() => {
+        $scope.code = [];
+        $scope.currentPage = 1;
+        $scope.isCodePageFinish = false;
+        $scope.getCode($scope.menuSearch.text);
+      }, 500);
+    });
 
     $scope.view = inview => {
       if(!inview || $scope.isCodeLoading || $scope.isCodePageFinish) { return; }
@@ -624,8 +536,8 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
       $state.go('admin.editRefCode', { id });
     };
   }
-]).controller('AdminEditRefCodeController', ['$scope', '$http', '$timeout', '$state', '$mdMedia', '$stateParams',
-($scope, $http, $timeout, $state, $mdMedia, $stateParams) => {
+]).controller('AdminEditRefCodeController', ['$scope', '$http', '$timeout', '$state', '$filter', '$stateParams',
+($scope, $http, $timeout, $state, $filter, $stateParams) => {
   $scope.setTitle('编辑邀请码');
   $scope.setMenuButton('arrow_back', function() {
     $state.go('admin.refCodeList');
@@ -657,6 +569,9 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
     $state.go('admin.refCodeList');
   });
   $scope.getRefUrl = code => `${ $scope.config.site }/home/ref/${ code }`;
+  $scope.clipboardSuccess = event => {
+    $scope.toast($filter('translate')('邀请链接已复制到剪贴板'));
+  };
 }
 ]).controller('AdminRefUserListController', ['$scope', '$http', '$timeout', '$state', '$mdMedia',
   ($scope, $http, $timeout, $state, $mdMedia) => {
@@ -704,10 +619,13 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
     $scope.toUser = userId => {
       $state.go('admin.userPage', { userId });
     };
+    $scope.setFabButton(() => {
+      $state.go('admin.addRefUser');
+    });
   }
 ])
-.controller('AdminMyRefCodeController', ['$scope', '$http', '$timeout', '$state', '$mdMedia',
-  ($scope, $http, $timeout, $state, $mdMedia) => {
+.controller('AdminMyRefCodeController', ['$scope', '$http', '$filter', '$state', '$mdMedia',
+  ($scope, $http, $filter, $state, $mdMedia) => {
     $scope.setTitle('我的邀请码');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.refSetting');
@@ -717,6 +635,58 @@ app.controller('AdminSettingsController', ['$scope', '$http', '$timeout', '$stat
     $scope.getRefUrl = code => {
       return `${ $scope.config.site }/home/ref/${ code }`;
     };
+    $scope.clipboardSuccess = event => {
+      $scope.toast($filter('translate')('邀请链接已复制到剪贴板'));
+    };
+  }
+])
+.controller('AdminAddRefUserController', ['$scope', '$http', '$timeout', '$state', '$mdMedia', 'alertDialog',
+  ($scope, $http, $timeout, $state, $mdMedia, alertDialog) => {
+    $scope.setTitle('添加邀请关系');
+    $scope.setMenuButton('arrow_back', function() {
+      $state.go('admin.refUserList');
+    });
+    $scope.refCode = [];
+    $scope.sourceUserCode = '';
+    const getRefCode = userId => {
+      $http.get(`/api/admin/ref/code/${ userId }`).then(success => {
+        $scope.refCode = success.data;
+        if($scope.refCode.length) { $scope.sourceUserCode = $scope.refCode[0].code; }
+      });
+    };
+    $scope.sourceUser = {
+      search: '',
+      searchChange: function(search) {
+      },
+      selectedItemChange: function(item) {
+        $scope.sourceUser.selectedItem = item;
+        if(item && item.id) { getRefCode(item.id); };
+      },
+      querySearch: function(search) {
+        return $http.post('/api/admin/setting/ref/searchSourceUser', { search }).then(success => success.data);
+      }
+    };
+    $scope.refUser = {
+      search: '',
+      searchChange: function(search) {
+      },
+      selectedItemChange: function(item) {
+        $scope.refUser.selectedItem = item;
+      },
+      querySearch: function(search) {
+        return $http.post('/api/admin/setting/ref/searchRefUser', { search }).then(success => success.data);
+      }
+    };
+    $scope.confirm = () => {
+      $http.post(`/api/admin/setting/ref/${ $scope.sourceUser.selectedItem.id }/${ $scope.refUser.selectedItem.id }/${ $scope.sourceUserCode }`)
+      .then(success => {
+        $state.go('admin.refUserList');
+      }).catch(err => {
+        alertDialog.show('添加失败', '确定');
+      });
+    };
+    $scope.cancel = () => {
+      $state.go('admin.refUserList');
+    };
   }
 ]);
-;

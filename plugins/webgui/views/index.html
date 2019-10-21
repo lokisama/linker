@@ -17,12 +17,15 @@
     <link rel="shortcut icon" href="/favicon.png">
     <link rel="manifest" href="/manifest.json">
     <title><%= title%></title>
+    <meta name="keywords" content="<%= keywords%>">
+    <meta name="description" content="<%= description%>">
     <base href="/">
 </head>
 
 <body ng-cloak>
     <script src="<%= cdn%>/libs/lib.js"></script>
     <script>
+        window.api = '';
         window.cdn = '<%= cdn%>';
         window.title = '<%= title%>';
     </script>
@@ -36,6 +39,9 @@
         ga('send', 'pageview');
     </script>
     <% } %>
+    
+    <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="1ab0b393-8c49-409e-baf7-244aebb996f5";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
+    
     <script src="/libs/bundle.js"></script>
     <div ng-controller="MainController" layout-fill>
         <div layout-fill layout="row" layout-align="center center" ng-show="mainLoading">
@@ -48,6 +54,14 @@
     <% if (paypal) { %>
         <script async src="https://www.paypalobjects.com/api/checkout.js"></script>
     <% } %>
+    <style>
+    .md-button.md-fab.md-fab-bottom-right{
+            left: 20px;
+            right: auto;
+            z-index: 60;
+            bottom: 15px;
+    }
+    </style>
 </body>
 
 </html>

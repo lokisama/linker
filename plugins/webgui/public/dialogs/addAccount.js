@@ -1,10 +1,12 @@
 const app = angular.module('app');
-const window = require('window');
 const cdn = window.cdn || '';
 
-app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $state, $http) => {
-  const macAccount = window.ssmgrConfig.macAccount;
-  const publicInfo = {};
+app.factory('addAccountDialog', [ '$mdDialog', '$http', 'configManager', 'alertDialog', ($mdDialog, $http, configManager, alertDialog) => {
+  const config = configManager.getConfig();
+  const publicInfo = {
+    isGiftCardUse: config.giftcard,
+    isRefCodeUse: config.refCode,
+  };
   publicInfo.isMacAddress = mac => {
     if(!mac) { return false; }
     const match = mac.toLowerCase().replace(/-/g, '').replace(/:/g, '').match(/^[0-9a-f]{12}$/);
@@ -60,7 +62,6 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
         });
       }
     ],
-    fullscreen: true,
     clickOutsideToClose: true,
   };
   const getAccountPort = () => {
@@ -78,11 +79,39 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
       server: publicInfo.server[0].id,
     };
   };
+  const getUserAccount = () => {
+    publicInfo.status = 'giftcard';
+    publicInfo.isLoading = true;
+    $http.get(`/api/admin/user/${ publicInfo.userId }`).then(success => {
+      publicInfo.isLoading = false;
+      publicInfo.userAccount = success.data.account;
+    });
+  };
+  const addRefCode = () => {
+    publicInfo.status = 'refCode';
+    publicInfo.refCodeNumber = 1;
+    publicInfo.refUserNumber = 1;
+    publicInfo.addRefCodeForUser = () => {
+      publicInfo.isLoading = true;
+      $http.post(`/api/admin/ref/code/${ publicInfo.userId }`, {
+        number: publicInfo.refCodeNumber,
+        max: publicInfo.refUserNumber,
+      }).then(success => {
+        hide();
+      }).catch(err => {
+        alertDialog.show('添加失败', '确定');
+      });
+    };
+  };
   const next = () => {
     if(publicInfo.accountType === 'port') {
       getAccountPort();
     } else if(publicInfo.accountType === 'mac') {
       macAddress();
+    } else if(publicInfo.accountType === 'giftcard') {
+      getUserAccount();
+    } else if(publicInfo.accountType === 'refCode') {
+      addRefCode();
     }
   };
   publicInfo.next = next;
@@ -110,7 +139,7 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
   };
   publicInfo.setMac = setMac;
   const editMac = () => {
-    $http.put(`/api/admin/account/mac`, {
+    $http.put('/api/admin/account/mac', {
       id: publicInfo.mac.id,
       macAddress: publicInfo.isMacAddress(publicInfo.mac.macAddress),
       accountId: publicInfo.mac.account,
@@ -120,6 +149,20 @@ app.factory('addAccountDialog', [ '$mdDialog', '$state', '$http', ($mdDialog, $s
     });
   };
   publicInfo.editMac = editMac;
+  const checkGiftCard = () => {
+    $http.post('/api/admin/giftcard/use', {
+      password: publicInfo.giftcardCode,
+      userId: publicInfo.userId,
+      accountId: publicInfo.giftcardAccountId === '0' ? null : +publicInfo.giftcardAccountId,
+    }).then(result => {
+      if(!result.data.success) {
+        alertDialog.show(result.data.message, '确定');
+      } else {
+        alertDialog.show('充值成功', '确定');
+      }
+    });
+  };
+  publicInfo.checkGiftCard = checkGiftCard;
   const edit = (accountInfo, account, server) => {
     publicInfo.account = account;
     publicInfo.server = server;

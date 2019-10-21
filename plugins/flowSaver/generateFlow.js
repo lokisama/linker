@@ -53,7 +53,7 @@ const generateFlow = async (type) => {
     logger.info(`Generate ${ type } flow, length: ${ sum.length }`);
     const insertPromises = [];
     for(let i = 0; i < Math.ceil(sum.length / 50); i++) {
-      logger.info(`insert generate flow from ${ i *50 } to ${ i * 50 + 50 }`);
+      logger.info(`insert generate flow from ${ i * 50 } to ${ i * 50 + 50 }`);
       const insert = knex(tableName).insert(sum.slice(i * 50, i * 50 + 50).map(m => {
         return {
           id: m.id,
@@ -80,18 +80,18 @@ const generateFlow = async (type) => {
   await generateFlow(type);
 };
 
-cron.minute(() => {
-  knex('saveFlow').delete().whereBetween('time', [0, Date.now() - 48 * 3600 * 1000]).then();
-  knex('saveFlowDay').delete().whereBetween('time', [0, Date.now() - 180 * 24 * 3600 * 1000]).then();
-  knex('saveFlowHour').delete().whereBetween('time', [0, Date.now() - 30 * 24 * 3600 * 1000]).then();
-  knex('saveFlow5min').delete().whereBetween('time', [0, Date.now() - 7 * 24 * 3600 * 1000]).then();
-}, 37);
-cron.minute(() => {
+cron.minute(async () => {
+  knex('saveFlow').delete().whereBetween('time', [0, Date.now() - 36 * 3600 * 1000]).then();
+  knex('saveFlowDay').delete().whereBetween('time', [0, Date.now() - 45 * 24 * 3600 * 1000]).then();
+  knex('saveFlowHour').delete().whereBetween('time', [0, Date.now() - 7 * 24 * 3600 * 1000]).then();
+  knex('saveFlow5min').delete().whereBetween('time', [0, Date.now() - 3 * 24 * 3600 * 1000]).then();
+}, 'RemoveOldFlow',37);
+cron.minute(async () => {
   generateFlow('5min');
-}, 5);
+}, 'Generate5minFlow', 5);
 cron.cron(() => {
   generateFlow('hour');
-}, '1 * * * *');
+},'GenerateHourFlow', '1 * * * *', 3600);
 cron.cron(() => {
   generateFlow('day');
-}, '1 0 * * *');
+}, 'GenerateDayFlow', '1 0 * * *', 24 * 3600);

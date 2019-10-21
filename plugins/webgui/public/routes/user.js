@@ -46,6 +46,22 @@ app.config(['$stateProvider', $stateProvider => {
       url: '/ref',
       controller: 'UserRefController',
       templateUrl: `${ cdn }/public/views/user/ref.html`,
-    });
+    })
+    .state('user.order', {
+      url: '/order',
+      controller: 'UserOrderController',
+      templateUrl: `${ cdn }/public/views/user/order.html`,
+    })
+    .state('user.macAddress', {
+      url: '/macAddress',
+      controller: 'UserMacAddressController',
+      templateUrl: `${ cdn }/public/views/user/macAddress.html`,
+    })
+    .state('user.notice', {
+      url: '/notice',
+      controller: 'UserNoticeController',
+      templateUrl: `${ cdn }/public/views/user/notice.html`,
+    })
+    ;
   }])
 ;

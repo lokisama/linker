@@ -3,7 +3,7 @@ const logger = log4js.getLogger('system');
 
 const knex = appRequire('init/knex').knex;
 const crypto = require('crypto');
-const path = require('path');
+// const path = require('path');
 const config = appRequire('services/config').all();
 const password = config.manager.password;
 const host = config.manager.address.split(':')[0];
@@ -59,7 +59,7 @@ const receiveCommand = async (data, code) => {
     } else if (message.command === 'ip') {
       return shadowsocks.getClientIp(message.port);
     } else {
-      return Promise.reject();
+      return Promise.reject('invalid command');
     }
   } catch(err) {
     throw err;
@@ -70,35 +70,35 @@ const pack = (data) => {
   const message = JSON.stringify(data);
   const dataBuffer = Buffer.from(message);
   const length = dataBuffer.length;
-  const lengthBuffer = Buffer.from(('0000' + length.toString(16)).substr(-4), 'hex');
+  const lengthBuffer = Buffer.from(('0000000000000000' + length.toString(16)).substr(-8), 'hex');
   const pack = Buffer.concat([lengthBuffer, dataBuffer]);
   return pack;
 };
 
-const checkData = (receive) => {
+const checkData = receive => {
   const buffer = receive.data;
   let length = 0;
   let data;
   let code;
-  if (buffer.length < 2) {
-    return;
-  }
+  if(buffer.length < 2) { return; }
   length = buffer[0] * 256 + buffer[1];
-  if (buffer.length >= length + 2) {
+  if(buffer.length >= length + 2) {
     data = buffer.slice(2, length - 2);
     code = buffer.slice(length - 2);
     // receive.data = buffer.slice(length + 2, buffer.length);
     if(!checkCode(data, password, code)) {
-      receive.socket.end();
+      receive.socket.end(pack({ code: 2 }));
       // receive.socket.close();
       return;
     }
     receiveCommand(data, code).then(s => {
-      receive.socket.end(pack({code: 0, data: s}));
+      receive.socket.end(pack({ code: 0, data: s }));
       // receive.socket.close();
-    }, e => {
-      logger.error(e);
-      receive.socket.end(pack({code: 1}));
+    }).catch(err => {
+      logger.error(err);
+      let code = -1;
+      if(err === 'invalid command') { code = 1; }
+      receive.socket.end(pack({ code }));
       // receive.socket.close();
     });
     if(buffer.length > length + 2) {
@@ -110,7 +110,7 @@ const checkData = (receive) => {
 const server = net.createServer(socket => {
   const receive = {
     data: Buffer.from(''),
-    socket: socket,
+    socket,
   };
   socket.on('data', data => {
     receiveData(receive, data);
@@ -122,7 +122,7 @@ const server = net.createServer(socket => {
     // console.log('close');
   });
 }).on('error', (err) => {
-  logger.error(`socket error: `, err);
+  logger.error('socket error: ', err);
 });
 
 server.listen({

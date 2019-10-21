@@ -3,6 +3,9 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('giftcard');
 const uuidv4 = require('uuid/v4');
 const account = appRequire('plugins/account/index');
+const orderPlugin = appRequire('plugins/webgui_order');
+const ref = appRequire('plugins/webgui_ref/time');
+const moment = require('moment');
 
 const dbTableName = require('./db/giftcard').tableName;
 
@@ -73,45 +76,24 @@ const sendSuccessMail = async userId => {
 
 const processOrder = async (userId, accountId, password) => {
   const cardResult = await knex(dbTableName).where({ password }).select();
-  if (cardResult.length === 0)
+  if (cardResult.length === 0) {
     return { success: false, message: '充值码不存在' };
-
+  }
   const card = cardResult[0];
-  if (card.status !== cardStatusEnum.available)
+  if (card.status !== cardStatusEnum.available) {
     return { success: false, message: '无法使用这个充值码' };
-
+  }
   await knex(dbTableName).where({ id: card.id }).update({
     user: userId,
     account: accountId,
     status: cardStatusEnum.used,
     usedTime: Date.now()
   });
+  const orderInfo = await orderPlugin.getOneOrder(card.orderType);
   await account.setAccountLimit(userId, accountId, card.orderType);
+  await ref.payWithRef(userId, card.orderType);
   return { success: true, type: card.orderType, cardId: card.id };
 };
-
-
-// const orderList = async (options = {}) => {
-//     const where = {};
-//     if (options.userId) {
-//         where['user.id'] = options.userId;
-//     }
-//     const orders = await knex(dbTableName).select([
-//         `${dbTableName}.id`,
-//         `${dbTableName}.orderType`,
-//         'user.id as userId',
-//         'user.username',
-//         'account_plugin.port',
-//         `${dbTableName}.status`,
-//         `${dbTableName}.createTime`,
-//     ])
-//         .leftJoin('user', 'user.id', `${dbTableName}.user`)
-//         .leftJoin('account_plugin', 'account_plugin.id', `${dbTableName}.account`)
-//         .where(where)
-//         .orderBy(`${dbTableName}.createTime`, 'DESC');
-//     return orders;
-// };
-
 
 const orderListAndPaging = async (options = {}) => {
   const search = options.search || '';
@@ -120,13 +102,16 @@ const orderListAndPaging = async (options = {}) => {
   const sort = options.sort || `${dbTableName}.createTime_desc`;
   const page = options.page || 1;
   const pageSize = options.pageSize || 20;
+  const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
+  const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
 
   const where = {};
   where[dbTableName + '.status'] = cardStatusEnum.used;
-  let count = knex(dbTableName).select([]).where(where);
+  let count = knex(dbTableName).select([]).where(where).whereBetween(`${dbTableName}.usedTime`, [start, end]);
   let orders = knex(dbTableName).select([
     `${dbTableName}.password as orderId`,
     `${dbTableName}.orderType`,
+    'webgui_order.name as orderName',
     'user.id as userId',
     'user.username',
     'account_plugin.port',
@@ -136,7 +121,9 @@ const orderListAndPaging = async (options = {}) => {
   .where(where)
   .orderBy(`${dbTableName}.usedTime`, 'DESC')
   .leftJoin('user', 'user.id', `${dbTableName}.user`)
-  .leftJoin('account_plugin', 'account_plugin.id', `${dbTableName}.account`);
+  .leftJoin('account_plugin', 'account_plugin.id', `${dbTableName}.account`)
+  .leftJoin('webgui_order', 'webgui_order.id', `${dbTableName}.orderType`)
+  .whereBetween(`${dbTableName}.usedTime`, [start, end]);
 
   if (filter.length) {
     count = count.whereIn(`${dbTableName}.status`, filter);
@@ -164,14 +151,12 @@ const orderListAndPaging = async (options = {}) => {
 };
 
 const checkOrder = async (id) => {
-  const order = await knex(dbTableName).select().where({
-    id,
-  });
-
-  if (order.length > 0)
+  const order = await knex(dbTableName).select().where({ id });
+  if (order.length > 0) {
     return success[0].status;
-  else
+  } else {
     return null;
+  }
 };
 
 const generateBatchInfo = (x) => {
@@ -185,6 +170,7 @@ const generateBatchInfo = (x) => {
       status = batchStatusEnum.usedup;
   }
   return {
+    orderName: x.orderName,
     batchNumber: x.batchNumber,
     status: status,
     type: x.orderType,
@@ -197,31 +183,36 @@ const generateBatchInfo = (x) => {
 
 const listBatch = async () => {
   const sqlResult = await knex(dbTableName).select([
-    'batchNumber',
-    'status',
-    'orderType',
-    'createTime',
-    'comment',
+    'webgui_order.name as orderName',
+    `${ dbTableName }.batchNumber`,
+    `${ dbTableName }.status as status`,
+    `${ dbTableName }.orderType as orderType`,
+    `${ dbTableName }.createTime as createTime`,
+    `${ dbTableName }.comment as comment`,
     knex.raw('COUNT(*) as totalCount'),
     knex.raw(`COUNT(case status when '${cardStatusEnum.available}' then 1 else null end) as availableCount`)
-  ]).groupBy('batchNumber');
+  ])
+  .groupBy('batchNumber')
+  .leftJoin('webgui_order', `${dbTableName}.orderType`, 'webgui_order.id');
   const finalResult = sqlResult.map(generateBatchInfo);
   return finalResult;
 };
 
 const getBatchDetails = async (batchNumber) => {
   const sqlBatchResult = await knex(dbTableName).select([
-    'batchNumber',
-    'status',
-    'orderType',
-    'createTime',
-    'comment',
+    'webgui_order.name as orderName',
+    `${ dbTableName }.batchNumber`,
+    `${ dbTableName }.status as status`,
+    `${ dbTableName }.orderType as orderType`,
+    `${ dbTableName }.createTime as createTime`,
+    `${ dbTableName }.comment as comment`,
     knex.raw('COUNT(*) as totalCount'),
     knex.raw(`COUNT(case status when '${cardStatusEnum.available}' then 1 else null end) as availableCount`)
-  ]).where({ batchNumber });
-  if (sqlBatchResult.length == 0)
-    return null;
-
+  ])
+  .where({ batchNumber })
+  .leftJoin('webgui_order', `${dbTableName}.orderType`, 'webgui_order.id');
+  if (sqlBatchResult.length == 0) { return null; }
+    
   const batchInfo = generateBatchInfo(sqlBatchResult[0]);
 
   const sqlCardsResult = await knex(dbTableName).select([
@@ -246,11 +237,46 @@ const revokeBatch = async batchNumber => {
   }).update({ status: cardStatusEnum.revoked });
 };
 
+const getUserOrders = async userId => {
+  const orders = await knex(dbTableName).select([
+    `${dbTableName}.password as orderId`,
+    `${dbTableName}.orderType`,
+    'user.id as userId',
+    'user.username',
+    'account_plugin.port',
+    `${dbTableName}.status`,
+    `${dbTableName}.usedTime as createTime`,
+  ])
+  .where({ 'user.id': userId })
+  .orderBy(`${dbTableName}.usedTime`, 'DESC')
+  .leftJoin('user', 'user.id', `${dbTableName}.user`)
+  .leftJoin('account_plugin', 'account_plugin.id', `${dbTableName}.account`);
+  return orders;
+};
+
+const getUserFinishOrder = async userId => {
+  let orders = await knex('giftcard').select([
+    'password as orderId',
+    'createTime',
+  ]).where({
+    user: userId,
+  }).orderBy('createTime', 'DESC');
+  orders = orders.map(order => {
+    return {
+      orderId: order.orderId,
+      type: '充值码',
+      createTime: order.createTime,
+    };
+  });
+  return orders;
+};
+
 exports.generateGiftCard = generateGiftCard;
 exports.orderListAndPaging = orderListAndPaging;
-// exports.orderList = orderList;
 exports.checkOrder = checkOrder;
 exports.processOrder = processOrder;
 exports.revokeBatch = revokeBatch;
 exports.listBatch = listBatch;
 exports.getBatchDetails = getBatchDetails;
+exports.getUserOrders = getUserOrders;
+exports.getUserFinishOrder = getUserFinishOrder;

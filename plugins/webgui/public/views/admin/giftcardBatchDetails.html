@@ -2,7 +2,7 @@
     <md-card flex>
         <md-card-header>
             <md-card-header-text ng-show="batch">
-                <span class="md-title">{{ batch.type | prettyOrderType }}卡</span>
+                <span class="md-title">{{ batch.orderName }}</span>
                 <span class="md-subhead">创建于 {{ batch.createTime | timeago }}，目前状态 {{ batch.status | prettyPrintBatchStatus}}</span>
             </md-card-header-text>
             <md-card-header-text ng-hide="batch">
@@ -17,7 +17,7 @@
                 </md-button>
             </div>
             <div ng-if="batch.status === 'AVAILABLE'">
-                <md-button class="md-primary" aria-label="export txt" download="batch{{ batch.batchNumber }}.txt" ng-href="{{ exportUrl }}"> {{ '导出 TXT' | translate }}
+                <md-button class="md-primary" aria-label="export csv" download="batch{{ batch.batchNumber }}.csv" ng-href="{{ exportUrl }}"> {{ '导出 CSV' | translate }}
                 </md-button>
             </div>
         </md-card-header>

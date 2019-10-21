@@ -13,34 +13,35 @@
                 </md-radio-group>
             </div>
             <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'pay'">
-                <div ng-if="publicInfo.alipay[publicInfo.orderType] && publicInfo.config.alipay && publicInfo.myPayType === 'alipay'" layout="column" layout-align="center center">
+                <div ng-if="publicInfo.config.alipay && publicInfo.myPayType === 'alipay'" layout="column" layout-align="center center">
                     <qr size="getQrCodeSize()" layout-margin text="qrCode()" image="true" ng-click="pay()"></qr>
                     <div translate>支付宝扫码支付</div>
                     <div translate>手机请点击二维码付款</div>
                 </div>
-                <div style="margin-top: 30px;" ng-if="publicInfo.paypal[publicInfo.orderType] && publicInfo.config.paypal && publicInfo.myPayType === 'paypal'" layout="column" layout-align="center center">
+                <div style="margin-top: 30px;" ng-if="publicInfo.config.paypal && publicInfo.myPayType === 'paypal'" layout="column" layout-align="center center">
                     <div translate>请点击下面按钮完成PayPal支付</div>
                     <div style="margin-top: 5px;" id="paypal-button-container"></div>
                 </div> 
             </div>
             <div layout="column" layout-align="center center" ng-if="publicInfo.status === 'choose'">
                 <div style="margin-bottom: 20px;" translate>请选择续费周期：</div>
-                <md-radio-group ng-model="publicInfo.orderType" flex style="width: 100%;">
-                    <md-radio-button layout="row" layout-align="center center" style="width: 100%;" ng-repeat="t in publicInfo.time" value="{{t.type}}" ng-if="(publicInfo.alipay[t.type] && publicInfo.config.alipay && publicInfo.myPayType === 'alipay') || (publicInfo.paypal[t.type] && publicInfo.config.paypal && publicInfo.myPayType === 'paypal')">
-                        <div layout="row" layout-align="space-between center" style="min-width: 200px; max-width: 390px;">
-                            <span flex="50" translate>{{ t.name }}</span>
-                            <span flex="50" style="text-align:right; color: #888">
-                                <span ng-show="publicInfo.alipay[t.type] && publicInfo.config.alipay && publicInfo.myPayType === 'alipay'">¥{{publicInfo.alipay[t.type]}}</span>
-                                <span ng-show="publicInfo.paypal[t.type] && publicInfo.config.paypal && publicInfo.myPayType === 'paypal'">${{publicInfo.paypal[t.type]}}</span>
+                <md-radio-group ng-model="publicInfo.orderId" ng-change="publicInfo.setOrder(publicInfo.orderId)" flex>
+                    <md-radio-button style="margin-top: 15px; margin-bottom: 5px; width: 100%;" layout="row" layout-align="center center" ng-repeat-start="order in publicInfo.orders" value="{{order.id}}" ng-hide="order[publicInfo.myPayType] === 0">
+                        <div layout="row" layout-align="space-between center" style="min-width: 210px; max-width: 390px;">
+                            <span flex="65" translate>{{ order.name }}</span>
+                            <span flex="35" style="text-align:right; color: #888">
+                                <span>{{ publicInfo.myPayType === 'alipay' ? '￥' : '$' }}</span><span>{{ order[publicInfo.myPayType] }}</span>
                             </span>
                         </div>
                     </md-radio-button>
+                    <div style="margin: 5px 0 5px 30px; color: #666; font-size: 0.85em;" ng-show="+publicInfo.orderId === +order.id && order.shortComment">{{ order.shortComment }}</div>
+                    <div style="margin: 5px 0 5px 30px; color: #666; font-size: 0.85em;" ng-if="publicInfo.selectedOrder.baseId" ng-show="+publicInfo.orderId === +order.id" ng-repeat-end>有效期：{{ publicInfo.account.data.to | date : 'yyyy-MM-dd HH:mm' }}</div>
                 </md-radio-group>
             </div>
             <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'giftcard'">
                 <form>
                     <md-input-container class="md-block" flex-gt-sm>
-                        <label>充值码</label>
+                        <label translate>充值码</label>
                         <input ng-model="publicInfo.giftCardPassword">
                     </md-input-container>
                 </form>
@@ -52,6 +53,9 @@
             <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'error'">
                 <div style="margin-bottom: 20px;">支付失败</div>
                 <div style="margin-bottom: 20px;">{{ publicInfo.message }}</div>
+            </div>
+            <div layout="column" layout-align="center center" ng-show="publicInfo.status === 'comment'">
+                <div class="markdown-table" marked="publicInfo.comment"></div>
             </div>
         </div>
     </md-dialog-content>
@@ -71,11 +75,17 @@
         <md-button class="md-primary" ng-show="publicInfo.status === 'choose'" ng-click="publicInfo.close()">
             {{ '取消' | translate }}
         </md-button>
-        <md-button class="md-primary" ng-show="publicInfo.status === 'choose'" ng-click="publicInfo.createOrder()" ng-disabled="!publicInfo.orderType">
-            {{ '下一步' | translate }}
+        <md-button class="md-primary" ng-show="publicInfo.status === 'choose'" ng-click="publicInfo.showComment()" ng-disabled="!publicInfo.orderId">
+            {{ publicInfo.selectedOrder.comment ? '下一步' : '支付' | translate }}
         </md-button>
         <md-button class="md-primary" ng-show="publicInfo.status === 'pay' || publicInfo.status === 'success' || publicInfo.status === 'error'" ng-click="publicInfo.close()">
             {{ '关闭' | translate }}
+        </md-button>
+        <md-button class="md-primary" ng-show="publicInfo.status === 'comment'" ng-click="publicInfo.jumpToPayPage()">
+            {{ '返回' | translate }}
+        </md-button>
+        <md-button class="md-primary" ng-show="publicInfo.status === 'comment'" ng-click="publicInfo.createOrder()" ng-disabled="publicInfo.time > 0">
+            支付<span ng-show="publicInfo.time">({{ publicInfo.time }})</span>
         </md-button>
     </md-dialog-actions>
 </md-dialog>

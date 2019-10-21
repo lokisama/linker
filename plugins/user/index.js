@@ -1,19 +1,20 @@
 const knex = appRequire('init/knex').knex;
+const redis = appRequire('init/redis').redis;
 const crypto = require('crypto');
-const macAccount = appRequire('plugins/macAccount/index');
+// const macAccount = appRequire('plugins/macAccount/index');
 
 const checkPasswordLimit = {
   number: 5,
-  time: 30 * 1000,
+  time: 60,
 };
-const checkPasswordFail = {};
+// const checkPasswordFail = {};
 
 const checkExist = async (obj) => {
   const user = await knex('user').select().where(obj);
   if(user.length === 0) {
     return;
   } else {
-    return Promise.reject();
+    return Promise.reject('user exists');
   }
 };
 
@@ -55,7 +56,8 @@ const addUser = async (options) => {
     if(options.telegramId) {
       Object.assign(insert, { telegram: options.telegramId });
     }
-    return knex('user').insert(insert);
+    const user = await knex('user').insert(insert);
+    return user;
   } catch(err) {
     console.log(err);
     return Promise.reject(err);
@@ -66,34 +68,42 @@ const checkPassword = async (username, password) => {
   try {
     const user = await knex('user').select(['id', 'type', 'username', 'password']).where({
       username,
-    });
-    if(user.length === 0) {
+    }).then(s => s[0]);
+    if(!user) {
       return Promise.reject('user not exists');
     }
-    for(const cpf in checkPasswordFail) {
-      if(Date.now() - checkPasswordFail[cpf].time >= checkPasswordLimit.time) {
-        delete checkPasswordFail[cpf];
-      }
-    };
-    if(checkPasswordFail[username] &&
-      checkPasswordFail[username].number > checkPasswordLimit.number &&
-      Date.now() - checkPasswordFail[username].time < checkPasswordLimit.time
-    ) {
+    // for(const cpf in checkPasswordFail) {
+    //   if(Date.now() - checkPasswordFail[cpf].time >= checkPasswordLimit.time) {
+    //     delete checkPasswordFail[cpf];
+    //   }
+    // };
+    // if(checkPasswordFail[username] &&
+    //   checkPasswordFail[username].number > checkPasswordLimit.number &&
+    //   Date.now() - checkPasswordFail[username].time < checkPasswordLimit.time
+    // ) {
+    //   return Promise.reject('password retry out of limit');
+    // }
+    const failNumber = await redis.get(`Temp:CheckPasswordFail:${ user.id }`);
+    if(+failNumber >= checkPasswordLimit.number) {
       return Promise.reject('password retry out of limit');
     }
-    if(createPassword(password, username) === user[0].password) {
+    if(createPassword(password, username) === user.password) {
       await knex('user').update({
         lastLogin: Date.now(),
       }).where({
         username,
       });
-      return user[0];
+      return user;
     } else {
-      if(!checkPasswordFail[username] || Date.now() - checkPasswordFail[username].time >= checkPasswordLimit.time) {
-        checkPasswordFail[username] = { number: 1, time: Date.now() };
-      } else if(checkPasswordFail[username].number <= checkPasswordLimit.number) {
-        checkPasswordFail[username].number += 1;
-        checkPasswordFail[username].time = Date.now();
+      // if(!checkPasswordFail[username] || Date.now() - checkPasswordFail[username].time >= checkPasswordLimit.time) {
+      //   checkPasswordFail[username] = { number: 1, time: Date.now() };
+      // } else if(checkPasswordFail[username].number <= checkPasswordLimit.number) {
+      //   checkPasswordFail[username].number += 1;
+      //   checkPasswordFail[username].time = Date.now();
+      // }
+      const failNumber = await redis.incr(`Temp:CheckPasswordFail:${ user.id }`);
+      if(+failNumber === 1) {
+        await redis.expire(`Temp:CheckPasswordFail:${ user.id }`, checkPasswordLimit.time);
       }
       return Promise.reject('invalid password');
     }
@@ -222,6 +232,7 @@ const deleteUser = async userId => {
   if(existAccount.length) {
     return Promise.reject('delete user fail');
   }
+  const macAccount = appRequire('plugins/macAccount/index');
   const macAccounts = await macAccount.getAccountByUserId(userId);
   if(macAccounts.length) {
     macAccounts.forEach(f => {
