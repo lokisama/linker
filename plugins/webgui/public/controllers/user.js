@@ -135,6 +135,10 @@ app
     document.addEventListener('crispReady', function (e) {
       $crisp.push(['set', 'session:data', [[['user-type', 'ssmgr-user']]]]);
       $crisp.push(['set', 'session:data', [[['user-agent', navigator.userAgent]]]]);
+      $crisp.push(['on', 'message:received', () => {
+        $crisp.push(['do', 'chat:open']);
+        $crisp.push(['do', 'chat:show']);
+      }]);
       if(!$scope.crispToken) {
         $scope.crispToken = $crisp.get('session:identifier');
         $http.post('/api/user/crisp', { token: $scope.crispToken });
@@ -516,9 +520,10 @@ app
     };
     setAccountServerList($scope.account, $scope.servers);
 
-    const getUserAccountInfo = () => {
+    const getUserAccountInfo = (first) => {
       userApi.getUserAccount().then(success => {
         $scope.servers = success.servers;
+        let setDefaultTab = false;
         if(success.account.map(m => m.id).join('') === $scope.account.map(m => m.id).join('')) {
           console.log(success.account.map(m => m.id).join(''),true)
           success.account.forEach((a, index) => {
@@ -538,8 +543,15 @@ app
             })[0].id;
             $scope.getServerPortData(f, serverId);
           });
+          setDefaultTab = true;
         }
         setAccountServerList($scope.account, $scope.servers);
+        if(setDefaultTab) {
+          $scope.account.forEach(f => {
+            f.defaultTab = f.serverList.findIndex(e => e.id === f.idle);
+            if(f.defaultTab < 0) { f.defaultTab = 0; }
+          });
+        }
         $localStorage.user.serverInfo.data = success.servers;
         $localStorage.user.serverInfo.time = Date.now();
         $localStorage.user.accountInfo.data = success.account;
@@ -549,7 +561,7 @@ app
         }
       });
     };
-    getUserAccountInfo();
+    getUserAccountInfo(true);
 
     const base64Encode = str => {
       return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
@@ -557,6 +569,7 @@ app
       }));
     };
     $scope.createQrCode = (server, account) => {
+      // console.log(server, account);
       if(!server) { return ''; }
       if(server.type === 'WireGuard') {
         const a = account.port % 254;

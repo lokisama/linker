@@ -9,9 +9,9 @@ let host;
 let port;
 let password;
 try {
-  const host = config.manager.address.split(':')[0];
-  const port = +config.manager.address.split(':')[1];
-  const password = config.manager.password;
+  host = config.manager.address.split(':')[0];
+  port = +config.manager.address.split(':')[1];
+  password = config.manager.password;
 } catch(err) {
 
 }
@@ -163,6 +163,7 @@ const send = async (data, options) => {
           ret.version = versions[0] + ' x ' + versions.length;
         }
       }
+      ret.number = versions.length;
       return successMark ? ret : Promise.reject();
     } else if(data.command === 'flow') {
       let successMark = false;
