@@ -82,7 +82,7 @@ const processOrder = async (userId, accountId, password) => {
     return { success: false, message: '充值码不存在' };
   }
   const card = cardResult[0];
-  if (card.status !== cardStatusEnum.available) {
+  if (card.status !== cardStatusEnum.available || card.status !== cardStatusEnum.sended) {
     return { success: false, message: '无法使用这个充值码' };
   }
   await knex(dbTableName).where({ id: card.id }).update({
