@@ -94,7 +94,7 @@ const processOrder = async (userId, accountId, password) => {
   const orderInfo = await orderPlugin.getOneOrder(card.orderType);
   await account.setAccountLimit(userId, accountId, card.orderType);
   await ref.payWithRef(userId, card.orderType);
-  return { success: true, type: card.orderType, cardId: card.id ,status: card.status, password: password};
+  return { success: true, type: card.orderType, cardId: card.id ,status: cardStatusEnum.sended, password: password};
 };
 
 const processBind = async (userId, accountId, password) => {
@@ -111,7 +111,7 @@ const processBind = async (userId, accountId, password) => {
     status: cardStatusEnum.sended,
     usedTime: Date.now()
   });
-  return { success: true, cardId: card.id ,status: card.status, password: password};
+  return { success: true, cardId: card.id ,status: cardStatusEnum.sended, password: password};
 };
 
 const orderListAndPaging = async (options = {}) => {
