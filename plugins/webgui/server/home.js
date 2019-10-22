@@ -246,30 +246,85 @@ exports.login = async (req, res) => {
   try {
     delete req.session.user;
     delete req.session.type;
-    req.checkBody('email', 'Invalid email').isEmail();
-    req.checkBody('password', 'Invalid password').notEmpty();
-    const validation = await req.getValidationResult();
-    if(!validation.isEmpty()) {
-      throw('invalid body');
+
+    if(!req.body.phone){
+      req.checkBody('email', 'Invalid email').isEmail();
+      req.checkBody('password', 'Invalid password').notEmpty();
+      const validation = await req.getValidationResult();
+      if(!validation.isEmpty()) {
+        throw('invalid body');
+      }
+      const email = req.body.email.toString().toLowerCase();
+      const password = req.body.password;
+      const result = await user.checkPassword(email, password);
+      logger.info(`[${ req.body.email }] login success`);
+      req.session.user = result.id;
+      req.session.type = result.type;
+      res.send({
+        type: result.type,
+        id: result.id,
+      });
+    }else{
+      req.checkBody('phone', 'Invalid phone').notEmpty();
+      req.checkBody('password', 'Invalid password').notEmpty();
+      const validation = await req.getValidationResult();
+      if(!validation.isEmpty()) {
+        throw('invalid body');
+      }
+      const phone = req.body.phone.toString();
+      const password = req.body.password;
+      const result = await user.checkPassword(phone, password);
+      logger.info(`[${ req.body.phone }] login success`);
+      req.session.user = result.id;
+      req.session.type = result.type;
+      res.send({
+        type: result.type,
+        id: result.id,
+      });
     }
-    const email = req.body.email.toString().toLowerCase();
-    const password = req.body.password;
-    const result = await user.checkPassword(email, password);
-    logger.info(`[${ req.body.email }] login success`);
-    req.session.user = result.id;
-    req.session.type = result.type;
-    res.send({
-      type: result.type,
-      id: result.id,
-    });
   } catch(err) {
-    logger.error(`User[${ req.body.email }] login fail: ${ err }`);
+    
     const errorData = [
       'invalid body',
       'user not exists',
       'invalid password',
       'password retry out of limit'
     ];
+
+    if(err == "user not exists" && req.body.phone){
+      const phone = req.body.phone.toString().toLowerCase();
+      const password = req.body.password;
+      let group = 0;
+      let type = 'normal';
+      
+      const webguiSetting = await knex('webguiSetting').select().where({
+        key: 'account',
+      }).then(success => JSON.parse(success[0].value));
+      if(webguiSetting.defaultGroup) {
+        try {
+          await groupPlugin.getOneGroup(webguiSetting.defaultGroup);
+          group = webguiSetting.defaultGroup;
+        } catch(err) {}
+      }
+      const [ userId ] = await user.add({
+        username: phone,
+        phone,
+        password,
+        type,
+        group,
+      });
+      
+      if(req.body.ref) { ref.addRefUser(req.body.ref, req.session.user); }
+      req.session.user = userId;
+      req.session.type = type;
+      res.send({
+        type: type,
+        id: userId,
+      });
+      logger.info(`[${ req.body.phone }] signup and login success`);
+      return;
+    }
+    logger.error(`User[${ req.body.email }] login fail: ${ err }`);
     if(errorData.indexOf(err) < 0) {
       return res.status(500).end();
     } else {

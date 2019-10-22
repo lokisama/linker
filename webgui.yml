@@ -77,8 +77,9 @@ o3W+h0lfTyOLqW1JlmMs6nIlqb46GixHovUlDDfaMQu7vxgwxSX6IXnr/DttRuut
 #  password: 'wx11530600'
 #  database: 'ssmgr_webgui'
 db:
+  #host: 'rm-bp1dfh1k2koqg2gk3o.mysql.rds.aliyuncs.com'
   host: 'rm-uf614hmyuddi3vx23o.mysql.rds.aliyuncs.com'
   port: 3306
   user: 'root'
   password: '1989Zj1011'
-  database: 'ssmgr'
+  database: 'mingbo'

@@ -20,12 +20,14 @@ const cardType = {
 
 const cardStatusEnum = {
   available: 'AVAILABLE',
+  sended: 'SENDED',
   used: 'USED',
   revoked: 'REVOKED'
 };
 
 const batchStatusEnum = {
   available: 'AVAILABLE',
+  sended: 'SENDED',
   usedup: 'USEDUP',
   revoked: 'REVOKED'
 };
@@ -92,7 +94,24 @@ const processOrder = async (userId, accountId, password) => {
   const orderInfo = await orderPlugin.getOneOrder(card.orderType);
   await account.setAccountLimit(userId, accountId, card.orderType);
   await ref.payWithRef(userId, card.orderType);
-  return { success: true, type: card.orderType, cardId: card.id };
+  return { success: true, type: card.orderType, cardId: card.id ,status: card.status, password: password};
+};
+
+const processBind = async (userId, accountId, password) => {
+  const cardResult = await knex(dbTableName).where({ password }).select();
+  if (cardResult.length === 0) {
+    return { success: false, message: '充值码不存在' };
+  }
+  const card = cardResult[0];
+  if (card.status !== cardStatusEnum.available) {
+    return { success: false, message: '无法使用这个充值码' };
+  }
+  await knex(dbTableName).where({ id: card.id }).update({
+    user: userId,
+    status: cardStatusEnum.sended,
+    usedTime: Date.now()
+  });
+  return { success: true, cardId: card.id ,status: card.status, password: password};
 };
 
 const orderListAndPaging = async (options = {}) => {
@@ -275,6 +294,7 @@ exports.generateGiftCard = generateGiftCard;
 exports.orderListAndPaging = orderListAndPaging;
 exports.checkOrder = checkOrder;
 exports.processOrder = processOrder;
+exports.processBind = processBind;
 exports.revokeBatch = revokeBatch;
 exports.listBatch = listBatch;
 exports.getBatchDetails = getBatchDetails;

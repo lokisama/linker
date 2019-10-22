@@ -105,3 +105,16 @@ exports.useGiftCardForUser = async (req, res) => {
     res.status(500).end();
   }
 };
+
+exports.bindGiftCardForUser = async (req, res) => {
+  try {
+    const password = req.body.password;
+    const userId = +req.body.userId;
+    const accountId = req.body.accountId ? +req.body.accountId : null;
+    const result = await giftcard.processBind(userId, accountId, password);
+    res.send(result);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).end();
+  }
+};

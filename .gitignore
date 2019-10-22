@@ -47,6 +47,7 @@ ss.sqlite
 plugins/webgui/libs/bundle.js
 plugins/webgui/libs/lib.js
 plugins/webgui/libs/style.css
+plugins/ssclient/
 *.yml
 *.sqlite
 dump.rdb

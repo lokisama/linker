@@ -8,7 +8,9 @@ const createTable = async() => {
     await knex.schema.createTable(tableName, function(table) {
       table.increments('id').primary();
       table.string('username').unique();
+      table.string('phone').defaultTo('000');
       table.string('email');
+      table.string('phone');
       table.string('telegram');
       table.string('password');
       table.string('type');
@@ -20,6 +22,13 @@ const createTable = async() => {
       table.string('comment').defaultTo('');
       table.string('crisp');
     });
+  }else{
+    const hasColumn = await knex.schema.hasColumn(tableName, 'phone');
+    if(!hasColumn) {
+      await knex.schema.table(tableName, function(table) {
+        table.string('phone').defaultTo('000');
+      });
+    }
   }
   const users = await knex('user').select(['id']);
   if(users.length === 0 && config.plugins.webgui.admin_username && config.plugins.webgui.admin_password) {
