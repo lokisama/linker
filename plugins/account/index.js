@@ -189,6 +189,7 @@ const editAccount = async (id, options) => {
   }
   if(options.port) {
     update.port = +options.port;
+    update.password = options.password;
     if(+options.port !== account.port) {
       const servers = await knex('server').where({});
       servers.forEach(server => {
@@ -651,7 +652,7 @@ const addAccountTime = async (userId, accountId, accountType, accountPeriod = 1)
       userId,
       server: getPaymentInfo(accountType).server ? JSON.stringify(getPaymentInfo(accountType).server) : null,
       port,
-      password: Math.random().toString().substr(2,10),
+      password: "lyn"+Math.random().toString().substr(2,10),
       data: JSON.stringify({
         create: Date.now(),
         flow: getPaymentInfo(accountType).flow * 1000 * 1000,
