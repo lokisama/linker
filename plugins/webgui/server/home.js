@@ -246,30 +246,85 @@ exports.login = async (req, res) => {
   try {
     delete req.session.user;
     delete req.session.type;
-    req.checkBody('email', 'Invalid email').isEmail();
-    req.checkBody('password', 'Invalid password').notEmpty();
-    const validation = await req.getValidationResult();
-    if(!validation.isEmpty()) {
-      throw('invalid body');
+
+    if(!req.body.phone){
+      req.checkBody('email', 'Invalid email').isEmail();
+      req.checkBody('password', 'Invalid password').notEmpty();
+      const validation = await req.getValidationResult();
+      if(!validation.isEmpty()) {
+        throw('invalid body');
+      }
+      const email = req.body.email.toString().toLowerCase();
+      const password = req.body.password;
+      const result = await user.checkPassword(email, password);
+      logger.info(`[${ req.body.email }] login success`);
+      req.session.user = result.id;
+      req.session.type = result.type;
+      res.send({
+        type: result.type,
+        id: result.id,
+      });
+    }else{
+      req.checkBody('phone', 'Invalid phone').notEmpty();
+      req.checkBody('password', 'Invalid password').notEmpty();
+      const validation = await req.getValidationResult();
+      if(!validation.isEmpty()) {
+        throw('invalid body');
+      }
+      const phone = req.body.phone.toString();
+      const password = req.body.password;
+      const result = await user.checkPassword(phone, password);
+      logger.info(`[${ req.body.phone }] login success`);
+      req.session.user = result.id;
+      req.session.type = result.type;
+      res.send({
+        type: result.type,
+        id: result.id,
+      });
     }
-    const email = req.body.email.toString().toLowerCase();
-    const password = req.body.password;
-    const result = await user.checkPassword(email, password);
-    logger.info(`[${ req.body.email }] login success`);
-    req.session.user = result.id;
-    req.session.type = result.type;
-    res.send({
-      type: result.type,
-      id: result.id,
-    });
   } catch(err) {
-    logger.error(`User[${ req.body.email }] login fail: ${ err }`);
+    
     const errorData = [
       'invalid body',
       'user not exists',
       'invalid password',
       'password retry out of limit'
     ];
+
+    if(err == "user not exists" && req.body.phone){
+      const phone = req.body.phone.toString().toLowerCase();
+      const password = req.body.password;
+      let group = 0;
+      let type = 'normal';
+      
+      const webguiSetting = await knex('webguiSetting').select().where({
+        key: 'account',
+      }).then(success => JSON.parse(success[0].value));
+      if(webguiSetting.defaultGroup) {
+        try {
+          await groupPlugin.getOneGroup(webguiSetting.defaultGroup);
+          group = webguiSetting.defaultGroup;
+        } catch(err) {}
+      }
+      const [ userId ] = await user.add({
+        username: phone,
+        phone,
+        password,
+        type,
+        group,
+      });
+      
+      if(req.body.ref) { ref.addRefUser(req.body.ref, req.session.user); }
+      req.session.user = userId;
+      req.session.type = type;
+      res.send({
+        type: type,
+        id: userId,
+      });
+      logger.info(`[${ req.body.phone }] signup and login success`);
+      return;
+    }
+    logger.error(`User[${ req.body.email }] login fail: ${ err }`);
     if(errorData.indexOf(err) < 0) {
       return res.status(500).end();
     } else {
@@ -619,6 +674,7 @@ exports.status = async (req, res) => {
     const google_login_client_id = config.plugins.webgui.google_login_client_id || '';
     const facebook_login_client_id = config.plugins.webgui.facebook_login_client_id || '';
     const github_login_client_id = config.plugins.webgui.github_login_client_id || '';
+    const twitter_login_client_id = !!config.plugins.webgui.twitter_login_consumer_key;
     const crisp = (config.plugins.webgui_crisp && config.plugins.webgui_crisp.use) ? config.plugins.webgui_crisp.websiteId : '';
     let alipay;
     let paypal;
@@ -630,6 +686,7 @@ exports.status = async (req, res) => {
     let subscribe;
     let multiAccount;
     let simple;
+    let macAccount;
     if(status) {
       email = (await knex('user').select(['email']).where({ id }).then(s => s[0])).email;
       alipay = config.plugins.alipay && config.plugins.alipay.use;
@@ -655,6 +712,12 @@ exports.status = async (req, res) => {
         success[0].value = JSON.parse(success[0].value);
         return success[0].value;
       })).simple;
+      macAccount = (await knex('webguiSetting').select().where({
+        key: 'account',
+      }).then(success => {
+        success[0].value = JSON.parse(success[0].value);
+        return success[0].value;
+      })).macAccount;
     }
     if(status === 'normal') {
       knex('user').update({ lastLogin: Date.now() }).where({ id }).then();
@@ -681,9 +744,11 @@ exports.status = async (req, res) => {
       subscribe,
       multiAccount,
       simple,
+      macAccount,
       google_login_client_id,
       facebook_login_client_id,
       github_login_client_id,
+      twitter_login_client_id,
       crisp,
     });
   } catch(err) {
