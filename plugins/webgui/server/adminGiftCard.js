@@ -1,5 +1,6 @@
 const knex = appRequire('init/knex').knex;
 const giftcard = appRequire('plugins/giftcard');
+const user = appRequire('plugins/user/index');
 const log4js = require('log4js');
 const logger = log4js.getLogger('webgui');
 
@@ -118,3 +119,22 @@ exports.bindGiftCardForUser = async (req, res) => {
     res.status(500).end();
   }
 };
+
+exports.sendGiftCardForMingboUser = async (req, res) => {
+  try {
+    const phone = req.body.user;
+    const type = req.body.type;
+    const serverId = req.body.serverId;
+    const userId = user.getOneUserByPhone(phone);
+    const password = giftcard.getPasswordByType(type);
+    // const result = await giftcard.processBind(userId, null, password,serverId);
+
+    console.log(phone,type,password);
+    res.send({"success":true});
+  } catch (err) {
+    console.log("error");
+    logger.error(err);
+    res.status(500).end();
+  }
+};
+

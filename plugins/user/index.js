@@ -160,6 +160,17 @@ const getOneUser = async (id) => {
   return user[0];
 };
 
+const getOneUserByPhone = async (phone) => {
+  const user = await knex('user').select().where({
+    type: 'normal',
+    username: phone,
+  });
+  if(!user.length) {
+    return Promise.reject('User not found');
+  }
+  return user[0];
+};
+
 const getOneAdmin = async (id) => {
   const user = await knex('user').select().where({
     type: 'admin',
@@ -271,6 +282,7 @@ exports.get = getUsers;
 exports.getRecentSignUp = getRecentSignUpUsers;
 exports.getRecentLogin = getRecentLoginUsers;
 exports.getOne = getOneUser;
+exports.getOneUserByPhone = getOneUserByPhone;
 exports.getOneAdmin = getOneAdmin;
 exports.getUserAndPaging = getUserAndPaging;
 exports.delete = deleteUser;
