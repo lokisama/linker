@@ -453,15 +453,15 @@ exports.getPriceByUser = async (req, res) => {
     const groupId = req.userInfo.group;
     let orders = await orderPlugin.getOrders();
     orders = orders.filter(f => f.isShow == 1).map( o=> {
-      id,
-      sku,
-      name,
-      shortComment,
-      Comment,
-      amount,
-      server,
-      sort,
-      baseId
+      id:o.id,
+      sku:o.sku,
+      name:o.name,
+      shortComment: o.shortComment,
+      comment: o.comment,
+      amount: o.amount,
+      server: o.server,
+      sort: o.sort,
+      baseId : o.baseId
     })
     const groupSetting = await groupPlugin.getOneGroup(groupId);
     if(groupSetting.order) {
