@@ -4,6 +4,8 @@ const user = appRequire('plugins/user/index');
 const log4js = require('log4js');
 const logger = log4js.getLogger('webgui');
 
+const minboPlugin = appRequire('plugins/payMingbo');
+
 exports.addGiftCard = async (req, resp) => {
   const count = Number(req.body.count);
   const orderId = Number(req.body.orderId);
@@ -107,12 +109,32 @@ exports.useGiftCardForUser = async (req, res) => {
   }
 };
 
-exports.bindGiftCardForUser = async (req, res) => {
+/**
+ * 使用礼品券
+ * @param  {[type]} req [description]
+ * @param  {[type]} res [description]
+ * userId
+ * password
+ * @return {[type]}     [description]
+ */
+exports.useGiftCardForMingboUser = async (req, res) => {
   try {
-    const password = req.body.password;
     const userId = +req.body.userId;
+    const phone = req.body.phone;
+    const password = req.body.password;
     const accountId = req.body.accountId ? +req.body.accountId : null;
-    const result = await giftcard.processBind(userId, accountId, password);
+    let userInfo;
+    if(!userId && phone){
+      userInfo = await user.getOneUserByPhone(phone);
+    }else if(userId && !phone){
+      userInfo = await user.getOne(userId);
+    }
+
+    if(userInfo == null){
+      res.send({"error":"用户不存在"});
+    }
+
+    const result = await giftcard.processOrderForMingboUser(userInfo,accountId,password);
     res.send(result);
   } catch (err) {
     logger.error(err);
@@ -120,21 +142,65 @@ exports.bindGiftCardForUser = async (req, res) => {
   }
 };
 
+/**
+ * 发送礼品券
+ * @param  {[type]} req [description]
+  {
+  "phone":13788997536,
+  "type":2
+  }
+ * @param  {[type]} res [description]
+  {
+    "success": true,
+    "data": {
+        "cardId": 27,
+        "sku": "tcp_daily",
+        "comment": "2天免费",
+        "password": "679d83a76f7b41c882",
+        "type": 2
+      }
+    }
+ * @return {[type]}     [description]
+ */
 exports.sendGiftCardForMingboUser = async (req, res) => {
   try {
-    const phone = req.body.user;
-    const type = req.body.type;
-    const serverId = req.body.serverId;
-    const userId = user.getOneUserByPhone(phone);
-    const password = giftcard.getPasswordByType(type);
-    // const result = await giftcard.processBind(userId, null, password,serverId);
+    const userId = +req.body.userId;
+    const phone = req.body.phone;
+    const mingboType = req.body.type;
+    const accountId = req.body.accountId ? +req.body.accountId : null;
+    let userInfo;
+    if(!userId && phone){
+      userInfo = await user.getOneUserByPhone(phone);
+    }else if(userId && !phone){
+      userInfo = await user.getOne(userId);
+    }
 
-    console.log(phone,type,password);
-    res.send({"success":true});
+    const result = await giftcard.processBind(userInfo.id, accountId, mingboType);
+    res.send(result);
   } catch (err) {
-    console.log("error");
     logger.error(err);
     res.status(500).end();
   }
 };
+
+exports.searchGiftcard = async (req, res) => {
+  try {
+    const userId = +req.body.userId;
+    const phone = req.body.phone;
+    const status = req.body.status;
+    let userInfo;
+    if(!userId && phone){
+      userInfo = await user.getOneUserByPhone(phone);
+    }else if(userId && !phone){
+      userInfo = await user.getOne(userId);
+    }
+
+    const result = await giftcard.searchGiftcard(userInfo.id,status);
+    res.send(result);
+
+  } catch (err) {
+    logger.error(err);
+    res.status(500).end();
+  }
+}
 

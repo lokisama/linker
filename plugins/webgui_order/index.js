@@ -28,14 +28,21 @@ const getOrdersAndAccountNumber = async () => {
     knex.raw('count(account_plugin.id) as accountNumber'),
   ])
   .leftJoin('account_plugin', 'account_plugin.orderId', 'webgui_order.id')
+  //.where('isShow',1)
   .groupBy('webgui_order.id')
-  .orderBy('webgui_order.name', 'ASC');
+  .orderBy('webgui_order.sort', 'ASC');
   return orders;
 };
 
 const getOneOrder = async orderId => {
   const order = await knex('webgui_order').where({ id: orderId }).then(s => s[0]);
   if(!order) { return Promise.reject('order not found'); }
+  return order;
+};
+
+const getOneBySku = async sku => {
+  const order = await knex('webgui_order').where({ sku }).then(s => s[0]);
+  if(!order) { return Promise.reject('sku not found'); }
   return order;
 };
 
@@ -120,3 +127,5 @@ exports.newOrder = newOrder;
 exports.editOrder = editOrder;
 exports.deleteOrder = deleteOrder;
 exports.getOneOrderByAccountId = getOneOrderByAccountId;
+
+exports.getOneBySku = getOneBySku;

@@ -180,8 +180,6 @@ app.get('/api/admin/giftcard/details/:batchNumber(\\d+)', isAdmin, adminGiftCard
 app.post('/api/admin/giftcard/revoke', isAdmin, adminGiftCard.revokeBatch);
 app.post('/api/admin/giftcard/add', isAdmin, adminGiftCard.addGiftCard);
 app.post('/api/admin/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGiftCardForUser);
-app.post('/api/admin/giftcard/bind', isAdmin, isSuperAdmin, adminGiftCard.bindGiftCardForUser);
-app.post('/api/admin/giftcard/send', isAdmin, isSuperAdmin, adminGiftCard.sendGiftCardForMingboUser);
 
 app.get('/api/admin/group', isAdmin, adminGroup.getGroups);
 app.get('/api/admin/group/:id(\\d+)', isAdmin, adminGroup.getOneGroup);
@@ -233,6 +231,22 @@ app.get('/api/user/ref/code', isUser, user.getRefCode);
 app.get('/api/user/ref/user', isUser, user.getRefUser);
 
 app.get('/api/user/order', isUser, user.getOrder);
+
+
+/*
+ Mingbo API
+ */
+app.post('/api/mingbo/giftcard/send', isAdmin, isSuperAdmin, adminGiftCard.sendGiftCardForMingboUser);
+app.post('/api/mingbo/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGiftCardForMingboUser);
+app.post('/api/mingbo/giftcard/search', isAdmin, isSuperAdmin, adminGiftCard.searchGiftcard);
+app.post('/api/mingbo/alipay/callback', user.alipayCallbackMingbo);
+app.post('/api/mingbo/wechatPay/callback', user.alipayCallback);
+
+app.get('/api/mingbo/user/plans', isUser, user.getPriceByUser);
+app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
+app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
+app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
+
 
 if (config.plugins.webgui_telegram && config.plugins.webgui_telegram.use) {
   const telegram = appRequire('plugins/webgui_telegram/account');

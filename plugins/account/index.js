@@ -279,7 +279,7 @@ const addAccountLimit = async (id, number = 1) => {
     }
     return Promise.reject('account not found');
   });
-  if(account.type < 2 || account.type > 5) { return; }
+  if(account.type < 2) { return; }
   const accountData = JSON.parse(account.data);
   const timePeriod = {
     '2': 7 * 86400 * 1000,
@@ -298,6 +298,23 @@ const addAccountLimit = async (id, number = 1) => {
   }).where({ id });
   return;
 };
+
+const getExpireByDate = (limit) => { 
+  var d=Date.now();
+  d.getDate(d.getDate() + limit);
+  return d.getTime()-Date.now().getTime(); 
+}
+
+const getExpireByMonth = (limit) => { 
+  var d=Date.now();
+  d.setMonth(d.getMonth() + limit);
+  return d.getTime()-Date.now().getTime(); 
+}
+const getExpireByYear = (limit) => { 
+  var d=new Date();
+  d.setYear(d.getYear() + limit);
+  return d.getTime()-Date.now().getTime(); 
+}
 
 const addAccountLimitToMonth = async (userId, accountId, number = 1) => {
   if(!accountId) {
@@ -482,7 +499,7 @@ const setAccountLimit = async (userId, accountId, orderId) => {
       orderId,
       user: userId,
       port,
-      password: Math.random().toString().substr(2,10),
+      password: 'lynca'+Math.random().toString().substr(2,10),
       time: Date.now(),
       limit,
       flow: orderInfo.flow,

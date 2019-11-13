@@ -4,6 +4,7 @@ const logger = log4js.getLogger('giftcard');
 const uuidv4 = require('uuid/v4');
 const account = appRequire('plugins/account/index');
 const orderPlugin = appRequire('plugins/webgui_order');
+const payMingboPlugin = appRequire('plugins/payMingbo');
 const ref = appRequire('plugins/webgui_ref/time');
 const moment = require('moment');
 
@@ -82,7 +83,7 @@ const processOrder = async (userId, accountId, password) => {
 		return { success: false, message: '充值码不存在' };
 	}
 	const card = cardResult[0];
-	if (card.status !== cardStatusEnum.available || card.status !== cardStatusEnum.sended) {
+	if (card.status !== cardStatusEnum.available) {
 		return { success: false, message: '无法使用这个充值码' };
 	}
 	await knex(dbTableName).where({ id: card.id }).update({
@@ -91,14 +92,14 @@ const processOrder = async (userId, accountId, password) => {
 		status: cardStatusEnum.used,
 		usedTime: Date.now()
 	});
-	const orderInfo = await orderPlugin.getOneOrder(card.orderType);
+	const orderInfo = await payMingboPlugin.getOneOrder(card.orderType);
 	await account.setAccountLimit(userId, accountId, card.orderType);
 	await ref.payWithRef(userId, card.orderType);
-	return { success: true, type: card.orderType, cardId: card.id ,status: cardStatusEnum.sended, password: password};
+	return { success: true, type: card.orderType, cardId: card.id ,status: cardStatusEnum.used, password: password};
 };
 
-const processBind = async (userId, accountId, password,mingboServerId=null) => {
-	const cardResult = await knex(dbTableName).whereIn({ password }).select();
+const processOrderForMingboUser = async (userInfo, accountId, password) => {
+	const cardResult = await knex(dbTableName).where({ password }).select();
 	if (cardResult.length === 0) {
 		return { success: false, message: '充值码不存在' };
 	}
@@ -106,46 +107,78 @@ const processBind = async (userId, accountId, password,mingboServerId=null) => {
 	if (card.status !== cardStatusEnum.available) {
 		return { success: false, message: '无法使用这个充值码' };
 	}
+	const result = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, card.sku, card.limit , card);
+
+	await knex(dbTableName).where({ id: card.id }).update({
+		user: userInfo.id,
+		account: accountId,
+		status: cardStatusEnum.used,
+		orderId: result.orderId,
+		usedTime: Date.now(),
+	});
+
+	//const orderInfo = await orderPlugin.getOneOrder(card.orderType);
+	//await account.setAccountLimit(userId, accountId, card.orderType);
+	//await ref.payWithRef(userId, card.orderType);
+	return { success: true, data: result};
+};
+
+const processBind = async (userId, accountId, card) => {
+	// const cardResult = await knex(dbTableName).whereIn({ password }).select();
+	// if (cardResult.length === 0) {
+	// 	return { success: false, message: '充值码不存在' };
+	// }
+	// const card = cardResult[0];
+	// if (card.status !== cardStatusEnum.available && card.user !== null) {
+	// 	return { success: false, message: '充值码已赠送' };
+	// }
 	await knex(dbTableName).where({ id: card.id }).update({
 		user: userId,
-		status: cardStatusEnum.sended,
-		mingboServerId: mingboServerId,
 		usedTime: Date.now()
 	});
-	return { success: true, cardId: card.id ,status: cardStatusEnum.sended, password: password, mingboServerId: mingboServerId};
+	return { success: true, data: { cardId: card.id , sku: card.sku, comment:card.comment , password: card.password, type:card.mingboType}};
 };
 
-const getPasswordByType = async (type) => {
-	const serverIdEnum = {
-		"1": [5],
-		"2": [2],
-		"3": [3],
-		"4": [4],
-		"5": [5],
-		"6": [6]
+const processBindAuto = async (userId, accountId, mingboType) => {
+	
+	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
+	if (cardResult.length === 0) {
+		return { success: false, message: '礼品卡type不存在或已用完，请联系lynca' };
+	}
+	const card = cardResult[0];
+	if (card.status !== cardStatusEnum.available && card.user !== null) {
+		return { success: false, message: '礼品卡已赠送' };
 	}
 
-	const serverId = serverIdEnum[type];
+	const result = await processBind(userId, accountId, card);
 
-	const cardResult = await knex(dbTableName)
-	.where((builder) =>
-		builder.whereIn('orderType', serverId)
-	)
-	.andWhere(function() {
-		this.where({ status : cardStatusEnum.available})
-	})
-	.select();
-  
-  console.log(cardResult[0]);
-	const cards = await knex(dbTableName).where( "id",cardResult[0].id).update({
-		user: userId,
-		status: cardStatusEnum.sended,
-		serverId: serverId,
-		usedTime: Date.now()
-	});
-	
-	return cards.map(o=>o.password);
+	return result;
 };
+
+const searchGiftcard = async (userId,status = null) =>{
+
+	let cardResult;
+	if(status == null){
+		cardResult= await knex(dbTableName).where({ user:userId }).select();
+	}else{
+		cardResult= await knex(dbTableName).where({ user:userId,status: status }).select();
+	}
+	
+	const data = cardResult.map(o =>{
+		return {
+			password : o.password,
+			status: o.status,
+			type: o.mingboType,
+			comment: o.comment,
+			cutPrice: o.cutPrice,
+			orderId: o.orderId,
+			usedTime: o.usedTime,
+			expireTime: o.expireTime
+		}
+	});
+
+	return { success: true, data: data};
+}
 
 const orderListAndPaging = async (options = {}) => {
 	const search = options.search || '';
@@ -201,6 +234,16 @@ const orderListAndPaging = async (options = {}) => {
 		orders,
 	};
 };
+
+
+const checkGitcard = async (password)=>{
+	const giftcard = await knex(dbTableName).select().where({ password });
+	if (order.length > 0) {
+		return success[0];
+	} else {
+		return null;
+	}
+}
 
 const checkOrder = async (id) => {
 	const order = await knex(dbTableName).select().where({ id });
@@ -323,14 +366,33 @@ const getUserFinishOrder = async userId => {
 	return orders;
 };
 
+const setCardFinish = async (userId,accountId,password) =>{
+	await knex(dbTableName).where({ password }).update({
+		user: userId,
+		account: accountId,
+		status: cardStatusEnum.used,
+		usedTime: Date.now()
+	});
+}
+
+
+const getOneByPassword = async(password)=>{
+	const card = await knex(dbTableName).select().where({ password });
+	return card.length > 0 ? card[0] : null;
+}
+
 exports.generateGiftCard = generateGiftCard;
 exports.orderListAndPaging = orderListAndPaging;
 exports.checkOrder = checkOrder;
 exports.processOrder = processOrder;
-exports.processBind = processBind;
-exports.getPasswordByType = getPasswordByType;
 exports.revokeBatch = revokeBatch;
 exports.listBatch = listBatch;
 exports.getBatchDetails = getBatchDetails;
 exports.getUserOrders = getUserOrders;
 exports.getUserFinishOrder = getUserFinishOrder;
+
+exports.processBind = processBindAuto;
+exports.processOrderForMingboUser = processOrderForMingboUser;
+exports.searchGiftcard = searchGiftcard;
+exports.getOneByPassword = getOneByPassword;
+exports.setCardFinish = setCardFinish;

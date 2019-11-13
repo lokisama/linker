@@ -20,6 +20,8 @@ const alipayPlugin = appRequire('plugins/alipay/index');
 const macAccountPlugin = appRequire('plugins/macAccount/index');
 const accountFlow = appRequire('plugins/account/accountFlow');
 
+const payMingboPlugin = appRequire('plugins/payMingbo/index');
+
 const alipay = appRequire('plugins/alipay/index');
 
 exports.getAccount = async (req, res) => {
@@ -298,6 +300,76 @@ exports.alipayCallback = (req, res) => {
   return res.send('success');
 };
 
+exports.getGiftcards = async (req, res) =>{
+    const userId = req.session.user;
+    const status = req.body.status;
+
+    let userInfo = await user.getOne(userId);
+    if(userInfo == null){
+      return res.send({"success": false ,"error":"用户不存在"});
+    }
+
+    const giftcards = await giftcard.searchGiftcard(userId, status);
+    return res.send({"success": true ,"data": giftcards });
+}
+
+exports.useGiftcard = async (req, res) =>{
+    const userId = req.session.user;
+
+    let userInfo = await user.getOne(userId);
+    if(userInfo == null){
+      return res.send({"success": false ,"error":"用户不存在"});
+    }
+  
+}
+
+exports.createAppOrder = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const card = req.body.card;
+    const sku = req.body.sku;
+    const limit = req.body.limit;
+    const accountId = req.body.accountId ? +req.body.accountId : null;
+
+    let userInfo = await user.getOne(userId);
+    if(userInfo == null){
+      return res.send({"success": false ,"error":"用户不存在"});
+    }
+
+    if(sku == null || limit == null){
+      return res.send({"success": false ,"error":"套餐信息不完整"});
+    }
+
+    let cardData = await giftcard.getOneByPassword(card);
+    if(cardData){
+      if(cardData.status === "USED"){
+        return res.send({"success": false ,"error":"礼品卡已使用"});
+      }else if(!cardData.limit && !cardData.cutPrice){
+        return res.send({"success": false ,"error":"礼品卡异常"});
+      }else{
+        await giftcard.setCardFinish(userId,accountId,card);
+      }
+      
+    }
+
+    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData);
+    return res.send(alipayOrder);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.alipayCallbackMingbo = (req, res) => {
+  const data = req.body;
+  console.log(data);
+  const signStatus = payMingboPlugin.getNotifyFromMingbo(req.body);
+  if (signStatus === false) {
+    return res.send('error');
+  }
+  return res.send('success');
+};
+
 exports.getPrice = async (req, res) => {
   try {
     const accountId = +req.query.accountId;
@@ -347,6 +419,72 @@ exports.getPrice = async (req, res) => {
       });
     }
     return res.send(currentOrder.length ? currentOrder : orders);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.getPriceByUser = async (req, res) => {
+  try {
+    const accountId = +req.query.accountId;
+    let accountInfo;
+    let changeOrderTypeId = 0;
+    let orderInfo;
+    const isExpired = account => {
+      if(!account) { return true; }
+      const accountData = JSON.parse(account.data);
+      const time = {
+        '2': 7 * 24 * 3600000,
+        '3': 30 * 24 * 3600000,
+        '4': 24 * 3600000,
+        '5': 3600000,
+      };
+      const expire = accountData.create + time[account.type] * accountData.limit;
+      return expire <= Date.now();
+    };
+    if(accountId) {
+      orderInfo = await orderPlugin.getOneOrderByAccountId(accountId);
+      accountInfo = await knex('account_plugin').where({ id: accountId }).then(s => s[0]);
+      if(orderInfo && !orderInfo.changeOrderType) {
+        changeOrderTypeId = orderInfo.id;
+      }
+    }
+    const groupId = req.userInfo.group;
+    let orders = await orderPlugin.getOrders();
+    orders = orders.filter(f => f.isShow == 1).map( o=> {
+      id,
+      sku,
+      name,
+      shortComment,
+      Comment,
+      amount,
+      server,
+      sort,
+      baseId
+    })
+    const groupSetting = await groupPlugin.getOneGroup(groupId);
+    if(groupSetting.order) {
+      orders = orders.filter(f => {
+        return JSON.parse(groupSetting.order).indexOf(f.id) >= 0;
+      });
+      if(orderInfo) {
+        orders = orders.filter(f => {
+          if(!f.baseId) { return true; }
+          if(f.baseId === orderInfo.id && !isExpired(accountInfo)) { return true; }
+          return false;
+        });
+      } else {
+        orders = orders.filter(f => !f.baseId);
+      }
+    }
+    let currentOrder = [];
+    if(changeOrderTypeId && !isExpired(accountInfo)) {
+      currentOrder = orders.filter(f => {
+        return (f.id === changeOrderTypeId || f.baseId === changeOrderTypeId);
+      });
+    }
+    return res.send({success:true,data:currentOrder.length ? currentOrder : orders});
   } catch(err) {
     console.log(err);
     res.status(403).end();

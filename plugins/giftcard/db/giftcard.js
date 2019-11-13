@@ -17,13 +17,7 @@ const createTable = async () => {
       table.string('comment').defaultTo('');
     });
   }else{
-    const hasColumn = await knex.schema.hasColumn(tableName, 'mingboServerId');
-      if(!hasColumn) {
-        await knex.schema.table(tableName, function(table) {
-          table.string('serverId');
-          table.string('mingboServerId');
-        });
-      }
+    
   }
 };
 
