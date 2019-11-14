@@ -18,8 +18,10 @@
         <md-card flex ng-click="editOrder(order.id)" md-colors="{{ orderColor(order) }}">
             <md-card-content>
                 <div layout="row" layout-align="space-between center" style="word-break: keep-all; white-space:nowrap; overflow: hidden; text-overflow:ellipsis;">
-                    <div flex="80">{{ order.name }}</div>
-                    <div flex="20" style="color: #666; font-size: 0.9em; text-align: right;">{{ order.accountNumber }}</div>
+                    <div flex="20" ng-if="order.isShow === 1" style="color: green; font-size: 0.6em; text-align: left;">[可见]</div>
+                    <div flex="20" ng-if="order.isShow === 0" style="color: red; font-size: 0.6em; text-align: left;">[隐藏]</div>
+                    <div flex="80">{{ order.name }} <span style="font-size: 0.6em; text-align: left;">{{ order.shortComment }}</span></div>
+                    <div flex="10" style="color: #666; font-size: 0.6em; text-align: right;">{{ order.accountNumber }}</div>
                 </div>
             </md-card-content>
         </md-card>

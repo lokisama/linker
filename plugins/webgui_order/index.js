@@ -25,6 +25,7 @@ const getOrdersAndAccountNumber = async () => {
     'webgui_order.multiServerFlow as multiServerFlow',
     'webgui_order.changeOrderType as changeOrderType',
     'webgui_order.autoRemove as autoRemove',
+    'webgui_order.isShow as isShow',
     knex.raw('count(account_plugin.id) as accountNumber'),
   ])
   .leftJoin('account_plugin', 'account_plugin.orderId', 'webgui_order.id')
@@ -74,6 +75,11 @@ const newOrder = async data => {
     multiServerFlow: data.multiServerFlow,
     changeOrderType: data.changeOrderType,
     active: data.active,
+    isShow: data.isShow,
+    sku: data.sku,
+    amount: data.amount,
+    sort: data.sort,
+    giftcardType: data.giftcardType
   });
   return id;
 };
@@ -97,6 +103,11 @@ const editOrder = async data => {
     multiServerFlow: data.multiServerFlow,
     changeOrderType: data.changeOrderType,
     active: data.active,
+    isShow: data.isShow,
+    sku: data.sku,
+    amount: data.amount,
+    sort: data.sort,
+    giftcardType: data.giftcardType
   }).where({
     id: data.id,
   });

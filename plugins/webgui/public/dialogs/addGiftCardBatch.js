@@ -5,8 +5,13 @@ const cdn = window.cdn || '';
 app.factory('addGiftCardBatchDialog', ['$mdDialog', '$http', ($mdDialog, $http) => {
   const publicInfo = {
     status: 'show',
-    count: 20,
+    count: 50,
     orderId: 3,
+    sku:'vip_monthly',
+    limit:1,
+    cutPrice:50,
+    mingboType:1,
+    comment:'新人5折券'
   };
 
   $http.get('/api/admin/order').then(success => {
@@ -36,6 +41,10 @@ app.factory('addGiftCardBatchDialog', ['$mdDialog', '$http', ($mdDialog, $http) 
       count: publicInfo.count,
       orderId: publicInfo.orderId,
       comment: publicInfo.comment,
+      sku: publicInfo.sku,
+      limit: publicInfo.limit,
+      cutPrice: publicInfo.cutPrice,
+      mingboType: publicInfo.mingboType
     })
     .then(() => close())
     .catch(err => { publicInfo.status = 'error'; });

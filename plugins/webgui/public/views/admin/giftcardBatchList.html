@@ -4,7 +4,7 @@
             <md-card-content>
                 <div layout="row" layout-align="space-between center" style="word-break: keep-all; white-space:nowrap; overflow: hidden; text-overflow:ellipsis;">
                     <div flex="30">
-                        <span>{{ batch.orderName }}</span>
+                        <span>{{ batch.comment }}</span>
                         <span>
                             <span ng-if="batch.status === 'AVAILABLE'">
                                 ({{batch.availableCount}} / {{batch.totalCount}})
@@ -17,7 +17,7 @@
                     <div flex="70" style="text-align:right; color: #aaa; font-size: 0.8em;">{{batch.createTime | timeago}}</div>
                 </div>
                 <div layout="row" layout-align="space-between center" style="word-break: keep-all; white-space:nowrap; overflow: hidden; text-overflow:ellipsis;">
-                    <div flex="100" style="color: #aaa; font-size: 0.8em;">{{ batch.comment || '-' }}</div>
+                    <div flex="100" style="color: #aaa; font-size: 0.8em;">{{ batch.sku || '-' }}</div>
                 </div>
             </md-card-content>
         </md-card>

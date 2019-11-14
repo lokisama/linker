@@ -22,7 +22,7 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$timeout', '$http', '$loc
   };
   if(publicInfo.config.alipay) { publicInfo.payType.push({ type: 'alipay', name: '支付宝' }); }
   if(publicInfo.config.paypal) { publicInfo.payType.push({ type: 'paypal', name: 'Paypal' }); }
-  if(publicInfo.config.giftcard) { publicInfo.payType.push({ type: 'giftcard', name: '充值码' }); }
+  if(publicInfo.config.giftcard) { publicInfo.payType.push({ type: 'giftcard', name: '优惠券' }); }
   publicInfo.myPayType = publicInfo.payType[0] ? publicInfo.payType[0].type : undefined;
   let dialogPromise = null;
   const createOrder = () => {
@@ -168,7 +168,7 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$timeout', '$http', '$loc
       const data = result.data;
       if (data.success) {
         publicInfo.status = 'success';
-        publicInfo.message = `充值码[ ${ publicInfo.giftCardPassword } ]使用成功`;
+        publicInfo.message = `优惠券[ ${ publicInfo.giftCardPassword } ]使用成功`;
         publicInfo.giftCardPassword = '';
       } else {
         publicInfo.status = 'error';

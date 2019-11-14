@@ -53,6 +53,11 @@ exports.newOrder = async (req, res) => {
     data.multiServerFlow = req.body.multiServerFlow;
     data.changeOrderType = req.body.changeOrderType;
     data.active = req.body.active;
+    data.sku = req.body.sku;
+    data.isShow = req.body.isShow;
+    data.sort = req.body.sort;
+    data.amount = req.body.amount;
+    data.giftcardType = req.body.giftcardType;
     const orderId = await orderPlugin.newOrder(data);
     await groupPlugin.editMultiGroupForOrder(orderId, req.body.group || []);
     res.send('success');
@@ -83,6 +88,11 @@ exports.editOrder = async (req, res) => {
     data.multiServerFlow = req.body.multiServerFlow;
     data.changeOrderType = req.body.changeOrderType;
     data.active = req.body.active;
+    data.sku = req.body.sku;
+    data.isShow = req.body.isShow;
+    data.sort = req.body.sort;
+    data.amount = req.body.amount;
+    data.giftcardType = req.body.giftcardType;
     await orderPlugin.editOrder(data);
     const changeCurrentAccount = req.body.changeCurrentAccount;
     const update = {};

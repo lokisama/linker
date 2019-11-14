@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminServerController', ['$scope', '$http', '$state', 'moment', '$localStorage', 'adminApi', '$timeout', '$interval', 'serverChartDialog',
   ($scope, $http, $state, moment, $localStorage, adminApi, $timeout, $interval, serverChartDialog) => {
-    $scope.setTitle('服务器');
+    $scope.setTitle('VPN线路');
     $scope.setMenuSearchButton('search');
     $scope.setMenuRightButton('timeline');
     if(!$localStorage.admin.serverChart) {

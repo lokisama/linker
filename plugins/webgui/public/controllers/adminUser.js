@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminUserController', ['$scope', '$state', '$stateParams', 'adminApi', '$mdMedia', '$localStorage', 'userSortDialog', '$timeout',
   ($scope, $state, $stateParams, adminApi, $mdMedia, $localStorage, userSortDialog, $timeout) => {
-    $scope.setTitle('用户');
+    $scope.setTitle('用户管理');
     $scope.setMenuSearchButton('search');
     $scope.setFabButton(() => {
       $state.go('admin.addUser');

@@ -10,12 +10,16 @@ exports.addGiftCard = async (req, resp) => {
   const count = Number(req.body.count);
   const orderId = Number(req.body.orderId);
   const comment = req.body.comment;
+  const sku = req.body.sku;
+  const limit = req.body.limit;
+  const cutPrice = req.body.cutPrice;
+  const mingboType = req.body.mingboType;
   if (count === NaN || orderId === NaN || count === 0) {
     resp.status(400).send('Bad parameters').end();
     return;
   }
   try {
-    const batchNumber = await giftcard.generateGiftCard(count, orderId, comment);
+    const batchNumber = await giftcard.generateGiftCard(count, orderId, comment,sku,limit,cutPrice, mingboType);
     resp.send({ batchNumber: batchNumber });
   } catch (err) {
     logger.error(`添加充值码失败：${err.toString()}`);
@@ -131,14 +135,15 @@ exports.useGiftCardForMingboUser = async (req, res) => {
     }
 
     if(userInfo == null){
-      res.send({"error":"用户不存在"});
+      return res.send({"succuss": false,"error":"用户不存在"});
     }
 
     const result = await giftcard.processOrderForMingboUser(userInfo,accountId,password);
-    res.send(result);
+    return res.send(result);
+
   } catch (err) {
     logger.error(err);
-    res.status(500).end();
+    return res.send({"succuss": false,"error":err});
   }
 };
 
@@ -176,10 +181,10 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
     }
 
     const result = await giftcard.processBind(userInfo.id, accountId, mingboType);
-    res.send(result);
+    return res.send(result);
   } catch (err) {
     logger.error(err);
-    res.status(500).end();
+    return res.send({"succuss": false,"error":err});
   }
 };
 
@@ -196,11 +201,11 @@ exports.searchGiftcard = async (req, res) => {
     }
 
     const result = await giftcard.searchGiftcard(userInfo.id,status);
-    res.send(result);
+    return res.send(result);
 
   } catch (err) {
     logger.error(err);
-    res.status(500).end();
+    return res.send({"succuss": false,"error":err});
   }
 }
 

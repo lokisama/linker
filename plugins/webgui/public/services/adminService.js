@@ -33,7 +33,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
     let url;
     if(payType === '支付宝') { url = '/api/admin/alipay'; }
     if(payType === 'Paypal') { url = '/api/admin/paypal'; }
-    if(payType === '充值码') { url = '/api/admin/giftcard'; }
+    if(payType === '优惠券') { url = '/api/admin/giftcard'; }
     if(payType === '邀请码') { url = '/api/admin/refOrder'; }
     const search = opt.search || '';
     const filter = opt.filter || '';
@@ -47,7 +47,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
     let url;
     if(payType === '支付宝') { url = '/api/admin/alipay/csv'; }
     if(payType === 'Paypal') { url = '/api/admin/paypal/csv'; }
-    if(payType === '充值码') { url = '/api/admin/giftcard/csv'; }
+    if(payType === '优惠券') { url = '/api/admin/giftcard/csv'; }
     if(payType === '邀请码') { url = '/api/admin/refOrder/csv'; }
     let downloadUrl = url + '?';
     for(const o in opt) {

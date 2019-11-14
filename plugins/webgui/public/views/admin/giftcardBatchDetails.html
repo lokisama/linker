@@ -2,7 +2,7 @@
     <md-card flex>
         <md-card-header>
             <md-card-header-text ng-show="batch">
-                <span class="md-title">{{ batch.orderName }}</span>
+                <span class="md-title">{{ batch.comment }} [{{batch.cutPrice}}%] [SKU:{{ batch.sku }}]*{{ batch.limit }} [TYPE:{{batch.mingboType}}]</span>
                 <span class="md-subhead">创建于 {{ batch.createTime | timeago }}，目前状态 {{ batch.status | prettyPrintBatchStatus}}</span>
             </md-card-header-text>
             <md-card-header-text ng-hide="batch">
@@ -13,13 +13,18 @@
                 </span>
             </md-card-header-text>
             <div ng-if="batch.status === 'AVAILABLE'">
-                <md-button class="md-primary" aria-label="revoke" ng-click="revoke()"> {{ '召回' | translate }}
+                <input type="text" value="" ng-model="toUser"/>
+                <md-button class="md-primary" aria-label="send" ng-click="send(toUser)"> {{ '赠与用户' | translate }}
                 </md-button>
             </div>
             <div ng-if="batch.status === 'AVAILABLE'">
-                <md-button class="md-primary" aria-label="export csv" download="batch{{ batch.batchNumber }}.csv" ng-href="{{ exportUrl }}"> {{ '导出 CSV' | translate }}
+                <md-button class="md-primary" aria-label="revoke" ng-click="revoke()"> {{ '召回' | translate }}
                 </md-button>
             </div>
+            <!-- <div ng-if="batch.status === 'AVAILABLE'">
+                <md-button class="md-primary" aria-label="export csv" download="batch{{ batch.batchNumber }}.csv" ng-href="{{ exportUrl }}"> {{ '导出 CSV' | translate }}
+                </md-button>
+            </div> -->
         </md-card-header>
     </md-card>
 </div>
@@ -29,9 +34,10 @@
             <md-divider></md-divider>
             <md-list-item ng-repeat="card in batch.cards">
                 <div flex layout="row" layout-align="space-between center" ng-click="showPassword(card.id, card.password)">
-                    <div flex="30" flex-xs="60">
-                        <span ng-if="card.status === 'USED'">已用 {{ card.userEmail }}</span>
-                        <span ng-if="card.status !== 'USED'">{{ card.status | prettyPrintBatchStatus }}</span>
+                    <div flex="80" flex-xs="60">
+                        <span ng-if="card.status === 'USED'"> 密码：{{card.password}} 用户：{{card.user}} [已用]</span>
+                        <span ng-if="card.status !== 'USED' && card.user">密码：{{card.password}} 用户：{{card.user}} [系统赠与]</span>
+                        <span ng-if="card.status !== 'USED' && !card.user">密码：{{card.password}} [{{ card.status | prettyPrintBatchStatus }}] </span>
                     </div>
                     <div flex="20" flex-xs="40" style="text-align: right;">
                         <span style="font-size: 0.9em; color: #555" ng-if="card.usedTime != null && card.usedTime !== NaN">{{ card.usedTime | timeago }}<br></span>

@@ -7,27 +7,30 @@
             <div layout="row" layout-align="center center" ng-show="publicInfo.status === 'show'">
                 <form>
                     <md-input-container class="md-block">
+                        <label>名称</label>
+                        <input type="text" required name="comment" ng-model="publicInfo.comment">
+                    </md-input-container>
+                    <md-input-container class="md-block">
                         <label>数量</label>
                         <input type="number" required name="count" ng-model="publicInfo.count">
                     </md-input-container>
                     <md-input-container class="md-block" style="height: 54px;">
-                        <label>类型</label>
-                        <md-select ng-model="publicInfo.orderId">
-                            <md-option ng-repeat="order in publicInfo.orderList" ng-value="{{order.id}}">{{ order.name }}</md-option>
-                            <!-- <md-option ng-value="7">年</md-option>
-                            <md-option ng-value="9">半年</md-option>
-                            <md-option ng-value="6">季度</md-option>
-                            <md-option ng-value="3">月</md-option>
-                            <md-option ng-value="2">周</md-option>
-                            <md-option ng-value="8">两周</md-option>
-                            <md-option ng-value="4">天</md-option>
-                            <md-option ng-value="5">小时</md-option> -->
-                        </md-select>
+                        <label>SKU</label>
+                        <input type="text" required name="count" ng-model="publicInfo.sku">
                     </md-input-container>
                     <md-input-container class="md-block">
-                        <label>备注</label>
-                        <input type="text" required name="comment" ng-model="publicInfo.comment">
+                        <label>倍数</label>
+                        <input type="number" required name="count" ng-model="publicInfo.limit">
                     </md-input-container>
+                    <md-input-container class="md-block">
+                        <label>折扣</label>
+                        <input type="number" required name="count" ng-model="publicInfo.cutPrice">
+                    </md-input-container>
+                    <md-input-container class="md-block">
+                        <label>业务Type</label>
+                        <input type="number" required name="count" ng-model="publicInfo.mingboType">
+                    </md-input-container>
+                    
                 </form>
             </div>
             <div layout="row" layout-align="center center" ng-show="publicInfo.status === 'error'">

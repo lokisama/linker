@@ -26,35 +26,35 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       }
     };
     $scope.menus = [{
-      name: '首页',
+      name: '首页概览',
       icon: 'home',
       click: 'admin.index',
-    }, {
-      name: '服务器',
+    },{
+      name: '用户管理',
+      icon: 'people',
+      click: 'admin.user',
+    },{
+      name: 'VPN线路',
       icon: 'cloud',
       click: 'admin.server',
       hide: !!($scope.id !== 1),
     }, {
-      name: '用户',
-      icon: 'people',
-      click: 'admin.user',
-    }, {
-      name: '账号',
+      name: 'VPN端口',
       icon: 'account_circle',
       click: 'admin.account',
     }, {
-      name: '订单',
+      name: '订单管理',
       icon: 'attach_money',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
-      name: '设置',
+      name: '系统设置',
       icon: 'settings',
       click: 'admin.settings',
     }, {
       name: 'divider',
     }, {
-      name: '退出',
+      name: '安全退出',
       icon: 'exit_to_app',
       click: function() {
         $http.post('/api/home/logout').then(() => {
@@ -183,7 +183,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
 ])
 .controller('AdminIndexController', ['$scope', '$state', 'adminApi', '$localStorage', '$interval', 'orderDialog',
   ($scope, $state, adminApi, $localStorage, $interval, orderDialog) => {
-    $scope.setTitle('首页');
+    $scope.setTitle('首页概览');
     if($localStorage.admin.indexInfo) {
       $scope.signupUsers = $localStorage.admin.indexInfo.data.signup;
       $scope.loginUsers = $localStorage.admin.indexInfo.data.login;
@@ -234,7 +234,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
 ])
 .controller('AdminPayController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
   ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
-    $scope.setTitle('订单');
+    $scope.setTitle('订单管理');
     $scope.setMenuSearchButton('search');
     $scope.showOrderInfo = order => {
       orderDialog.show(order);
@@ -244,10 +244,11 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.payTypes = [];
     if($scope.config.alipay) { $scope.payTypes.push({ name: '支付宝' }); }
     if($scope.config.paypal) { $scope.payTypes.push({ name: 'Paypal' }); }
-    if($scope.config.giftcard) { $scope.payTypes.push({ name: '充值码' }); }
+    if($scope.config.giftcard) { $scope.payTypes.push({ name: '优惠券' }); }
     if($scope.config.refCode) { $scope.payTypes.push({ name: '邀请码' }); }
     if($scope.payTypes.length) { $scope.myPayType = $scope.payTypes[0].name; }
     $scope.selectPayType = type => {
+      console.log(type);
       tabSwitchTime = Date.now();
       $scope.myPayType = type;
       $scope.orders = [];

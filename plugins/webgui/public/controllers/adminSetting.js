@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminSettingsController', ['$scope', '$state',
   ($scope, $state) => {
-    $scope.setTitle('设置');
+    $scope.setTitle('系统设置');
     $scope.toSetting = path => { $state.go(path); };
     if($scope.id === 1) {
       $scope.settingList = [
@@ -19,15 +19,19 @@ app.controller('AdminSettingsController', ['$scope', '$state',
           to: 'admin.groupSetting',
         },
         {
-          name: '订单设置',
+          name: '套餐管理',
           to: 'admin.order',
         },
         {
-          name: '邮件设置',
+          name: '礼品卡管理',
+          to: 'admin.listGiftCardBatch',
+        },
+        {
+          name: '邮件管理',
           to: 'admin.mailSetting',
         },
         {
-          name: '账号设置',
+          name: '账号系统',
           to: 'admin.accountSetting',
         },
         {
@@ -35,20 +39,20 @@ app.controller('AdminSettingsController', ['$scope', '$state',
           to: 'admin.passwordSetting',
         },
         {
-          name: '邀请码',
+          name: '推广链接',
           to: 'admin.refSetting',
         },
       ];
+      // if($scope.config.giftcard) {
+      //   $scope.settingList.push({
+      //     name: '优惠券',
+      //     to: 'admin.listGiftCardBatch',
+      //   });
+      // };
       if($scope.config.telegram) {
         $scope.settingList.push({
           name: 'Telegram',
           to: 'admin.telegramSetting',
-        });
-      };
-      if($scope.config.giftcard) {
-        $scope.settingList.push({
-          name: '充值码',
-          to: 'admin.listGiftCardBatch',
         });
       };
     } else {

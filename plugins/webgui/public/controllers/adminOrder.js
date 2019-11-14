@@ -3,7 +3,7 @@ const app = angular.module('app');
 app
 .controller('AdminOrderSettingController', ['$scope', '$state', '$http',
   ($scope, $state, $http, $filter) => {
-    $scope.setTitle('订单设置');
+    $scope.setTitle('套餐设置');
     $scope.setMenuButton('arrow_back', function() {
       $state.go('admin.settings');
     });
@@ -61,6 +61,11 @@ app
       changeOrderType: 1,
       server: null,
       active: 1,
+      sort:0,
+      isShow:1,
+      sku:'',
+      amount:0,
+      giftcardType:''
     };
     $http.get('/api/admin/server').then(success => {
       $scope.servers = success.data;
@@ -102,6 +107,7 @@ app
       })
       .filter(f => f);
       $scope.order.server = $scope.order.orderServer ? server : null;
+      $scope.order.amount = $scope.order.alipay;
       if($scope.order.orderType === 'normal') {
         $http.post('/api/admin/order', {
           baseId: 0,
@@ -122,6 +128,11 @@ app
           server: $scope.order.server,
           active: $scope.order.active,
           group: $scope.orderGroup,
+          isShow: $scope.order.isShow,
+          sku: $scope.order.sku,
+          sort: $scope.order.sort,
+          amount: $scope.order.amount,
+          giftcardType: $scope.order.giftcardType
         }).then(success => {
           $state.go('admin.order');
         });
@@ -135,6 +146,11 @@ app
           paypal: $scope.order.paypal,
           flow: $scope.order.flow,
           group: $scope.orderGroup,
+          isShow: $scope.order.isShow,
+          sku: $scope.order.sku,
+          sort: $scope.order.sort,
+          amount: $scope.order.amount,
+          giftcardType: $scope.order.giftcardType
         }).then(success => {
           $state.go('admin.order');
         });
@@ -289,7 +305,7 @@ app
             if(err.status === 403) {
               let errData = '删除订单失败';
               if(err.data === 'account with this order exists') { errData = '无法删除订单，请先删除订单对应的账号'; }
-              if(err.data === 'giftcard with this order exists') { errData = '无法删除订单，请先删除订单对应的充值码'; }
+              if(err.data === 'giftcard with this order exists') { errData = '无法删除订单，请先删除订单对应的优惠券'; }
               if(err.data === 'flowpack order exists') { errData = '无法删除订单，请先删除对应的流量包订单'; }
               return Promise.reject(errData);
             } else {
@@ -313,6 +329,7 @@ app
       })
       .filter(f => f);
       $scope.order.server = $scope.order.orderServer ? server : null;
+      $scope.order.amount = $scope.order.alipay;
       if(!$scope.order.baseId) {
         $http.put(`/api/admin/order/${ $scope.orderId }`, {
           baseId: 0,
@@ -334,6 +351,11 @@ app
           changeCurrentAccount: $scope.changeCurrentAccount,
           active: $scope.order.active,
           group: $scope.orderGroup,
+          isShow: $scope.order.isShow,
+          sku: $scope.order.sku,
+          sort: $scope.order.sort,
+          amount: $scope.order.amount,
+          giftcardType: $scope.order.giftcardType
         }).then(success => {
           $state.go('admin.order');
         });
@@ -357,6 +379,11 @@ app
           server: $scope.order.server,
           changeCurrentAccount: $scope.changeCurrentAccount,
           group: $scope.orderGroup,
+          isShow: $scope.order.isShow,
+          sku: $scope.order.sku,
+          sort: $scope.order.sort,
+          amount: $scope.order.amount,
+          giftcardType: $scope.order.giftcardType
         }).then(success => {
           $state.go('admin.order');
         });

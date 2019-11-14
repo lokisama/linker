@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminGiftCardController', ['$scope', '$http', 'addGiftCardBatchDialog', '$state',
   ($scope, $http, addGiftCardBatchDialog, $state) => {
-    $scope.setTitle('充值码管理');
+    $scope.setTitle('优惠券管理');
     $scope.setMenuButton('arrow_back', 'admin.settings');
     const showBatch = () => {
       $http.get('/api/admin/giftcard/list').then(result => {
@@ -28,7 +28,7 @@ app.controller('AdminGiftCardController', ['$scope', '$http', 'addGiftCardBatchD
 ]).controller('AdminGiftCardBatchDetailsController', ['$scope', '$http', '$stateParams', 'confirmDialog', 'alertDialog',
   ($scope, $http, $stateParams, confirmDialog, alertDialog) => {
     const batchNumber = $stateParams.batchNumber;
-    $scope.setTitle(`充值码[ ${batchNumber} ]`);
+    $scope.setTitle(`优惠券[ ${batchNumber} ]`);
     $scope.setMenuButton('arrow_back', 'admin.listGiftCardBatch');
     const showDetails = () => {
       $http.get(`/api/admin/giftcard/details/${batchNumber}`).then(result => {
@@ -46,6 +46,18 @@ app.controller('AdminGiftCardController', ['$scope', '$http', 'addGiftCardBatchD
     };
     showDetails();
 
+    $scope.toUser = "13788997536";
+    $scope.send = (phone) =>{
+      console.log(phone);
+      $http.post(`/api/mingbo/giftcard/send`, { "phone": phone, "type": $scope.batch.mingboType}).then(result => {
+          if(!result.data.success){
+            alertDialog.show(result.data.error, '确定');
+            return;
+          }
+
+          alertDialog.show(`成功赠与用户 ${phone}`, '确定');
+      });
+    }
     $scope.revoke = () => {
       confirmDialog.show({
         text: '确实要召回这些卡片吗？该操作不可撤销。',

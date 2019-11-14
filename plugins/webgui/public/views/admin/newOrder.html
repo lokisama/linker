@@ -47,12 +47,23 @@
                 </div>
                 <div layout="row" layout-align="space-between center">
                     <md-input-container class="md-block" flex="45">
-                        <label>支付宝</label>
+                        <label>原价</label>
                         <input type="number" step="any" name="alipay" ng-model="order.alipay">
                     </md-input-container>
                     <md-input-container class="md-block" flex="45">
-                        <label>Paypal</label>
-                        <input type="number" step="any" name="paypal" ng-model="order.paypal">
+                        <label>支持券类型</label>
+                        <input type="text" name="flow" ng-model="order.giftcardType">
+                    </md-switch>
+                    </md-input-container>
+                </div>
+                <div layout="row" layout-align="space-between center">
+                    <md-input-container class="md-block" flex="45">
+                        <label>SKU</label>
+                        <input type="text" step="any" name="sku" ng-model="order.sku">
+                    </md-input-container>
+                    <md-input-container class="md-block" flex="45">
+                        <label>排序</label>
+                        <input type="number" step="any" name="sort" ng-model="order.sort">
                     </md-input-container>
                 </div>
                 <div layout="row" layout-align="space-between center" ng-show="order.orderType === 'normal'">
@@ -82,6 +93,13 @@
                     </md-input-container>
                 </div>
             </form>
+            <div style="width: 100%;" layout="row" layout-align="space-between center">
+                <div flex="75">是否用户端显示</div>
+                <div flex layout="row" layout-align="end center">
+                    <md-switch ng-model="order.isShow" aria-label="isShow" ng-true-value="1" ng-false-value="0">
+                    </md-switch>
+                </div>
+            </div>
             <div style="width: 100%;" layout="row" layout-align="space-between center" ng-show="order.orderType === 'normal'">
                 <div flex="75">到期自动删除</div>
                 <div flex layout="row" layout-align="end center">

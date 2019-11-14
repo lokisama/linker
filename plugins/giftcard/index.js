@@ -33,7 +33,7 @@ const batchStatusEnum = {
 	revoked: 'REVOKED'
 };
 
-const generateGiftCard = async (count, orderType, comment = '') => {
+const generateGiftCard = async (count, orderType, comment = '',sku, limit, cutPrice, mingboType) => {
 	const currentCount = (await knex(dbTableName).count('* as cnt'))[0].cnt;
 	const batchNumber = currentCount === 0 ? 1 :
 		((await knex(dbTableName).max('batchNumber as mx'))[0].mx + 1);
@@ -47,6 +47,10 @@ const generateGiftCard = async (count, orderType, comment = '') => {
 			password,
 			createTime: Date.now(),
 			comment,
+			sku,
+			limit,
+			cutPrice,
+			mingboType
 		});
 	}
 	await knex(dbTableName).insert(cards);
@@ -80,11 +84,11 @@ const sendSuccessMail = async userId => {
 const processOrder = async (userId, accountId, password) => {
 	const cardResult = await knex(dbTableName).where({ password }).select();
 	if (cardResult.length === 0) {
-		return { success: false, message: '充值码不存在' };
+		return { success: false, message: '优惠券不存在' };
 	}
 	const card = cardResult[0];
 	if (card.status !== cardStatusEnum.available) {
-		return { success: false, message: '无法使用这个充值码' };
+		return { success: false, message: '无法使用这个优惠券' };
 	}
 	await knex(dbTableName).where({ id: card.id }).update({
 		user: userId,
@@ -101,11 +105,11 @@ const processOrder = async (userId, accountId, password) => {
 const processOrderForMingboUser = async (userInfo, accountId, password) => {
 	const cardResult = await knex(dbTableName).where({ password }).select();
 	if (cardResult.length === 0) {
-		return { success: false, message: '充值码不存在' };
+		return { success: false, message: '优惠券不存在' };
 	}
 	const card = cardResult[0];
 	if (card.status !== cardStatusEnum.available) {
-		return { success: false, message: '无法使用这个充值码' };
+		return { success: false, message: '无法使用这个优惠券' };
 	}
 	const result = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, card.sku, card.limit , card);
 
@@ -143,11 +147,11 @@ const processBindAuto = async (userId, accountId, mingboType) => {
 	
 	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
 	if (cardResult.length === 0) {
-		return { success: false, message: '礼品卡type不存在或已用完，请联系lynca' };
+		return { success: false, message: '优惠券type不存在或已用完，请联系lynca' };
 	}
 	const card = cardResult[0];
 	if (card.status !== cardStatusEnum.available && card.user !== null) {
-		return { success: false, message: '礼品卡已赠送' };
+		return { success: false, message: '优惠券已赠送' };
 	}
 
 	const result = await processBind(userId, accountId, card);
@@ -196,7 +200,7 @@ const orderListAndPaging = async (options = {}) => {
 	let orders = knex(dbTableName).select([
 		`${dbTableName}.password as orderId`,
 		`${dbTableName}.orderType`,
-		'webgui_order.name as orderName',
+		`${dbTableName}.comment as orderName`,
 		'user.id as userId',
 		'user.username',
 		'account_plugin.port',
@@ -271,6 +275,10 @@ const generateBatchInfo = (x) => {
 		type: x.orderType,
 		createTime: x.createTime,
 		comment: x.comment,
+		sku: x.sku,
+		limit: x.limit,
+		cutPrice: x.cutPrice,
+		mingboType: x.mingboType,
 		totalCount: x.totalCount,
 		availableCount: x.availableCount
 	};
@@ -284,6 +292,10 @@ const listBatch = async () => {
 		`${ dbTableName }.orderType as orderType`,
 		`${ dbTableName }.createTime as createTime`,
 		`${ dbTableName }.comment as comment`,
+		`${ dbTableName }.sku as sku`,
+		`${ dbTableName }.limit as limit`,
+		`${ dbTableName }.cutPrice as cutPrice`,
+		`${ dbTableName }.mingboType as mingboType`,
 		knex.raw('COUNT(*) as totalCount'),
 		knex.raw(`COUNT(case status when '${cardStatusEnum.available}' then 1 else null end) as availableCount`)
 	])
@@ -301,6 +313,10 @@ const getBatchDetails = async (batchNumber) => {
 		`${ dbTableName }.orderType as orderType`,
 		`${ dbTableName }.createTime as createTime`,
 		`${ dbTableName }.comment as comment`,
+		`${ dbTableName }.sku as sku`,
+		`${ dbTableName }.limit as limit`,
+		`${ dbTableName }.cutPrice as cutPrice`,
+		`${ dbTableName }.mingboType as mingboType`,
 		knex.raw('COUNT(*) as totalCount'),
 		knex.raw(`COUNT(case status when '${cardStatusEnum.available}' then 1 else null end) as availableCount`)
 	])
@@ -316,7 +332,8 @@ const getBatchDetails = async (batchNumber) => {
 		`${dbTableName}.usedTime as usedTime`,
 		`${dbTableName}.password as password`,
 		'account_plugin.port as portNumber',
-		'user.email as userEmail'
+		'user.email as userEmail',
+		'user.username as user'
 	])
 		.where({ batchNumber: batchNumber })
 		.leftJoin('account_plugin', `${dbTableName}.account`, 'account_plugin.id')
@@ -334,8 +351,10 @@ const revokeBatch = async batchNumber => {
 
 const getUserOrders = async userId => {
 	const orders = await knex(dbTableName).select([
-		`${dbTableName}.password as orderId`,
+		`${dbTableName}.password as password`,
+		`${dbTableName}.orderId as orderId`,
 		`${dbTableName}.orderType`,
+		`${dbTableName}.comment`,
 		'user.id as userId',
 		'user.username',
 		'account_plugin.port',
@@ -359,7 +378,7 @@ const getUserFinishOrder = async userId => {
 	orders = orders.map(order => {
 		return {
 			orderId: order.orderId,
-			type: '充值码',
+			type: '优惠券',
 			createTime: order.createTime,
 		};
 	});

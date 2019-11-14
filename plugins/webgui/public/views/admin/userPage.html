@@ -152,14 +152,14 @@
         </md-card>
     </div>
 </div>
-<div style="margin: 10px 10px 5px 10px; font-size: 0.8em; color: #555" ng-if="giftCardOrders.length">充值码订单 [{{ giftCardOrders.length }}]</div>
+<div style="margin: 10px 10px 5px 10px; font-size: 0.8em; color: #555" ng-if="giftCardOrders.length">优惠券 [{{ giftCardOrders.length }}]</div>
 <div layout="row" layout-wrap>
     <div flex-xs="100" flex-sm="50" flex-md="33" flex-gt-md="25" ng-repeat="order in giftCardOrders track by $index">
         <md-card ng-click="showOrderInfo(order)">
             <md-card-content>
                 <div layout="row" layout-align="space-between center">
                     <div flex="70" style="font-size: 0.9em;">
-                        <span>{{order.orderId}}</span><br><span style="font-size: 0.9em;">{{ order.createTime | timeago }}</span>
+                        <span>{{order.comment}}[<span ng-if="order.orderId">{{order.orderId}}</span><span ng-if="!order.orderId">未使用</span>]</span><br><span style="font-size: 0.9em;">{{ order.createTime | timeago }}</span>
                     </div>
                 </div>
             </md-card-content>

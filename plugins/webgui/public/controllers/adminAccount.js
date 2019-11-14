@@ -2,7 +2,7 @@ const app = angular.module('app');
 
 app.controller('AdminAccountController', ['$scope', '$state', '$mdMedia', '$http', 'accountSortDialog','$timeout', 'adminApi', '$localStorage',
   ($scope, $state, $mdMedia, $http, accountSortDialog, $timeout, adminApi, $localStorage) => {
-    $scope.setTitle('账号');
+    $scope.setTitle('VPN端口');
     $scope.setMenuRightButton('sort_by_alpha');
     $scope.setMenuSearchButton('search');
     if(!$localStorage.admin.accountFilterSettings) {
