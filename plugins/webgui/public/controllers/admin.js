@@ -26,31 +26,31 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       }
     };
     $scope.menus = [{
-      name: '首页概览',
-      icon: 'home',
-      click: 'admin.index',
-    },{
-      name: '用户管理',
-      icon: 'people',
-      click: 'admin.user',
-    },{
-      name: 'VPN线路',
-      icon: 'cloud',
-      click: 'admin.server',
-      hide: !!($scope.id !== 1),
-    }, {
-      name: 'VPN端口',
-      icon: 'account_circle',
-      click: 'admin.account',
-    }, {
-      name: '订单管理',
+    //   name: '首页概览',
+    //   icon: 'home',
+    //   click: 'admin.index',
+    // },{
+    //   name: '用户管理',
+    //   icon: 'people',
+    //   click: 'admin.user',
+    // },{
+    //   name: 'VPN线路',
+    //   icon: 'cloud',
+    //   click: 'admin.server',
+    //   hide: !!($scope.id !== 1),
+    // }, {
+    //   name: 'VPN端口',
+    //   icon: 'account_circle',
+    //   click: 'admin.account',
+    // }, {
+      name: '支付记录',
       icon: 'attach_money',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
-      name: '系统设置',
+      name: '优惠券',
       icon: 'settings',
-      click: 'admin.settings',
+      click: 'admin.listGiftCardBatch',
     }, {
       name: 'divider',
     }, {

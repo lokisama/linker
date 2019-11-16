@@ -6,6 +6,7 @@ const user = appRequire('plugins/user/index');
 const knex = appRequire('init/knex').knex;
 const alipay = appRequire('plugins/alipay/index');
 const paypal = appRequire('plugins/paypal/index');
+const payMingbo = appRequire('plugins/payMingbo/index');
 const email = appRequire('plugins/email/index');
 const config = appRequire('services/config').all();
 const isAlipayUse = config.plugins.alipay && config.plugins.alipay.use;
@@ -394,6 +395,39 @@ exports.getOrders = (req, res) => {
   
   options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
   alipay.orderListAndPaging(options)
+  .then(success => {
+    res.send(success);
+  }).catch(err => {
+    console.log(err);
+    res.status(403).end();
+  });
+};
+
+exports.getOrdersForMingbo = (req, res) => {
+  if(!isAlipayUse) {
+    return res.send({
+      maxPage: 0,
+      page: 1,
+      pageSize: 0,
+      total: 0,
+      orders: [],
+    });
+  }
+  const options = {};
+  if(req.adminInfo.id === 1) {
+    options.group = +req.query.group;
+  } else {
+    options.group = req.adminInfo.group;
+  }
+  options.page = +req.query.page || 1;
+  options.pageSize = +req.query.pageSize || 20;
+  options.search = req.query.search || '';
+  options.sort = req.query.sort || 'paymingbo.createTime_desc';
+  options.start = req.query.start;
+  options.end = req.query.end;
+  
+  options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
+  payMingbo.orderListAndPaging(options)
   .then(success => {
     res.send(success);
   }).catch(err => {

@@ -2,7 +2,6 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('mingboPay');
 const cron = appRequire('init/cron');
 const config = appRequire('services/config').all();
-const alipayf2f = require('alipay-ftof');
 const fs = require('fs');
 const ref = appRequire('plugins/webgui_ref/time');
 const orderPlugin = appRequire('plugins/webgui_order');
@@ -10,34 +9,31 @@ const groupPlugin = appRequire('plugins/group');
 const giftcardPlugin = appRequire('plugins/giftcard');
 
 const path = require('path');
-const Alipay = require('alipay-node-sdk');
+
+const ytdl = require('ytdl-core');
+// TypeScript: import ytdl from 'ytdl-core'; with --esModuleInterop
+// TypeScript: import * as ytdl from 'ytdl-core'; with --allowSyntheticDefaultImports
+// TypeScript: import ytdl = require('ytdl-core'); with neither of the above
+
 
 let outTradeId = Date.now().toString();
 let orderExpire = 10;
-/**
- *
- * @param {Object} opts
- * @param {String} opts.appId  支付宝的appId
- * @param {String} opts.notifyUrl  支付宝服务器主动通知商户服务器里指定的页面http/https路径
- * @param {String} opts.rsaPrivate  商户私钥pem文件路径
- * @param {String} opts.rsaPublic  支付宝公钥pem文件路径
- * @param {String} opts.signType   签名方式, 'RSA' or 'RSA2'
- * @param {Boolean} [opts.sandbox] 是否是沙盒环境
- * @constructor
- */
-var ali = new Alipay({
-    appId: '2018062760440205',
-    notifyUrl: 'http://cloud.mingbonetwork.com/api/system/alipay',
-    rsaPrivate: path.resolve('./pem/app_private_key.pem'),
-    rsaPublic: path.resolve('./pem/app_public_merchant.pem'),
-    //rsaPrivate: 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCrXjKrrqomKe+09NefTk3JFKnQ+2H9sskTEwGCBv36aONX6IVzkSlAIVL8YGwIzqdIyVqzQbZVixGJTB251YFVaDW4Np7wVVdncONB15VaFddd8f6jVRlWP13O7ZtkTlwlIbkmGK6TNR6BJbJqXG4/wGwMyLLl4FsqQkMSWWFInymSytlKWkYAvt03iQ6+hEKFDP1R5MMauR6VeaBiRsiX3SkcMF+CDjg4YWpfLNowfupZ/L+3cZC4f8uXHuM8yCpNRrYEnU8+DQPYJJG+72XjqX9sh8qs510Icguuqw3oJJlum1gvx1OyusDA7C9MK/jYgUkYjQ2w7vATiWphrbwjAgMBAAECggEBAIwG0aKle1Tp6XvUoSgEBN1s7AHel0iFQXY7jnzgF8H42OOpFPrEv48ua6/bXguoSNrZ5SoaZNHra+3ja1rBEghmuZaH00GQinX0sU3IybotpKiYJ7jwvV5TMuT2FIZW3UZeEvsFKgkRW5at5eaxFkkzg1bC3COoOvYB5OpmbG64f3BN+5DLoepMeFRd4INBNrTEnyRUr+3YQy0mj9Bqnp1Oe3uUvahsnQF2Kh9nbUeb2lNldOELfU5ycuGmUBrwGUsUX5PFQuL6aQYY/OC7Rtd47zHPfVKxQb4D7YZsR5Q5Lb6n2g8FuNHmrci3HIRwZ1I/SFKjTrbB+nzz9WjtrYECgYEA529EheonFy4sak/LBgDER3M3ill3jJ1a164UJAcxxGRwASmfPVi3XmwAeocOkENHRTdrh3V4gxvFjlaslYRp2A82C5xLoul8gGHYENrs8rZ+JQDExOuRpD0QbWlQ1pDxk9mZGIdZjHF2x041Dc4cg6/IKuK89BDI8FnKyW8byGMCgYEAvY6/w45JpdaDneRmV2dOPlc+s5pVQugp2qDsd8RBbVCMda7Jv2VRmsH3R86qJy/Hv5p4+Mer/XCr8uVB+pJqR+umq2Q/MEtrArTtkCWEELunJUSVGbe5Kdx+BXX8OhnxegapfZ0ZoM1vyMkeUQvNYgPPYMYtBr9C5o1FBVfYKUECgYAwmiJWySSqbozvSpCFUzXlF2IrkLxVcFo6fxlFs6kU6E7JP7dsR6xCjQXQtXoue6KE+61+RgIn7nYffT5DLAqaUB92cr1DmisGPwYEDCXEluSI2s9310y/o/9GKt7KIKhK92B6UTpSDyX1lwv3OTitwwWTVAiAbOH177Vxdf7spwKBgF0J/reWVDGwu4M5Ar5ttyrEGcN/wc+IMlrb15TlYBOukHKGqwFlUot6HsxA9KUtP4ac5Dl/j7xinBMpUZwSV1YbpP/EwXsL2WdHtL6mm063PE//fItV8O1KCxTVF0rRRwPU10YPYO/bRb2wcU/oUhOEuTnPq3P/Vm/g8PqxZijBAoGANCk62iB7scO/0QUSroylB793lYHowbYwptzF7h0+D8YKby+9xVEElHRpRizUX3JkjHXy7JcL9aYTjIYjJoKKjvNK5HknY5aVcamvHHm0auWp9gI6gH95SZakYkioHlZ9LJhKr7LsCnrnr4cr1K2F+RKSbn9A+3+6WE1BJYmnkSY=',
-    //rsaPublic: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgj3b0d33rhyV6ycMTwd1O4/uVO0zwvU56cpZrBu7/4jrKDU4IL2c5q/dntwKhriMFsAUkxcPGzfF5Ys18BIJfl4kWd2VgLfKfp1VzIuX5ECwlRG46ACkREQHMo8DWnxBAbrQPvkXqxa/3a4klZZEQIZOE+OKy3rp0V1BetMkPwzm2w48LXpChR+OsTjn0tpHj0Ixb2EYpdt694+DrITQPzSUya6SFmzWUCCpykx6jXvIEjABBfbV9KXEf1ICgJq/ph7NJLS7Zg5MzPpBWK3uwrz88JxKqcGT9BWt7MiVKVnEXwgwiPjprNlJkGttbWMGagJnmSNr/dM70vmr184TPwIDAQAB',
 
-    sandbox: false,
-    signType: 'RSA'
-});
+//const Alipay = require('alipay-node-sdk');
+// var ali = new Alipay({
+//     appId: '2018062760440205',
+//     notifyUrl: 'http://cloud.mingbonetwork.com/api/system/alipay',
+//     rsaPrivate: path.resolve('./pem/app_private_key.pem'),
+//     rsaPublic: path.resolve('./pem/app_public_merchant.pem'),
+//     //rsaPrivate: 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCrXjKrrqomKe+09NefTk3JFKnQ+2H9sskTEwGCBv36aONX6IVzkSlAIVL8YGwIzqdIyVqzQbZVixGJTB251YFVaDW4Np7wVVdncONB15VaFddd8f6jVRlWP13O7ZtkTlwlIbkmGK6TNR6BJbJqXG4/wGwMyLLl4FsqQkMSWWFInymSytlKWkYAvt03iQ6+hEKFDP1R5MMauR6VeaBiRsiX3SkcMF+CDjg4YWpfLNowfupZ/L+3cZC4f8uXHuM8yCpNRrYEnU8+DQPYJJG+72XjqX9sh8qs510Icguuqw3oJJlum1gvx1OyusDA7C9MK/jYgUkYjQ2w7vATiWphrbwjAgMBAAECggEBAIwG0aKle1Tp6XvUoSgEBN1s7AHel0iFQXY7jnzgF8H42OOpFPrEv48ua6/bXguoSNrZ5SoaZNHra+3ja1rBEghmuZaH00GQinX0sU3IybotpKiYJ7jwvV5TMuT2FIZW3UZeEvsFKgkRW5at5eaxFkkzg1bC3COoOvYB5OpmbG64f3BN+5DLoepMeFRd4INBNrTEnyRUr+3YQy0mj9Bqnp1Oe3uUvahsnQF2Kh9nbUeb2lNldOELfU5ycuGmUBrwGUsUX5PFQuL6aQYY/OC7Rtd47zHPfVKxQb4D7YZsR5Q5Lb6n2g8FuNHmrci3HIRwZ1I/SFKjTrbB+nzz9WjtrYECgYEA529EheonFy4sak/LBgDER3M3ill3jJ1a164UJAcxxGRwASmfPVi3XmwAeocOkENHRTdrh3V4gxvFjlaslYRp2A82C5xLoul8gGHYENrs8rZ+JQDExOuRpD0QbWlQ1pDxk9mZGIdZjHF2x041Dc4cg6/IKuK89BDI8FnKyW8byGMCgYEAvY6/w45JpdaDneRmV2dOPlc+s5pVQugp2qDsd8RBbVCMda7Jv2VRmsH3R86qJy/Hv5p4+Mer/XCr8uVB+pJqR+umq2Q/MEtrArTtkCWEELunJUSVGbe5Kdx+BXX8OhnxegapfZ0ZoM1vyMkeUQvNYgPPYMYtBr9C5o1FBVfYKUECgYAwmiJWySSqbozvSpCFUzXlF2IrkLxVcFo6fxlFs6kU6E7JP7dsR6xCjQXQtXoue6KE+61+RgIn7nYffT5DLAqaUB92cr1DmisGPwYEDCXEluSI2s9310y/o/9GKt7KIKhK92B6UTpSDyX1lwv3OTitwwWTVAiAbOH177Vxdf7spwKBgF0J/reWVDGwu4M5Ar5ttyrEGcN/wc+IMlrb15TlYBOukHKGqwFlUot6HsxA9KUtP4ac5Dl/j7xinBMpUZwSV1YbpP/EwXsL2WdHtL6mm063PE//fItV8O1KCxTVF0rRRwPU10YPYO/bRb2wcU/oUhOEuTnPq3P/Vm/g8PqxZijBAoGANCk62iB7scO/0QUSroylB793lYHowbYwptzF7h0+D8YKby+9xVEElHRpRizUX3JkjHXy7JcL9aYTjIYjJoKKjvNK5HknY5aVcamvHHm0auWp9gI6gH95SZakYkioHlZ9LJhKr7LsCnrnr4cr1K2F+RKSbn9A+3+6WE1BJYmnkSY=',
+//     //rsaPublic: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgj3b0d33rhyV6ycMTwd1O4/uVO0zwvU56cpZrBu7/4jrKDU4IL2c5q/dntwKhriMFsAUkxcPGzfF5Ys18BIJfl4kWd2VgLfKfp1VzIuX5ECwlRG46ACkREQHMo8DWnxBAbrQPvkXqxa/3a4klZZEQIZOE+OKy3rp0V1BetMkPwzm2w48LXpChR+OsTjn0tpHj0Ixb2EYpdt694+DrITQPzSUya6SFmzWUCCpykx6jXvIEjABBfbV9KXEf1ICgJq/ph7NJLS7Zg5MzPpBWK3uwrz88JxKqcGT9BWt7MiVKVnEXwgwiPjprNlJkGttbWMGagJnmSNr/dM70vmr184TPwIDAQAB',
+
+//     sandbox: false,
+//     signType: 'RSA'
+// });
 
 
+// const alipayf2f = require('alipay-ftof');
 // let alipay_f2f;
 // if(config.plugins.alipay && config.plugins.alipay.use) {
 //   try {
@@ -62,6 +58,59 @@ var ali = new Alipay({
 //     gatewayUrl: config.plugins.alipay.gatewayUrl,
 //   });
 // }
+
+const Alipay = require('cn-pay');
+const aliConfig = {
+  app_id: '2018062760440205', // appid
+  // 商户私钥 注意：此处不是文件路径，一定要是文件内容
+  private_key: `-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEArb3jWTHhghX22KyL7DrQnlWludqzoyBgdr0SNOGEkV7VD7fA
++6kKAB1z2cD/Dm3ChcGU7gAB1bYlNdnZpALIZ+6nZA6+2/7PaatwuoFAJMLfwLpc
+TqhHifCVQ9xzxnQ+p03pVQYd/LueOO0lFqp4uR4SidSdcM1qUjpdMl7hqOdjet9+
+FHL/dSpC44tvSW1jXDoAx9IxssLxkw+S8yDaPTb6xzAknOnxbdQbEV8s30RC6pKk
+J4wGGjWkg70H5kJsB6BokmBd1NuRjZJSHll4HvBA98t6mRkf2GJANI6Oe3VHoNNq
+8nv4+aVBJ7Jki48eXqAZcxAy4icCIzAUJqsZjwIDAQABAoIBAAuckUE40DV9ek3o
+2kEjfSXX24ecUj0owMmuwTS/jbiZeevfAArRtVVkooV/HIy+US3XTjjJz1WVIs+C
+i8UmWnZ3wMAzLBZP5VTOnG4ajUrnq0SaL+kh3gYeChvK9AHjavyLfHiuO/rUHzL2
+xm/JXOAiXmLPzuXnFKACPpBLPxGmqPv6QdHIdOl1FfADzsHnd4TgZKQzys6K2JfT
+Bkb42ScyssHAy8eQHevDBRhMKQDai1vgGHb59mc2EC3xndl0pbTAy6rmiAUROICa
+7aQPe+LNjezirCsH23YnCs/9tcwo5jY1a431APUXosQexRoe3RBPEhb7pzd+X3z3
+oDRrzqECgYEA5FGoDKiaHQMllRje2Mk1MRfOi92FQvCi2BDSHTmijbD0XKm6yVet
+UwTR/Jy2fuqwWVXuaxeXzcoDcjofh+mC/dD5TVvO3fnkeGBcCnJsOUHaLXgiUfjn
+YV9lhUXyOEgmM/d2yOrFxmLF3oR0tPA8Y3SEGgLJo1qHcnDLhQfy0PsCgYEAws5R
+Dg7mSW9Ub8XleHnG9XY43o2xwQhmSYNubtP2dbE1LWblBL9H/N5Q2yoBrW21GSHh
+7G728d+3Qi9TZo70UOhrsvXp72WHuPtys0YpkQYmKkR6Gvdlf+7nofkZxwL9lExV
+v/3cIpGxzfYliL7ceueHooEBsqXsTc5/2A9J/X0CgYAZGrllmuxHIF9zg2aNY6JL
+oZh+XH8YmyjspPzVZc7v0XMs9SSqms9d/3uvUPPoBJobWI18jP2ODRZP6wAoi45x
+phajYOLgGWf7rGyyYV5w9UKuGTV82ednF3wsKUK22YgJ0r3m3ZmddKLZEqtaccfS
+D6+uxHuzUHLwLGLUX8ldHQKBgDCovFJYomkhZ+PreKAZOvtBJn9gwU/IO1SNgd4p
+D9ziALhwhTAkX2ToWyYDXhvl1WCLuBUIuqI8EVh03c42UwyKoaw4BNEJeVdZZ5Mk
+KWnSMWJJbH6j4TSNhkpNIIU3WAPc9WZZkM0Ju3II0+NOWWBRyO1sb/Ihw97Df+eG
+GiM5AoGBALymjmbNQsl3ZUml2Li6faJkX8KDoLo/BTmj+SYEav1hIUG8qY9f+b8Q
+vVW3Ch6r3CSqDsg/WbOSMKDkBgEJiCrlEUWB9lWM0F8R41DKiJ+ZVKEoxSFs0ja4
+cynf7Ayl1SBej1oTMQnxejGVUQKGj7aK3jPkguYtITP/VkOmLcVJ
+-----END RSA PRIVATE KEY-----
+`,
+  // 支付宝公钥 注意：此处不是文件路径，一定要是文件内容
+  public_key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgj3b0d33rhyV6ycMTwd1O4/uVO0zwvU56cpZrBu7/4jrKDU4IL2c5q/dntwKhriMFsAUkxcPGzfF5Ys18BIJfl4kWd2VgLfKfp1VzIuX5ECwlRG46ACkREQHMo8DWnxBAbrQPvkXqxa/3a4klZZEQIZOE+OKy3rp0V1BetMkPwzm2w48LXpChR+OsTjn0tpHj0Ixb2EYpdt694+DrITQPzSUya6SFmzWUCCpykx6jXvIEjABBfbV9KXEf1ICgJq/ph7NJLS7Zg5MzPpBWK3uwrz88JxKqcGT9BWt7MiVKVnEXwgwiPjprNlJkGttbWMGagJnmSNr/dM70vmr184TPwIDAQAB', 
+  notify_url: 'http://cloud.mingbonetwork.com/api/system/alipay', // 通知地址
+  return_url: 'http://cloud.mingbonetwork.com/api/system/alipay', // 跳转地址
+  dev: false // 设置为true 将启用开发环境的支付宝网关
+};
+const alipay = Alipay.alipay(aliConfig);
+
+const wxConfig = {
+  app_id: 'app_id', // 公众号appid
+  appid: 'appid', // app的appid
+  miniapp_id: 'miniapp_id', // 小程序的appid
+  mch_id: 'mch_id', // 商户Id
+  key: 'key', // 商户密钥
+  notify_url: 'notify_url', // 通知地址
+  return_url: 'return_url', // 跳转地址
+  //pfx: fs.readFileSync('<location-of-your-apiclient-cert.p12>') // 可选, 退款等情况时需要用到
+}
+const wechat = Alipay.wechat(wxConfig)
+
 
 const isTelegram = config.plugins.webgui_telegram && config.plugins.webgui_telegram.use;
 let telegram;
@@ -154,7 +203,6 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ) => {
       alipayParams: oldOrder.alipayParams
     };
   }
-  
   
   const groupInfo = await groupPlugin.getOneGroup(user.group);
   if(groupInfo.order) {
@@ -259,26 +307,6 @@ const checkOrder = async (orderId) => {
 //options = {user,card,server}
 const createAppOrder = async (user, account, sku, limit, card ) =>{
 
-    /**
-   * 生成支付参数供客户端使用
-   * @param {Object} opts
-   * @param {String} opts.subject              商品的标题/交易标题/订单标题/订单关键字等
-   * @param {String} [opts.body]               对一笔交易的具体描述信息。如果是多种商品，请将商品描述字符串累加传给body
-   * @param {String} opts.outTradeId           商户网站唯一订单号
-   * @param {String} [opts.timeout]            设置未付款支付宝交易的超时时间，一旦超时，该笔交易就会自动被关闭。
-                                                当用户进入支付宝收银台页面（不包括登录页面），会触发即刻创建支付宝交易，此时开始计时。
-                                                取值范围：1m～15d。m-分钟，h-小时，d-天，1c-当天（1c-当天的情况下，无论交易何时创建，都在0点关闭）。
-                                                该参数数值不接受小数点， 如 1.5h，可转换为 90m。
-   * @param {String} opts.amount               订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]
-   * @param {String} [opts.sellerId]           收款支付宝用户ID。 如果该值为空，则默认为商户签约账号对应的支付宝用户ID
-   * @param {String} opts.goodsType            商品主类型：0—虚拟类商品，1—实物类商品 注：虚拟类商品不支持使用花呗渠道
-   * @param {String} [opts.passbackParams]     公用回传参数，如果请求时传递了该参数，则返回给商户时会回传该参数。支付宝会在异步通知时将该参数原样返回。本参数必须进行UrlEncode之后才可以发送给支付宝
-   * @param {String} [opts.promoParams]        优惠参数(仅与支付宝协商后可用)
-   * @param {String} [opts.extendParams]       业务扩展参数 https://doc.open.alipay.com/docs/doc.htm?spm=a219a.7629140.0.0.3oJPAi&treeId=193&articleId=105465&docType=1#kzcs
-   * @param {String} [opts.enablePayChannels]  可用渠道，用户只能在指定渠道范围内支付。当有多个渠道时用“,”分隔。注：与disable_pay_channels互斥
-   * @param {String} [opts.disablePayChannels] 禁用渠道，用户不可用指定渠道支付。当有多个渠道时用“,”分隔。 注：与enable_pay_channels互斥
-   * @param {String} [opts.storeId]            商户门店编号
-   */
   let product = await orderPlugin.getOneBySku(sku);
   
   let totalAmount = 0;
@@ -293,18 +321,18 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
   }
   
   let myOrderId = moment().format('YYYYMMDDHHmmss') + Math.random().toString().substr(2, 6);
-  
-  let appPayParams = {
-    subject: product.name,
-    body: product.comment,
-    outTradeId: myOrderId,
-    timeout: orderExpire+'m',
-    amount: totalAmount.toFixed(2).toString(),
-    goodsType: '0'
-}
   let returnToApp = '';
+
   if(totalAmount > 0){
-    returnToApp = ali.appPay(appPayParams);
+    const order = {
+      out_trade_no: myOrderId,
+      total_amount: 0.01, //totalAmount.toFixed(2),
+      subject: product.name,
+      body: product.comment,
+      timeout: orderExpire+'m',
+    }
+
+    returnToApp = await alipay.app(order)
   }
 
   let order = await knex('paymingbo').insert({
@@ -407,43 +435,51 @@ const orderListAndPaging = async (options = {}) => {
   const search = options.search || '';
   const group = options.group;
   const filter = options.filter || [];
-  const sort = options.sort || 'alipay.createTime_desc';
+  const sort = options.sort || 'paymingbo.createTime_desc';
   const page = options.page || 1;
   const pageSize = options.pageSize || 20;
   const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
   const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
 
-  let count = knex('paymingbo').select().whereBetween('alipay.createTime', [start, end]);
+  let count = knex('paymingbo').select().whereBetween('paymingbo.createTime', [start, end]);
   let orders = knex('paymingbo').select([
-    'alipay.orderId',
-    'alipay.orderType',
+    'paymingbo.orderId',
+    'paymingbo.orderType',
     'webgui_order.name as orderName',
+    'giftcard.comment as comment',
+    'giftcard.cutPrice',
+    'giftcard.limit',
     'user.id as userId',
     'user.group as group',
     'user.username',
     'account_plugin.port',
-    'alipay.amount',
-    'alipay.status',
-    'alipay.alipayData',
-    'alipay.createTime',
-    'alipay.expireTime',
+    'paymingbo.amount',
+    'paymingbo.totalAmount',
+    'paymingbo.payMethod',
+    'paymingbo.payId',
+    'paymingbo.status',
+    'paymingbo.giftcard',
+    'paymingbo.alipayData',
+    'paymingbo.createTime',
+    'paymingbo.expireTime',
   ])
-  .leftJoin('user', 'user.id', 'alipay.user')
-  .leftJoin('account_plugin', 'account_plugin.id', 'alipay.account')
-  .leftJoin('webgui_order', 'webgui_order.id', 'alipay.orderType')
-  .whereBetween('alipay.createTime', [start, end]);
+  .leftJoin('user', 'user.id', 'paymingbo.user')
+  .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
+  .leftJoin('giftcard','giftcard.password','paymingbo.giftcard')
+  .whereBetween('paymingbo.createTime', [start, end]);
 
   if(filter.length) {
-    count = count.whereIn('alipay.status', filter);
-    orders = orders.whereIn('alipay.status', filter);
+    count = count.whereIn('paymingbo.status', filter);
+    orders = orders.whereIn('paymingbo.status', filter);
   }
   if(group >= 0) {
-    count = count.leftJoin('user', 'user.id', 'alipay.user').where({ 'user.group': group });
+    count = count.leftJoin('user', 'user.id', 'paymingbo.user').where({ 'user.group': group });
     orders = orders.where({ 'user.group': group });
   }
   if(search) {
-    count = count.where('alipay.orderId', 'like', `%${ search }%`);
-    orders = orders.where('alipay.orderId', 'like', `%${ search }%`);
+    count = count.where('paymingbo.orderId', 'like', `%${ search }%`);
+    orders = orders.where('paymingbo.orderId', 'like', `%${ search }%`);
   }
 
   count = await count.count('orderId as count').then(success => success[0].count);
@@ -541,6 +577,17 @@ const refund = async (orderId, amount) => {
 //   await knex('paymingbo').delete().where({ status: 'CREATE' }).whereBetween('createTime', [0, Date.now() - 1 * 24 * 3600 * 1000]);
 // }, 'DeleteAlipayOrder', 53);
 
+
+const youtube = async(url) => {
+  console.log(url);
+
+  const info = await ytdl.getBasicInfo(url);
+
+  console.log(info);
+
+  return info;
+}
+
 exports.orderListAndPaging = orderListAndPaging;
 exports.orderList = orderList;
 exports.createOrder = createOrder;
@@ -553,3 +600,4 @@ exports.refund = refund;
 exports.createOrderForMingboUser = createOrderForMingboUser;
 exports.createAppOrder = createAppOrder;
 exports.getNotifyFromMingbo = getNotifyFromMingbo;
+exports.youtube = youtube;

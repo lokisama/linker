@@ -41,6 +41,7 @@
     "alipay-ftof": "0.1.5",
     "alipay-node-sdk": "^1.1.9",
     "body-parser": "^1.19.0",
+    "cn-pay": "0.0.4",
     "commander": "^2.20.3",
     "compression": "^1.7.4",
     "connect-session-knex": "^1.4.0",
@@ -82,5 +83,8 @@
   "homepage": "https://github.com/shadowsocks/shadowsocks-manager#readme",
   "bin": {
     "ssmgr": "./bin/ssmgr"
+  },
+  "optionalDependencies": {
+    "ytdl-core": "^1.0.0"
   }
 }

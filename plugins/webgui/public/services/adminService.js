@@ -31,7 +31,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
       }).filter(f => f);
     }
     let url;
-    if(payType === '支付宝') { url = '/api/admin/alipay'; }
+    if(payType === '支付宝') { url = '/api/mingbo/orders'; }
     if(payType === 'Paypal') { url = '/api/admin/paypal'; }
     if(payType === '优惠券') { url = '/api/admin/giftcard'; }
     if(payType === '邀请码') { url = '/api/admin/refOrder'; }
@@ -45,7 +45,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
 
   const getCsvOrder = (payType, opt = {}) => {
     let url;
-    if(payType === '支付宝') { url = '/api/admin/alipay/csv'; }
+    if(payType === '支付宝') { url = '/api/mingbo/orders/csv'; }
     if(payType === 'Paypal') { url = '/api/admin/paypal/csv'; }
     if(payType === '优惠券') { url = '/api/admin/giftcard/csv'; }
     if(payType === '邀请码') { url = '/api/admin/refOrder/csv'; }
