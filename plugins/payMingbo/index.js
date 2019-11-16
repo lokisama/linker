@@ -580,12 +580,19 @@ const refund = async (orderId, amount) => {
 
 const youtube = async(url) => {
   console.log(url);
+  let info = await ytdl.getInfo(url);
+  let format;
+  if(info){
+     format = ytdl.chooseFormat(info.formats,{filter : (format)=> format.container==="mp4" && format.quality ==="hd720"});
+     if(format){
+       console.log('format found!',format);
+     }else{
+       format = ytdl.chooseFormat(info.formats,{filter : (format)=> format.container==="mp4" && format.quality ==="medium"});
+     }
+  }
 
-  const info = await ytdl.getBasicInfo(url);
+  return format;
 
-  console.log(info);
-
-  return info;
 }
 
 exports.orderListAndPaging = orderListAndPaging;
