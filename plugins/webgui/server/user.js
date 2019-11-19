@@ -859,7 +859,8 @@ exports.youtube = async (req, res) => {
   try {
     const url = req.body.url;
     const info = await payMingboPlugin.youtube(url);
-    res.send(info);
+    console.log("return",info);
+    return res.send(info);
   } catch(err) {
     console.log(err);
     res.status(403).end();

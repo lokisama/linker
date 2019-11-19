@@ -578,19 +578,14 @@ const refund = async (orderId, amount) => {
 // }, 'DeleteAlipayOrder', 53);
 
 
-const youtube = async(url) => {
-  console.log(url);
+const youtube = async (url) => {
+  console.log("url",url);
   let info = await ytdl.getInfo(url);
   let format;
   if(info){
-     format = ytdl.chooseFormat(info.formats,{filter : (format)=> format.container==="mp4" && format.quality ==="hd720"});
-     if(format){
-       console.log('format found!',format);
-     }else{
-       format = ytdl.chooseFormat(info.formats,{filter : (format)=> format.container==="mp4" && format.quality ==="medium"});
-     }
+     format = await ytdl.chooseFormat(info.formats,{filter : (format)=> format.container==="mp4" && format.quality ==="hd720" || format.quality ==="medium"});
   }
-
+  console.log("format",format);
   return format;
 
 }
