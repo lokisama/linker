@@ -59,9 +59,9 @@ let orderExpire = 10;
 //   });
 // }
 
-const Alipay = require('cn-pay');
+const cnPay = require('cn-pay');
 const aliConfig = {
-  app_id: '2018062760440205', // appid
+  app_id: '2018122462654664', // mingbo 2018122462654664
   // 商户私钥 注意：此处不是文件路径，一定要是文件内容
   private_key: `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEArb3jWTHhghX22KyL7DrQnlWludqzoyBgdr0SNOGEkV7VD7fA
@@ -92,24 +92,25 @@ cynf7Ayl1SBej1oTMQnxejGVUQKGj7aK3jPkguYtITP/VkOmLcVJ
 -----END RSA PRIVATE KEY-----
 `,
   // 支付宝公钥 注意：此处不是文件路径，一定要是文件内容
-  public_key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgj3b0d33rhyV6ycMTwd1O4/uVO0zwvU56cpZrBu7/4jrKDU4IL2c5q/dntwKhriMFsAUkxcPGzfF5Ys18BIJfl4kWd2VgLfKfp1VzIuX5ECwlRG46ACkREQHMo8DWnxBAbrQPvkXqxa/3a4klZZEQIZOE+OKy3rp0V1BetMkPwzm2w48LXpChR+OsTjn0tpHj0Ixb2EYpdt694+DrITQPzSUya6SFmzWUCCpykx6jXvIEjABBfbV9KXEf1ICgJq/ph7NJLS7Zg5MzPpBWK3uwrz88JxKqcGT9BWt7MiVKVnEXwgwiPjprNlJkGttbWMGagJnmSNr/dM70vmr184TPwIDAQAB', 
+  //public_key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgj3b0d33rhyV6ycMTwd1O4/uVO0zwvU56cpZrBu7/4jrKDU4IL2c5q/dntwKhriMFsAUkxcPGzfF5Ys18BIJfl4kWd2VgLfKfp1VzIuX5ECwlRG46ACkREQHMo8DWnxBAbrQPvkXqxa/3a4klZZEQIZOE+OKy3rp0V1BetMkPwzm2w48LXpChR+OsTjn0tpHj0Ixb2EYpdt694+DrITQPzSUya6SFmzWUCCpykx6jXvIEjABBfbV9KXEf1ICgJq/ph7NJLS7Zg5MzPpBWK3uwrz88JxKqcGT9BWt7MiVKVnEXwgwiPjprNlJkGttbWMGagJnmSNr/dM70vmr184TPwIDAQAB',
+  public_key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgLPH+Aggi2TvvVDGg2HjD5c211zFmGiL4gEAv/lC20I8MSeIkSijAEPzhds246LtHadeJ4oj1fVmO7kpwPjJu5H/95rAhSTGOau3JUEJZdu5pL6giKF/o2h/Ul3VYgVItDMtIURNzLlabriQE/p8cpcNrkuvuQm7O/8gq4k9rJOYGFX2RS4eorgwNnzTLCTMMVCiwJlwaj3zFGDP+l9QS2L5iobvNEEjB5yv1bv+KAZCL6ydcbc9LkRoethTUQRnXpqcugBUzGbAECV/dHkzC4OXHw5CEt5CvaIBZ7LIXkY/KP8IeBuM9oO0vr4XP5pDXelhyOyFKaBpxBig2npufwIDAQAB',
   notify_url: 'http://cloud.mingbonetwork.com/api/system/alipay', // 通知地址
-  return_url: 'http://cloud.mingbonetwork.com/api/system/alipay', // 跳转地址
+  return_url: '', // 跳转地址
   dev: false // 设置为true 将启用开发环境的支付宝网关
 };
-const alipay = Alipay.alipay(aliConfig);
+const alipay = cnPay.alipay(aliConfig);
 
 const wxConfig = {
-  app_id: 'app_id', // 公众号appid
-  appid: 'appid', // app的appid
-  miniapp_id: 'miniapp_id', // 小程序的appid
-  mch_id: 'mch_id', // 商户Id
-  key: 'key', // 商户密钥
-  notify_url: 'notify_url', // 通知地址
-  return_url: 'return_url', // 跳转地址
+  app_id: '', // 公众号appid
+  appid: 'wx2e9c3933aaea8a64', // app的appid
+  miniapp_id: '', // 小程序的appid
+  mch_id: '1521349171', // 商户Id
+  key: '4F470C885784073025C9B042EC6A1606', // 商户密钥
+  notify_url: 'http://cloud.mingbonetwork.com/api/system/wechat', // 通知地址
+  return_url: 'http://cloud.mingbonetwork.com/api/system/wechat', // 跳转地址
   //pfx: fs.readFileSync('<location-of-your-apiclient-cert.p12>') // 可选, 退款等情况时需要用到
 }
-const wechat = Alipay.wechat(wxConfig)
+const wechat = cnPay.wechat(wxConfig)
 
 
 const isTelegram = config.plugins.webgui_telegram && config.plugins.webgui_telegram.use;
@@ -326,14 +327,24 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
   if(totalAmount > 0){
     const order = {
       out_trade_no: myOrderId,
-      total_amount: 0.01, //totalAmount.toFixed(2),
+      total_amount: totalAmount.toFixed(2),
       subject: product.name,
       body: product.comment,
-      timeout: orderExpire+'m',
+      timeout: '30m',
     }
+
+
+    // const order = {
+    //   out_trade_no: myOrderId,
+    //   body: product.comment,//product.name,
+    //   total_fee: 2, // 直接以元为单位 //totalAmount.toFixed(2),
+    //   spbill_create_ip: '180.165.231.68' // 客户端ip
+    // }
 
     returnToApp = await alipay.app(order)
   }
+
+  console.log(returnToApp);
 
   let order = await knex('paymingbo').insert({
     orderId: myOrderId,
@@ -350,6 +361,7 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
     createTime: Date.now(),
     expireTime: Date.now() + orderExpire * 60 * 1000,
   });
+
   logger.info(`创建订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
 
   if(card){
@@ -369,24 +381,37 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
   };
 };
 
-const getNotifyFromMingbo = async (response) => {
+const getNotifyFromMingbo = async (data) => {
   /**
  * 签名校验
  * @param {Object} response 解析后的支付宝响应报文、支付宝支付结果通知报文
  * returns {boolean}
  */
- 
-  let ok = true;//ali.signVerify(response);
-  await knex('paymingbo').update({
+
+  let ok = alipay.verify(data,data.sign);
+
+  if(!ok){
+    return {"success":false,"error":"签名校验失败"};
+  }
+  let orderId = await knex('paymingbo').update({
     status: data.trade_status,
     alipayData: JSON.stringify(data),
+    alipayCallBack: JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
   }).andWhereNot({
     status: 'FINISH',
   }).then();
 
-  return ok;
+  let info = await orderListForMingbo({orderId:orderId});
+  console.log("info",info) ;
+  
+  if(info.length > 0){
+    return {"success": true, "data": info[0] };
+  }else{
+    return {"success": false,"error":"订单数据异常"};
+  }
+  
 };
 
 const verifyCallback = (data) => {
@@ -427,6 +452,37 @@ const orderList = async (options = {}) => {
   .orderBy('alipay.createTime', 'DESC');
   orders.forEach(f => {
     f.alipayData = JSON.parse(f.alipayData);
+  });
+  return orders;
+};
+
+const orderListForMingbo = async (options = {}) => {
+  const where = {};
+  if(options.userId) {
+    where['user.id'] = options.userId;
+  }
+  const orders = await knex('paymingbo').select([
+    'paymingbo.orderId',
+    'paymingbo.orderType',
+    'user.id as userId',
+    'user.username as phone',
+    'account_plugin.port',
+    'paymingbo.amount',
+    'paymingbo.sku',
+    'paymingbo.limit',
+    'paymingbo.giftcard',
+    'paymingbo.totalAmount',
+    'paymingbo.status',
+    'paymingbo.alipayCallback',
+    'paymingbo.createTime',
+    'paymingbo.expireTime',
+  ])
+  .leftJoin('user', 'user.id', 'paymingbo.user')
+  .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
+  .where(where)
+  .orderBy('paymingbo.createTime', 'DESC');
+  orders.forEach(f => {
+    f.alipayCallback = JSON.parse(f.alipayCallback);
   });
   return orders;
 };

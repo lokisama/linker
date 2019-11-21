@@ -360,14 +360,12 @@ exports.createAppOrder = async (req, res) => {
   }
 };
 
-exports.alipayCallbackMingbo = (req, res) => {
+exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   console.log(data);
-  const signStatus = payMingboPlugin.getNotifyFromMingbo(req.body);
-  if (signStatus === false) {
-    return res.send('error');
-  }
-  return res.send('success');
+  const signStatus = await payMingboPlugin.getNotifyFromMingbo(req.body);
+  
+  return res.send(signStatus);
 };
 
 exports.getPrice = async (req, res) => {
