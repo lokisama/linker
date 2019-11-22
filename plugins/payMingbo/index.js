@@ -404,15 +404,16 @@ const getNotifyFromMingbo = async (data) => {
     status: 'FINISH',
   }).then();
 
-  let info = await orderListForMingbo({orderId:orderId});
-  //console.log("info",info) ;
+  let info = await orderListForMingbo({orderId:orderId}).then(success => {
+    if(!success.length) {
+      return Promise.reject('settings not found');
+    }
+    return success[0];
+  });;
   
-  if(info.length > 0){
-    console.log({"success": true, "data": info[0] });
-    return {"success": true, "data": info[0] };
-  }else{
-    return {"success": false,"error":"订单数据异常"};
-  }
+  //console.log("info",info) ;
+  console.log({"success": true, "data": info });
+  return {"success": true, "data": info };
   
 };
 
