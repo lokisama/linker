@@ -834,6 +834,35 @@ exports.getOrder = async (req, res) => {
   }
 };
 
+exports.getOrderForMingbo = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    let orders = [];
+
+    if(config.plugins.alipay && config.plugins.alipay.use) {
+      // const alipayOrders = await alipayPlugin.getUserFinishOrder(userId);
+      const alipayOrders = await payMingboPlugin.getUserFinishOrder(userId);
+      orders = [...orders, ...alipayOrders];
+    }
+
+    const refOrders = await refOrder.getUserFinishOrder(userId);
+    orders = [...orders, ...refOrders];
+
+    if(config.plugins.giftcard && config.plugins.giftcard.use) {
+      const giftCardOrders = await giftcard.getUserFinishOrder(userId);
+      orders = [...orders, ...giftCardOrders];
+    }
+
+    orders = orders.sort((a, b) => {
+      return b.createTime - a.createTime;
+    });
+    res.send(orders);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
 exports.getMacAccount = async (req, res) => {
   try {
     const userId = req.session.user;

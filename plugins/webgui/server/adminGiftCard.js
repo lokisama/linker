@@ -168,23 +168,25 @@ exports.useGiftCardForMingboUser = async (req, res) => {
  * @return {[type]}     [description]
  */
 exports.sendGiftCardForMingboUser = async (req, res) => {
+
   try {
     const userId = +req.body.userId;
     const phone = req.body.phone;
     const mingboType = req.body.type;
     const accountId = req.body.accountId ? +req.body.accountId : null;
     let userInfo;
+
     if(!userId && phone){
       userInfo = await user.getOneUserByPhone(phone);
     }else if(userId && !phone){
       userInfo = await user.getOne(userId);
     }
 
-    const result = await giftcard.processBind(userInfo.id, accountId, mingboType);
+    const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType);
     return res.send(result);
   } catch (err) {
     logger.error(err);
-    return res.send({"succuss": false,"error":err});
+    return res.send({"succuss": false,"message":err});
   }
 };
 

@@ -389,7 +389,6 @@ const getNotifyFromMingbo = async (data) => {
  */
 
   let ok = alipay.verify(data,data.sign);
-  console.log(ok);
 
   if(!ok){
     return {"success":false,"error":"签名校验失败"};
@@ -411,8 +410,6 @@ const getNotifyFromMingbo = async (data) => {
     return success[0];
   });;
   
-  //console.log("info",info) ;
-  console.log({"success": true, "data": info });
   return {"success": true, "data": info };
   
 };
@@ -607,7 +604,7 @@ const getUserFinishOrder = async userId => {
     'createTime',
   ]).where({
     user: userId,
-    status: 'FINISH',
+    //status: 'FINISH',
   }).orderBy('createTime', 'DESC');
   orders = orders.map(order => {
     return {

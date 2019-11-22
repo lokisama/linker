@@ -241,9 +241,11 @@ app.post('/api/mingbo/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGif
 app.post('/api/mingbo/giftcard/search', isAdmin, isSuperAdmin, adminGiftCard.searchGiftcard);
 app.get('/api/mingbo/orders', isAdmin, admin.getOrdersForMingbo);
 app.post('/api/mingbo/alipay/callback', user.alipayCallbackMingbo);
+app.post('/api/mingbo/alipay/cb', user.alipayCallbackMingbo);
 app.post('/api/mingbo/wechatPay/callback', user.alipayCallback);
 
 app.get('/api/mingbo/user/plans', isUser, user.getPriceByUser);
+app.get('/api/mingbo/user/order', isUser, user.getOrder);
 app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
 app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);

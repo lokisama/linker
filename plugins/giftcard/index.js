@@ -140,12 +140,14 @@ const processBind = async (userId, accountId, card) => {
 		user: userId,
 		usedTime: Date.now()
 	});
-	return { success: true, data: { cardId: card.id , sku: card.sku, comment:card.comment , password: card.password, type:card.mingboType}};
+	//return { success: true, data: { cardId: card.id , sku: card.sku, comment:card.comment , password: card.password, type:card.mingboType}};
+	return { success: true, cardId: card.id ,  password: card.password, status: card.status, type:card.mingboType,sku: card.sku,comment:card.comment };
 };
 
 const processBindAuto = async (userId, accountId, mingboType) => {
 	
 	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
+	console.log(cardResult);
 	if (cardResult.length === 0) {
 		return { success: false, message: '优惠券type不存在或已用完，请联系lynca' };
 	}
@@ -410,7 +412,8 @@ exports.getBatchDetails = getBatchDetails;
 exports.getUserOrders = getUserOrders;
 exports.getUserFinishOrder = getUserFinishOrder;
 
-exports.processBind = processBindAuto;
+exports.processBind = processBind;
+exports.processBindAuto = processBindAuto;
 exports.processOrderForMingboUser = processOrderForMingboUser;
 exports.searchGiftcard = searchGiftcard;
 exports.getOneByPassword = getOneByPassword;
