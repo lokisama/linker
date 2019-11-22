@@ -363,9 +363,13 @@ exports.createAppOrder = async (req, res) => {
 exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   console.log(data);
-  const signStatus = await payMingboPlugin.getNotifyFromMingbo(req.body);
+  try{
+    const signStatus = await payMingboPlugin.getNotifyFromMingbo(req.body);
+    return res.send(signStatus);
+  }catch(e){
+    return res.send({"success": false ,"error":e});
+  }
   
-  return res.send(signStatus);
 };
 
 exports.getPrice = async (req, res) => {
