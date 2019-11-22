@@ -389,13 +389,14 @@ const getNotifyFromMingbo = async (data) => {
  */
 
   let ok = alipay.verify(data,data.sign);
+  console.log(ok);
 
   if(!ok){
     return {"success":false,"error":"签名校验失败"};
   }
   let orderId = await knex('paymingbo').update({
     status: data.trade_status,
-    alipayData: JSON.stringify(data),
+    //alipayData: JSON.stringify(data),
     alipayCallBack: JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
@@ -404,9 +405,10 @@ const getNotifyFromMingbo = async (data) => {
   }).then();
 
   let info = await orderListForMingbo({orderId:orderId});
-  console.log("info",info) ;
+  //console.log("info",info) ;
   
   if(info.length > 0){
+    console.log({"success": true, "data": info[0] });
     return {"success": true, "data": info[0] };
   }else{
     return {"success": false,"error":"订单数据异常"};
@@ -471,6 +473,7 @@ const orderListForMingbo = async (options = {}) => {
     'paymingbo.sku',
     'paymingbo.limit',
     'paymingbo.giftcard',
+    'giftcard.mingboType',
     'paymingbo.totalAmount',
     'paymingbo.status',
     'paymingbo.alipayCallback',
@@ -479,6 +482,7 @@ const orderListForMingbo = async (options = {}) => {
   ])
   .leftJoin('user', 'user.id', 'paymingbo.user')
   .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
+  .leftJoin('giftcard', 'giftcard.password', 'paymingbo.giftcard')
   .where(where)
   .orderBy('paymingbo.createTime', 'DESC');
   orders.forEach(f => {
