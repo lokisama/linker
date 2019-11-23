@@ -37,10 +37,11 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
     if(payType === '邀请码') { url = '/api/admin/refOrder'; }
     const search = opt.search || '';
     const filter = opt.filter || '';
+    const where = opt.where || {};
     // const sort = opt.sort || 'alipay.createTime_desc';
     const page = opt.page || 1;
     const pageSize = opt.pageSize || 20;
-    return $http.get(url, { params: opt }).then(success => success.data);
+    return $http.post(url, opt).then(success => success.data);
   };
 
   const getCsvOrder = (payType, opt = {}) => {

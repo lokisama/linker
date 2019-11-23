@@ -49,9 +49,18 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '优惠券',
+      icon: 'people',
+      click: 'admin.pay',
+      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+    }, {
+      name: '套餐配置',
+      icon: 'settings',
+      click: 'admin.order',
+    }, {
+      name: '优惠券配置',
       icon: 'settings',
       click: 'admin.listGiftCardBatch',
-    }, {
+    },{
       name: 'divider',
     }, {
       name: '安全退出',
@@ -256,18 +265,22 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       $scope.isOrderPageFinish = false;
       $scope.getOrders();
     };
+    //$scope.selectPayType('支付宝');
     if(!$localStorage.admin.orderFilterSettings) {
       $localStorage.admin.orderFilterSettings = {
-        filter: {
-          CREATE: true,
-          WAIT_BUYER_PAY: true,
-          TRADE_SUCCESS: true,
-          FINISH: true,
-          TRADE_CLOSED: true,
+        filter: ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"],
+        start:new Date(Date.now() - 3600000 * 24 * 7),
+        end: new Date(Date.now()),
+        where:{
+          //'paymingbo.status': 'SUCCESS'
         },
         group: -1,
       };
     }
+
+    $scope.selectStatus = [];
+    $scope.statusFilter = ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"];
+
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
     $scope.currentPage = 1;
     $scope.isOrderLoading = false;
@@ -283,20 +296,26 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       if(!$scope.payTypes.length) { return; }
       const oldTabSwitchTime = tabSwitchTime;
       $scope.isOrderLoading = true;
-      adminApi.getOrder($scope.myPayType, {
+      const params = {
         start: $scope.orderFilter.start,
         end: $scope.orderFilter.end,
         page: $scope.currentPage,
         pageSize: getPageSize(),
         search,
+        where: $scope.orderFilter.where,
         // sort: $scope.userSort.sort,
         group: $scope.orderFilter.group,
-        filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
-      }).then(success => {
+        filter: $scope.selectStatus,
+      };
+
+      console.log(params);
+
+      adminApi.getOrder($scope.myPayType, params).then(success => {
         $scope.setFabNumber(success.total);
         if(oldTabSwitchTime !== tabSwitchTime) { return; }
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }
+        $scope.orders = [];
         success.orders.forEach(f => {
           $scope.orders.push(f);
         });

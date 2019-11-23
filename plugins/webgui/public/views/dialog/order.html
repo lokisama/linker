@@ -26,12 +26,19 @@
                 <md-divider></md-divider>
                 <md-list-item ng-if="publicInfo.order.amount">
                     <div flex layout="row" layout-align="space-between center">
-                        <div flex="30" translate>金额：</div><div flex="70" style="text-align:right; font-size: 0.9em;">{{ publicInfo.order.amount }}</div>
+                        <div flex="30" translate>原价：</div><div flex="70" style="text-align:right; font-size: 0.9em;">{{ publicInfo.order.amount }}</div>
                     </div>
                 </md-list-item>
+                <md-divider ng-if="publicInfo.order.giftcard"></md-divider>
                 <md-list-item ng-if="publicInfo.order.giftcard">
                     <div flex layout="row" layout-align="space-between center">
                         <div flex="30" translate>优惠券：</div><div flex="70" style="text-align:right;">{{ publicInfo.order.giftcard }}</div>
+                    </div>
+                </md-list-item>
+                <md-divider ng-if="publicInfo.order.giftcard"></md-divider>
+                <md-list-item ng-if="publicInfo.order.giftcard">
+                    <div flex layout="row" layout-align="space-between center">
+                        <div flex="30" translate>总价：</div><div flex="70" style="text-align:right; font-size: 0.9em;">{{ publicInfo.order.totalAmount }}</div>
                     </div>
                 </md-list-item>
                 <md-divider ng-if="publicInfo.order.amount"></md-divider>

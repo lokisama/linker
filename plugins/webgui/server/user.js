@@ -329,7 +329,9 @@ exports.createAppOrder = async (req, res) => {
     const card = req.body.card;
     const sku = req.body.sku;
     const limit = req.body.limit;
+    const playform = req.body.playform;
     const accountId = req.body.accountId ? +req.body.accountId : null;
+    const payMethod = req.body.method ? req.body.method : 'alipay';
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
@@ -352,7 +354,8 @@ exports.createAppOrder = async (req, res) => {
       
     }
 
-    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData);
+    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, playform);
+
     return res.send(alipayOrder);
   } catch(err) {
     console.log(err);

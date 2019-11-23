@@ -382,18 +382,19 @@ exports.getOrders = (req, res) => {
   }
   const options = {};
   if(req.adminInfo.id === 1) {
-    options.group = +req.query.group;
+    options.group = +req.body.group;
   } else {
     options.group = req.adminInfo.group;
   }
-  options.page = +req.query.page || 1;
-  options.pageSize = +req.query.pageSize || 20;
-  options.search = req.query.search || '';
-  options.sort = req.query.sort || 'alipay.createTime_desc';
-  options.start = req.query.start;
-  options.end = req.query.end;
+  options.page = +req.body.page || 1;
+  options.pageSize = +req.body.pageSize || 20;
+  options.search = req.body.search || '';
+  options.where = req.body.where || {};
+  options.sort = req.body.sort || 'alipay.createTime_desc';
+  options.start = req.body.start;
+  options.end = req.body.end;
   
-  options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
+  options.filter = ( Array.isArray(req.body.filter) ? req.body.filter : [req.body.filter] ) || [];
   alipay.orderListAndPaging(options)
   .then(success => {
     res.send(success);
@@ -415,18 +416,19 @@ exports.getOrdersForMingbo = (req, res) => {
   }
   const options = {};
   if(req.adminInfo.id === 1) {
-    options.group = +req.query.group;
+    options.group = +req.body.group;
   } else {
     options.group = req.adminInfo.group;
   }
-  options.page = +req.query.page || 1;
-  options.pageSize = +req.query.pageSize || 20;
-  options.search = req.query.search || '';
-  options.sort = req.query.sort || 'paymingbo.createTime_desc';
-  options.start = req.query.start;
-  options.end = req.query.end;
+  options.page = +req.body.page || 1;
+  options.pageSize = +req.body.pageSize || 20;
+  options.search = req.body.search || '';
+  options.where = req.body.where || {};
+  options.sort = req.body.sort || 'paymingbo.createTime_desc';
+  options.start = req.body.start;
+  options.end = req.body.end;
   
-  options.filter = ( Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter] ) || [];
+  options.filter = ( Array.isArray(req.body.filter) ? req.body.filter : [req.body.filter] ) || [];
   payMingbo.orderListAndPaging(options)
   .then(success => {
     res.send(success);

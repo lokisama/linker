@@ -17,7 +17,7 @@ const ytdl = require('ytdl-core');
 
 
 let outTradeId = Date.now().toString();
-let orderExpire = 10;
+let orderExpire = 20;
 
 //const Alipay = require('alipay-node-sdk');
 // var ali = new Alipay({
@@ -176,7 +176,7 @@ const createOrder = async (user, account, orderId) => {
   };
 };
 
-const createOrderForMingboUser = async (user, account, sku, limit, card ) => {
+const createOrderForMingboUser = async (user, account, sku, limit, card ,platform) => {
   const productInfo = await orderPlugin.getOneBySku(sku);
   if(+productInfo.alipay <= 0) { return Promise.reject('amount error'); }
 
@@ -191,18 +191,37 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ) => {
   .then(success => {
     return success[0];
   });
+
+  const method = "app";
   
   if(oldOrder) {
-    return {
-      orderId:oldOrder.orderId,
-      amount:oldOrder.amount,
-      totalAmount:oldOrder.totalAmount,
-      sku: oldOrder.sku,
-      plan: productInfo.name,
-      user: user.username,
-      gitcard: oldOrder.giftcard,
-      alipayParams: oldOrder.alipayParams
-    };
+    if( platform == "alipay"){
+      return {
+        orderId:oldOrder.orderId,
+        amount:oldOrder.amount,
+        totalAmount:oldOrder.totalAmount,
+        sku: oldOrder.sku,
+        plan: productInfo.name,
+        user: user.username,
+        gitcard: oldOrder.giftcard,
+        method: method,
+        platform: platform,
+        payParams: oldOrder.payParams
+      };
+    }else if( platform == "wechat"){
+      return {
+        orderId:oldOrder.orderId,
+        amount:oldOrder.amount,
+        totalAmount:oldOrder.totalAmount,
+        sku: oldOrder.sku,
+        plan: productInfo.name,
+        user: user.username,
+        gitcard: oldOrder.giftcard,
+        method: method,
+        platform: platform,
+        payParams: oldOrder.payParams
+      };
+    }
   }
   
   const groupInfo = await groupPlugin.getOneGroup(user.group);
@@ -212,7 +231,7 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ) => {
     }
   }
 
-  const result = await createAppOrder(user,account,sku,limit,card);
+  const result = await createAppOrder(user,account,sku,limit,card,platform);
 
   return {
     orderId:result.orderId,
@@ -222,7 +241,8 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ) => {
     plan: result.plan,
     user: result.user,
     gitcard: result.gitcard,
-    alipayParams: result.alipayParams
+    method: result.method,
+    payParams:result.payParams
   };
 };
 
@@ -306,7 +326,7 @@ const checkOrder = async (orderId) => {
 };
 
 //options = {user,card,server}
-const createAppOrder = async (user, account, sku, limit, card ) =>{
+const createAppOrder = async (user, account, sku, limit, card, platform='alipay' ) =>{
 
   let product = await orderPlugin.getOneBySku(sku);
   
@@ -322,47 +342,54 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
   }
   
   let myOrderId = moment().format('YYYYMMDDHHmmss') + Math.random().toString().substr(2, 6);
-  let returnToApp = '';
+  let payParams = '';
+  let method = 'app';
 
   if(totalAmount > 0){
-    const order = {
-      out_trade_no: myOrderId,
-      total_amount: totalAmount.toFixed(2),
-      subject: product.name,
-      body: product.comment,
-      timeout: '30m',
+    
+    if(platform == 'alipay'){
+
+      const config = {
+        out_trade_no: myOrderId,
+        total_amount: totalAmount.toFixed(2),
+        subject: product.name,
+        body: product.comment,
+        timeout: orderExpire+'m',
+      };
+      payParams = await alipay.app(config);
+
+    }else if(platform == 'wechat'){
+      
+      const config = {
+        out_trade_no: myOrderId,
+        body: product.name,//product.name,
+        total_fee: 1, // 直接以元为单位 //totalAmount.toFixed(2),
+        spbill_create_ip: '180.165.231.68' // 客户端ip
+      };
+
+      payParams = await wechat.app(config);
     }
-
-
-    // const order = {
-    //   out_trade_no: myOrderId,
-    //   body: product.comment,//product.name,
-    //   total_fee: 2, // 直接以元为单位 //totalAmount.toFixed(2),
-    //   spbill_create_ip: '180.165.231.68' // 客户端ip
-    // }
-
-    returnToApp = await alipay.app(order)
   }
 
-  console.log(returnToApp);
+  logger.info(`创建订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
 
   let order = await knex('paymingbo').insert({
     orderId: myOrderId,
     orderType: product.id,
+    method: method,
+    platform: platform,
     amount: product.amount.toFixed(2),
     sku: sku,
     limit: limit,
     giftcard: card && card.password ? card.password : '',
     totalAmount: totalAmount.toFixed(2),
-    alipayParams : returnToApp,
+    payParams : payParams,
     user: user.id,
     account: account ? account : null,
     status: 'CREATE',
     createTime: Date.now(),
     expireTime: Date.now() + orderExpire * 60 * 1000,
   });
-
-  logger.info(`创建订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
 
   if(card){
     await knex('giftcard').update({orderId: myOrderId}).where({password:card.password});
@@ -377,7 +404,9 @@ const createAppOrder = async (user, account, sku, limit, card ) =>{
     plan: card ? ( product.isShow === 1 ?card.comment+'_'+product.name: card.comment) : ( product.isShow === 1 ? product.name: '内部套餐'),
     user: user.username,
     gitcard:card ? card.password : '',
-    alipayParams : returnToApp
+    method: method,
+    platform: platform,
+    payParams : payParams
   };
 };
 
@@ -474,7 +503,7 @@ const orderListForMingbo = async (options = {}) => {
     'giftcard.mingboType',
     'paymingbo.totalAmount',
     'paymingbo.status',
-    'paymingbo.alipayCallback',
+    'paymingbo.payCallback',
     'paymingbo.createTime',
     'paymingbo.expireTime',
   ])
@@ -484,7 +513,7 @@ const orderListForMingbo = async (options = {}) => {
   .where(where)
   .orderBy('paymingbo.createTime', 'DESC');
   orders.forEach(f => {
-    f.alipayCallback = JSON.parse(f.alipayCallback);
+    f.payCallback = JSON.parse(f.payCallback);
   });
   return orders;
 };
@@ -496,6 +525,10 @@ const orderListAndPaging = async (options = {}) => {
   const sort = options.sort || 'paymingbo.createTime_desc';
   const page = options.page || 1;
   const pageSize = options.pageSize || 20;
+  const where = options.where || 
+  {
+    "paymingbo.totalAmount":[">",30]
+  };
   const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
   const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
 
@@ -513,11 +546,13 @@ const orderListAndPaging = async (options = {}) => {
     'account_plugin.port',
     'paymingbo.amount',
     'paymingbo.totalAmount',
-    'paymingbo.payMethod',
-    'paymingbo.payId',
+    'paymingbo.method',
+    'paymingbo.platform',
+    'paymingbo.trade_no as trade_no',
     'paymingbo.status',
     'paymingbo.giftcard',
-    'paymingbo.alipayCallback',
+    'paymingbo.payCallback',
+    'paymingbo.payParams',
     'paymingbo.createTime',
     'paymingbo.expireTime',
   ])
@@ -540,10 +575,42 @@ const orderListAndPaging = async (options = {}) => {
     orders = orders.where('paymingbo.orderId', 'like', `%${ search }%`);
   }
 
+  if(where && Object.keys(where).length > 0 ) {
+    for(w in Object.keys(where)){
+      let key = Object.keys(where)[w];
+      let arr = where[key];
+      if(Array.isArray(arr)){
+        switch(arr[0]){
+          case ">":
+          case "<":
+          case "=":
+            count = count.where(key, arr[0], arr[1]);
+            orders = orders.where(key, arr[0], arr[1]);
+            console.log("after",key, arr[0], arr[1]);
+            break;
+          case "like":
+            count = count.where(key, "like", `%${ arr[1] }%`);
+            orders = orders.where(key, "like", `%${ arr[1] }%`);
+            console.log("after",key, arr[0], arr[1]);
+            break;
+          default:
+            count = count.where(key, arr);
+            orders = orders.where(key, arr);
+            break;
+        }
+      }else{
+        console.log(key, arr);
+        count = count.where(key, arr);
+        orders = orders.where(key, arr);
+        console.log(orders);
+      }
+    }
+  }
+
   count = await count.count('orderId as count').then(success => success[0].count);
   orders = await orders.orderBy(sort.split('_')[0], sort.split('_')[1]).limit(pageSize).offset((page - 1) * pageSize);
   orders.forEach(f => {
-    f.alipayCallback = JSON.parse(f.alipayCallback);
+    f.payCallback = JSON.parse(f.payCallback);
   });
   const maxPage = Math.ceil(count / pageSize);
   return {

@@ -1,14 +1,100 @@
-<md-tabs md-dynamic-height md-border-bottom>
+<!-- <md-tabs md-dynamic-height md-border-bottom>
     <md-tab ng-repeat="payType in payTypes"
             label="{{payType.name}}"
             md-on-select="selectPayType(payType.name)">
     </md-tab>
-</md-tabs>
+</md-tabs> -->
+<md-card>
+    <div layout="row">
+        <div flex  layout-margin="" style="min-width:330px;">
+            
+            <md-input-container class="md-inline-block">
+                <label translate>开始日期</label>
+                <!-- <input type="text" required name="start" ng-model="orderFilter.start"> -->
+                <md-datepicker ng-model="orderFilter.start" md-hide-icons="calendar"></md-datepicker>
+            </md-input-container>
+            <md-input-container class="md-inline-block">
+                <label translate>结束日期</label>
+                <!-- <input type="text" required name="end" ng-model="orderFilter.end"> -->
+                <md-datepicker ng-model="orderFilter.end" md-hide-icons="calendar"></md-datepicker>
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container flex layout="row"  layout-align="center center">
+              <label>充值账号</label>
+              <input type="text" ng-model="filterPhone">
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row"  layout-align="center center">
+            
+              <md-select multiple ng-model="selectStatus" placeholder="交易状态" flex>
+                <md-option ng-value="s" ng-repeat="s in statusFilter">{{s}}</md-option>
+              </md-select>
+
+            </md-input-container>
+
+        </div>
+    </div>
+
+    <div layout="row">
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row"  layout-align="center center">
+              <md-select ng-model="someModel" placeholder="商品名称" flex>
+                <md-option ng-value="plan" ng-repeat="plan in plans">{{ plan }}</md-option>
+              </md-select>
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row"  layout-align="center center">
+              <md-select ng-model="someModel" placeholder="类型" flex>
+                <md-option ng-value="pt" ng-repeat="pt in payTypes">{{ pt }}</md-option>
+              </md-select>
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row"  layout-align="center center">
+              <md-select ng-model="someModel" placeholder="商品状态" flex>
+                <md-option ng-value="opt" ng-repeat="opt in neighborhoods2">{{ opt }}</md-option>
+              </md-select>
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row" layout-align="center center">
+              <md-select ng-model="someModel" placeholder="支付平台" flex>
+                <md-option ng-value="opt" ng-repeat="opt in neighborhoods2">{{ opt }}</md-option>
+              </md-select>
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout="row"  layout-align="center center" style="min-width:270px;">
+            <md-button class="md-primary md-raised" ng-click="getOrders()">查询</md-button>
+            <md-button class="md-primary md-raised" ng-click="getOrders()">重置 </md-button>
+        </div>
+    </div>
+</md-card>
+
 <div ng-if="orders.length === 0 && !isOrderLoading" class="zero-element">没有订单</div>
 <div ng-show="orders.length">
     <md-card>
         <md-list>
-            <md-divider></md-divider>
             <md-list-item>
                 <div flex layout="row" layout-align="space-between center" style="text-align:center;font-size:0.8em">
                     <div flex="30" flex-xs="60">
@@ -30,6 +116,9 @@
                     交易状态
                     </div>
                     <div flex="30" flex-xs="60">
+                    商品状态
+                    </div>
+                    <div flex="30" flex-xs="60">
                     充值时间
                     </div>
                     <div flex="30" flex-xs="60">
@@ -43,6 +132,7 @@
                     </div>
                 </div>
             </md-list-item>
+            <md-divider></md-divider>
             <md-list-item ng-repeat="order in orders track by $index">
                 
                 <div flex layout="row" layout-align="space-between center" ng-click="showOrderInfo(order)" style="text-align:center;font-size:0.8em">
@@ -53,29 +143,41 @@
                         </span> -->
                     </div>
                     <div flex="30" flex-xs="60">
-                        {{order.giftcard?order.comment:order.orderName}}
+                        {{order.orderName}}
                     </div>
                     <div flex="30" flex-xs="60">
-                        <span>{{order.giftcard? ( order.cutPrice==0 ? '体验券':'打折券') :   '支付'}}</span>
+                        <span>{{order.giftcard? ( order.cutPrice==0 ? '体验券':'支付+打折券') :   '支付'}}</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         <span ng-if="order.cutPrice>0">{{order.cutPrice/10}}折</span>
-                        <span ng-if="order.cutPrice==0">免费</span>
+                        <span ng-if="order.cutPrice==0">体验</span>
+                        <span ng-if="order.cutPrice==null">-</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         {{order.totalAmount}}
                     </div>
-                    <div flex="30" flex-xs="60">
-                        {{order.status}}
+                    <div flex="30" flex-xs="60"">
+                        <div ng-switch="order.status">
+                        <span ng-switch-when="TRADE_SUCCESS">已付款</span>
+                        <span ng-switch-when="CREATE">创建</span>
+                        </div>
+                    </div>
+                    <div flex="30" flex-xs="60"">
+                        <span ng-if="order.status=='TRADE_SUCCESS'" style="color:green;">生效中</span>
+                        <span ng-if="order.status=='CREATE'" style="color:red;">异常</span>
                     </div>
                     <div flex="30" flex-xs="60" style="text-align:center;font-size: 0.6em;">
                         <span >{{order.createTime | date : 'MM-dd HH:mm'}}</span>
                     </div>
                     <div flex="30" flex-xs="60" style="text-align:center;">
-                        {{order.payMethod? order.payMethod : '体验券'}}
+                  
+                        <div ng-switch="order.platform">
+                        <span ng-switch-when="alipay">支付宝</span>
+                        <span ng-switch-when="wechat">微信</span>
+                        </div>
                     </div>
                     <div flex="30" flex-xs="60">
-                        {{order.payId}}
+                        <span alt="{{order.trade_no}}"style="text-align:center;font-size: 0.6em;width:50px;margin:0 auto;overflow: hidden;display:block;">{{order.trade_no}}</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         {{order.orderId.substr(12,6)}}
