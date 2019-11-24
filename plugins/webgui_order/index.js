@@ -12,6 +12,8 @@ const getOrdersAndAccountNumber = async () => {
     'webgui_order.name as name',
     'webgui_order.shortComment as shortComment',
     'webgui_order.comment as comment',
+    'webgui_order.sku as sku',
+    'webgui_order.amount as amount',
     'webgui_order.type as type',
     'webgui_order.cycle as cycle',
     'webgui_order.alipay as alipay',

@@ -278,10 +278,22 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       };
     }
 
-    $scope.selectStatus = [];
-    $scope.statusFilter = ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"];
-
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
+
+    $scope.selectStatus = [];
+    $scope.statusGroup = ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"];
+
+    $scope.filterPhone = $scope.orderFilter.where.hasOwnProperty("user.username")? $scope.orderFilter.where["user.username"] : "";
+    $scope.filterPlatform = $scope.orderFilter.where.hasOwnProperty("platform")? $scope.orderFilter.where["platform"] : "all";
+    $scope.platformGroup = ["alipay","wechat"];
+
+    $scope.selectPlan = {};
+    $scope.planGroup = [];
+    adminApi.getPlans().then(success=>{
+      console.log(success);
+      $scope.planGroup = success;
+    })
+
     $scope.currentPage = 1;
     $scope.isOrderLoading = false;
     $scope.isOrderPageFinish = false;
@@ -293,6 +305,10 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       if($mdMedia('gt-md')) { return 50; }
     };
     $scope.getOrders = search => {
+      $scope.orderFilter.where["user.username"] = $scope.filterPhone;
+      $scope.orderFilter.where["platform"] = $scope.filterPlatform;
+      $scope.orderFilter.where["sku"] = $scope.selectPlan.sku;
+
       if(!$scope.payTypes.length) { return; }
       const oldTabSwitchTime = tabSwitchTime;
       $scope.isOrderLoading = true;

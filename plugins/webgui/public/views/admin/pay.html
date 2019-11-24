@@ -35,7 +35,7 @@
             <md-input-container layout="row"  layout-align="center center">
             
               <md-select multiple ng-model="selectStatus" placeholder="交易状态" flex>
-                <md-option ng-value="s" ng-repeat="s in statusFilter">{{s}}</md-option>
+                <md-option ng-value="s" ng-repeat="s in statusGroup">{{s}}</md-option>
               </md-select>
 
             </md-input-container>
@@ -47,8 +47,9 @@
         <div flex  layout-margin="">
             
             <md-input-container layout="row"  layout-align="center center">
-              <md-select ng-model="someModel" placeholder="商品名称" flex>
-                <md-option ng-value="plan" ng-repeat="plan in plans">{{ plan }}</md-option>
+              <md-select ng-model="selectPlan" placeholder="商品名称" flex>
+                <md-option ng-value="">all</md-option>
+                <md-option ng-value="plan" ng-repeat="plan in planGroup">{{ plan.name }}<span style="font-size: 0.8em">[{{ plan.shortComment }}]</span></md-option>
               </md-select>
             </md-input-container>
 
@@ -77,8 +78,10 @@
         <div flex  layout-margin="">
             
             <md-input-container layout="row" layout-align="center center">
-              <md-select ng-model="someModel" placeholder="支付平台" flex>
-                <md-option ng-value="opt" ng-repeat="opt in neighborhoods2">{{ opt }}</md-option>
+              <md-select ng-model="filterPlatform" placeholder="支付平台" flex>
+
+                <md-option ng-value="">all</md-option>
+                <md-option ng-value="opt" ng-repeat="opt in platformGroup">{{ opt }}</md-option>
               </md-select>
             </md-input-container>
 
@@ -143,7 +146,7 @@
                         </span> -->
                     </div>
                     <div flex="30" flex-xs="60">
-                        {{order.orderName}}
+                        {{order.orderName}}<span style="font-size: 0.8em">[{{ order.orderShortName }}]</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         <span>{{order.giftcard? ( order.cutPrice==0 ? '体验券':'支付+打折券') :   '支付'}}</span>

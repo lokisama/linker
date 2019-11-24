@@ -22,6 +22,10 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
       type,
     } }).then(success => success.data);
   };
+
+  const getPlans = () =>{
+    return $http.get('/api/mingbo/plans').then(success => success.data);
+  };
   const getOrder = (payType, opt = {}) => {
     if(payType === 'Paypal') {
       opt.filter = opt.filter.map(m => {
@@ -320,6 +324,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
   return {
     getUser,
     getOrder,
+    getPlans,
     getCsvOrder,
     getServer,
     getAccount,

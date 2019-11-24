@@ -363,17 +363,19 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       const config = {
         out_trade_no: myOrderId,
         body: product.name,//product.name,
-        total_fee: 1, // 直接以元为单位 //totalAmount.toFixed(2),
+        total_fee: 1,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
         spbill_create_ip: '180.165.231.68' // 客户端ip
       };
 
       payParams = await wechat.app(config);
+      payParams = JSON.stringify(payParams);
     }
   }
 
   logger.info(`创建订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
 
-  let order = await knex('paymingbo').insert({
+
+  const insert = {
     orderId: myOrderId,
     orderType: product.id,
     method: method,
@@ -389,7 +391,10 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
     status: 'CREATE',
     createTime: Date.now(),
     expireTime: Date.now() + orderExpire * 60 * 1000,
-  });
+  };
+  console.log(insert);
+
+  let order = await knex('paymingbo').insert(insert);
 
   if(card){
     await knex('giftcard').update({orderId: myOrderId}).where({password:card.password});
@@ -494,16 +499,12 @@ const orderListForMingbo = async (options = {}) => {
     'paymingbo.orderId',
     'paymingbo.orderType',
     'user.id as userId',
-    'user.username as phone',
-    'account_plugin.port',
+    'user.username',
+    'account_plugin',
     'paymingbo.amount',
-    'paymingbo.sku',
-    'paymingbo.limit',
-    'paymingbo.giftcard',
-    'giftcard.mingboType',
-    'paymingbo.totalAmount',
-    'paymingbo.status',
-    'paymingbo.payCallback',
+    'paymingbo.status as status',
+    'paymingbo.platform as platform',
+    'paymingbo.payCallback as payCallbak',
     'paymingbo.createTime',
     'paymingbo.expireTime',
   ])
@@ -527,16 +528,16 @@ const orderListAndPaging = async (options = {}) => {
   const pageSize = options.pageSize || 20;
   const where = options.where || 
   {
-    "paymingbo.totalAmount":[">",30]
+    "totalAmount":[">",30]
   };
   const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
   const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
-
-  let count = knex('paymingbo').select().whereBetween('paymingbo.createTime', [start, end]);
-  let orders = knex('paymingbo').select([
+  const select  = [
     'paymingbo.orderId',
     'paymingbo.orderType',
     'webgui_order.name as orderName',
+    'webgui_order.sku as sku',
+    'webgui_order.shortComment as orderShortName',
     'giftcard.comment as comment',
     'giftcard.cutPrice',
     'giftcard.limit',
@@ -547,7 +548,7 @@ const orderListAndPaging = async (options = {}) => {
     'paymingbo.amount',
     'paymingbo.totalAmount',
     'paymingbo.method',
-    'paymingbo.platform',
+    'paymingbo.platform as platform',
     'paymingbo.trade_no as trade_no',
     'paymingbo.status',
     'paymingbo.giftcard',
@@ -555,7 +556,15 @@ const orderListAndPaging = async (options = {}) => {
     'paymingbo.payParams',
     'paymingbo.createTime',
     'paymingbo.expireTime',
-  ])
+  ];
+  let count = knex('paymingbo').select()
+  .leftJoin('user', 'user.id', 'paymingbo.user')
+  //.leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
+  //.leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
+  //.leftJoin('giftcard','giftcard.password','paymingbo.giftcard')
+  .whereBetween('paymingbo.createTime', [start, end]);
+
+  let orders = knex('paymingbo').select(select)
   .leftJoin('user', 'user.id', 'paymingbo.user')
   .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
   .leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
@@ -600,9 +609,10 @@ const orderListAndPaging = async (options = {}) => {
         }
       }else{
         console.log(key, arr);
-        count = count.where(key, arr);
-        orders = orders.where(key, arr);
-        console.log(orders);
+        if(arr != ""){
+          count = count.where(key, arr);
+          orders = orders.where(key, arr);
+        }
       }
     }
   }

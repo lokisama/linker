@@ -7,6 +7,7 @@ const knex = appRequire('init/knex').knex;
 const alipay = appRequire('plugins/alipay/index');
 const paypal = appRequire('plugins/paypal/index');
 const payMingbo = appRequire('plugins/payMingbo/index');
+const orderPlugin = appRequire('plugins/webgui_order');
 const email = appRequire('plugins/email/index');
 const config = appRequire('services/config').all();
 const isAlipayUse = config.plugins.alipay && config.plugins.alipay.use;
@@ -402,6 +403,26 @@ exports.getOrders = (req, res) => {
     console.log(err);
     res.status(403).end();
   });
+};
+
+exports.getPlans = async (req, res) => {
+  try {
+    const orders = await orderPlugin.getOrdersAndAccountNumber();
+    const ordersSorted = orders.filter(f => f.baseId === 0);
+    orders.filter(f => f.baseId).forEach(order => {
+      let spliceMark;
+      ordersSorted.forEach((os, index) => {
+        if(order.baseId === os.id) {
+          spliceMark = index + 1;
+        }
+      });
+      ordersSorted.splice(spliceMark, 0, order);
+    });
+    res.send(ordersSorted);
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
 };
 
 exports.getOrdersForMingbo = (req, res) => {
