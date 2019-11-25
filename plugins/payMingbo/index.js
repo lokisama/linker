@@ -417,6 +417,7 @@ const wechatNotify = async (data) => {
 
   let orderId = await knex('paymingbo').update({
     status: data.result_code,
+    trade_no: data.transaction_id,
     //alipayData: JSON.stringify(data),
     payCallBack: JSON.stringify(data),
   }).where({
@@ -447,6 +448,7 @@ const alipayNotify = async (data) => {
   }
   let orderId = await knex('paymingbo').update({
     status: data.trade_status,
+    trade_no: data.trade_no,
     //alipayData: JSON.stringify(data),
     payCallBack: JSON.stringify(data),
   }).where({
@@ -527,7 +529,7 @@ const orderListForMingbo = async (options = {}) => {
     'paymingbo.trade_no as trade_no',
     'paymingbo.status as status',
     'paymingbo.platform as platform',
-    'paymingbo.payCallback as payCallbak',
+    //'paymingbo.payCallback as payCallbak',
     'paymingbo.createTime',
     'paymingbo.expireTime',
   ])
