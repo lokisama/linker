@@ -449,6 +449,7 @@ const alipayNotify = async (data) => {
   let orderId = await knex('paymingbo').update({
     status: data.trade_status,
     trade_no: data.trade_no,
+
     //alipayData: JSON.stringify(data),
     payCallBack: JSON.stringify(data),
   }).where({
@@ -520,8 +521,10 @@ const orderListForMingbo = async (options = {}) => {
     'paymingbo.orderType',
     'user.id',
     'user.username as phone',
-    //'account_plugin.port',
+    'paymingbo.sku as sku',
+    'paymingbo.limit as limit',
     'paymingbo.giftcard',
+    'giftcard.mingboType as mingboType',
     'paymingbo.amount',
     'paymingbo.totalAmount',
     'paymingbo.method',
