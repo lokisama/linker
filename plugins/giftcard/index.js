@@ -127,7 +127,7 @@ const processOrderForMingboUser = async (userInfo, accountId, password) => {
 	return { success: true, data: result};
 };
 
-const processBind = async (userId, accountId, card) => {
+const processBind = async (userId, accountId, card, serverId="") => {
 	// const cardResult = await knex(dbTableName).whereIn({ password }).select();
 	// if (cardResult.length === 0) {
 	// 	return { success: false, message: '充值码不存在' };
@@ -138,13 +138,14 @@ const processBind = async (userId, accountId, card) => {
 	// }
 	await knex(dbTableName).where({ id: card.id }).update({
 		user: userId,
+		serverId: serverId,
 		usedTime: Date.now()
 	});
 	//return { success: true, data: { cardId: card.id , sku: card.sku, comment:card.comment , password: card.password, type:card.mingboType}};
-	return { success: true, cardId: card.id ,  password: card.password, status: card.status, type:card.mingboType,sku: card.sku,comment:card.comment };
+	return { success: true, cardId: card.id ,  password: card.password, status: card.status, type:card.mingboType, serverId:serverId, sku: card.sku,comment:card.comment };
 };
 
-const processBindAuto = async (userId, accountId, mingboType) => {
+const processBindAuto = async (userId, accountId, mingboType,serverId="") => {
 	
 	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
 	console.log(cardResult);
@@ -156,7 +157,7 @@ const processBindAuto = async (userId, accountId, mingboType) => {
 		return { success: false, message: '优惠券已赠送' };
 	}
 
-	const result = await processBind(userId, accountId, card);
+	const result = await processBind(userId, accountId, card ,serverId);
 
 	return result;
 };

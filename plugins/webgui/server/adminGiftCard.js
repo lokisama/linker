@@ -173,6 +173,7 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
     const userId = +req.body.userId;
     const phone = req.body.phone;
     const mingboType = req.body.type;
+    const serverId = req.body.serverId || "";
     const accountId = req.body.accountId ? +req.body.accountId : null;
     let userInfo;
 
@@ -182,7 +183,7 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
       userInfo = await user.getOne(userId);
     }
 
-    const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType);
+    const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType,serverId);
     return res.send(result);
   } catch (err) {
     logger.error(err);

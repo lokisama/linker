@@ -355,6 +355,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       };
 
       payParams = await wechat.app(config);
+      console.log(payParams);
       payParams = JSON.stringify(payParams);
     }
   }
