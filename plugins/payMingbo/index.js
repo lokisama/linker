@@ -438,10 +438,11 @@ const alipayNotify = async (data) => {
  * @param {Object} response 解析后的支付宝响应报文、支付宝支付结果通知报文
  * returns {boolean}
  */
-
+ /*console.log(data,data.sign);
   let ok = alipay.verify(data,data.sign);
+  console.log(ok);*/
 
-  if(!ok){
+  if(0){
     return {"success":false,"error":"签名校验失败"};
   }
   let orderId = await knex('paymingbo').update({
@@ -454,12 +455,7 @@ const alipayNotify = async (data) => {
     status: 'FINISH',
   }).then();
 
-  let info = await orderListForMingbo({"orderId":data.out_trade_no}).then(success => {
-    if(!success.length) {
-      return Promise.reject('settings not found');
-    }
-    return success[0];
-  });;
+  let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
   
   return {"success": true, "data": info };
   

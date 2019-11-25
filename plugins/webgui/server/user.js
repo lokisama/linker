@@ -368,7 +368,7 @@ exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   console.log(data);
   try{
-    const signStatus = await payMingboPlugin.alipayNotify(req.body);
+    const signStatus = await payMingboPlugin.alipayNotify(data);
     return res.send(signStatus);
   }catch(e){
     return res.send({"success": false ,"error":e});
