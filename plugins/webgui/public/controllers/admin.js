@@ -1,6 +1,6 @@
 const app = angular.module('app');
 
-app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state', '$http', '$document', '$interval', '$timeout', '$localStorage', 'configManager',
+app.controller('AdminGiftController', ['$scope', '$mdMedia', '$mdSidenav', '$state', '$http', '$document', '$interval', '$timeout', '$localStorage', 'configManager',
   ($scope, $mdMedia, $mdSidenav, $state, $http, $document, $interval, $timeout, $localStorage, configManager) => {
     const config = configManager.getConfig();
     if(config.status === 'normal') {
@@ -52,6 +52,15 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       icon: 'people',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+    }, {
+      name: '体验券券',
+      icon: 'people',
+      click: 'admin.pay',
+      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+    }, {
+      name: '统计',
+      icon: 'people',
+      click: 'admin.analysis'
     }, {
       name: '套餐配置',
       icon: 'settings',
@@ -348,7 +357,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         where:{},
         group: -1,
       };
-      
+
       $scope.filterPhone = "";
       $scope.filterPlatform = "";
       $scope.selectPlan  ="";
@@ -474,6 +483,21 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         filter: Object.keys($scope.orderFilter.filter).filter(f => $scope.orderFilter.filter[f]),
       });
     }, 'get_app');
+  }
+])
+
+.controller('AdminAnalysisController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
+  ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
+    $scope.setTitle('统计管理');
+    
+    const getPageSize = () => {
+      if($mdMedia('xs')) { return 30; }
+      if($mdMedia('sm')) { return 30; }
+      if($mdMedia('md')) { return 40; }
+      if($mdMedia('gt-md')) { return 50; }
+    };
+
+  
   }
 ]);
 

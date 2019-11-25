@@ -329,9 +329,9 @@ exports.createAppOrder = async (req, res) => {
     const card = req.body.card;
     const sku = req.body.sku;
     const limit = req.body.limit;
-    const playform = req.body.playform;
+    const platform = req.body.platform;
     const accountId = req.body.accountId ? +req.body.accountId : null;
-    const payMethod = req.body.method ? req.body.method : 'alipay';
+    //const method = req.body.method ? req.body.method : 'app';
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
@@ -341,7 +341,7 @@ exports.createAppOrder = async (req, res) => {
     if(sku == null || limit == null){
       return res.send({"success": false ,"error":"套餐信息不完整"});
     }
-
+    console.log();
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
       if(cardData.status === "USED"){
@@ -354,12 +354,13 @@ exports.createAppOrder = async (req, res) => {
       
     }
 
-    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, playform);
+    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, platform);
 
     return res.send(alipayOrder);
   } catch(err) {
     console.log(err);
-    res.status(403).end();
+    return res.send({"success":false,"message":err});
+    //res.status(403).end();
   }
 };
 
@@ -367,7 +368,18 @@ exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   console.log(data);
   try{
-    const signStatus = await payMingboPlugin.getNotifyFromMingbo(req.body);
+    const signStatus = await payMingboPlugin.alipayNotify(req.body);
+    return res.send(signStatus);
+  }catch(e){
+    return res.send({"success": false ,"error":e});
+  }
+  
+};
+
+exports.wechatCallbackMingbo = async (req, res) => {
+  const data = req.body;
+  try{
+    const signStatus = await payMingboPlugin.wechatNotify(data);
     return res.send(signStatus);
   }catch(e){
     return res.send({"success": false ,"error":e});

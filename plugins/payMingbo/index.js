@@ -178,13 +178,15 @@ const createOrder = async (user, account, orderId) => {
 
 const createOrderForMingboUser = async (user, account, sku, limit, card ,platform) => {
   const productInfo = await orderPlugin.getOneBySku(sku);
-  if(+productInfo.alipay <= 0) { return Promise.reject('amount error'); }
+  if(+productInfo.amount <= 0) { return Promise.reject('amount error'); }
 
+  console.log(Date.now() - orderExpire * 60 * 1000);
   const oldOrder = await knex('paymingbo')
-  .where('expireTime', '>', Date.now() - orderExpire * 600 * 1000)
+  .where('expireTime', '<', Date.now() - orderExpire * 60 * 1000)
   .where({
     user: user.id,
     sku: sku,
+    platform: platform,
     giftcard: card ? card.password : '',
     status: 'CREATE',
   })
@@ -331,7 +333,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   let method = 'app';
 
   if(totalAmount > 0){
-    
+    console.log(totalAmount,platform);
     if(platform == 'alipay'){
 
       const config = {
@@ -400,7 +402,37 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   };
 };
 
-const getNotifyFromMingbo = async (data) => {
+const wechatNotify = async (data) => {
+  /**
+ * 签名校验
+ * @param {Object} response 解析后的支付宝响应报文、支付宝支付结果通知报文
+ * returns {boolean}
+ */
+
+  /*let ok = wechat.verify(data,data.sign);
+
+  if(!ok){
+    return {"success":false,"error":"签名校验失败"};
+  }*/
+
+  let orderId = await knex('paymingbo').update({
+    status: data.result_code,
+    //alipayData: JSON.stringify(data),
+    payCallBack: JSON.stringify(data),
+  }).where({
+     orderId: data.out_trade_no
+  }).andWhereNot({
+    status: 'FINISH',
+  }).then();
+
+
+  let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
+  
+  return {"success": true, "data": info };
+  
+};
+
+const alipayNotify = async (data) => {
   /**
  * 签名校验
  * @param {Object} response 解析后的支付宝响应报文、支付宝支付结果通知报文
@@ -415,14 +447,14 @@ const getNotifyFromMingbo = async (data) => {
   let orderId = await knex('paymingbo').update({
     status: data.trade_status,
     //alipayData: JSON.stringify(data),
-    alipayCallBack: JSON.stringify(data),
+    payCallBack: JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
   }).andWhereNot({
     status: 'FINISH',
   }).then();
 
-  let info = await orderListForMingbo({orderId:orderId}).then(success => {
+  let info = await orderListForMingbo({"orderId":data.out_trade_no}).then(success => {
     if(!success.length) {
       return Promise.reject('settings not found');
     }
@@ -480,13 +512,23 @@ const orderListForMingbo = async (options = {}) => {
   if(options.userId) {
     where['user.id'] = options.userId;
   }
+
+  if(options.orderId) {
+    where['paymingbo.orderId'] = options.orderId;
+  }
+
   const orders = await knex('paymingbo').select([
     'paymingbo.orderId',
     'paymingbo.orderType',
-    'user.id as userId',
-    'user.username',
-    'account_plugin',
+    'user.id',
+    'user.username as phone',
+    //'account_plugin.port',
+    'paymingbo.giftcard',
     'paymingbo.amount',
+    'paymingbo.totalAmount',
+    'paymingbo.method',
+    'paymingbo.platform as platform',
+    'paymingbo.trade_no as trade_no',
     'paymingbo.status as status',
     'paymingbo.platform as platform',
     'paymingbo.payCallback as payCallbak',
@@ -498,9 +540,12 @@ const orderListForMingbo = async (options = {}) => {
   .leftJoin('giftcard', 'giftcard.password', 'paymingbo.giftcard')
   .where(where)
   .orderBy('paymingbo.createTime', 'DESC');
-  orders.forEach(f => {
+  
+
+  /*orders.forEach(f => {
     f.payCallback = JSON.parse(f.payCallback);
-  });
+  });*/
+
   return orders;
 };
 
@@ -726,5 +771,6 @@ exports.refund = refund;
 
 exports.createOrderForMingboUser = createOrderForMingboUser;
 exports.createAppOrder = createAppOrder;
-exports.getNotifyFromMingbo = getNotifyFromMingbo;
+exports.alipayNotify = alipayNotify;
+exports.wechatNotify = wechatNotify;
 exports.youtube = youtube;
