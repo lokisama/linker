@@ -278,16 +278,45 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       };
     }
 
+    $scope.orderStatusEnum = {
+      "0":"已冻结",
+      "1":"生效中",
+      "2":"已到期",
+      "-1":"异常"
+    };
+
+    $scope.orderModeEnum = {
+      "charge":"充值",
+      "recharge":"续费",
+      "update":"升级",
+      "free":"体验"
+    };
+
+    $scope.payStatusEnum = {
+      "CREATE":"创建",
+      "WAIT_BUYER_PAY":"等待",
+      "TRADE_SUCCESS":"成功",
+      "FINISH":"完成",
+      "TRADE_CLOSED":"关闭"
+    };
+
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
 
+    $scope.selectOrderMode = $scope.orderFilter.where.hasOwnProperty("orderMode")? $scope.orderFilter.where["orderMode"] : "";;
+    $scope.orderModeGroup = Object.keys($scope.orderModeEnum);
+
+    $scope.selectOrderStatus = $scope.orderFilter.where.hasOwnProperty("orderStatus")? $scope.orderFilter.where["orderStatus"] : "";;
+    $scope.orderStatusGroup = Object.keys($scope.orderStatusEnum);
+
     $scope.selectStatus = [];
-    $scope.statusGroup = ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"];
+    $scope.statusGroup = Object.keys($scope.payStatusEnum);
 
     $scope.filterPhone = $scope.orderFilter.where.hasOwnProperty("user.username")? $scope.orderFilter.where["user.username"] : "";
-    $scope.filterPlatform = $scope.orderFilter.where.hasOwnProperty("platform")? $scope.orderFilter.where["platform"] : "all";
+    
+    $scope.filterPlatform = $scope.orderFilter.where.hasOwnProperty("platform")? $scope.orderFilter.where["platform"] : "";
     $scope.platformGroup = ["alipay","wechat"];
 
-    $scope.selectPlan = {};
+    $scope.selectPlan = $scope.orderFilter.where.hasOwnProperty("webgui_order.sku")? $scope.orderFilter.where["webgui_order.sku"] : "";
     $scope.planGroup = [];
     adminApi.getPlans().then(success=>{
       console.log(success);
@@ -304,10 +333,38 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       if($mdMedia('md')) { return 40; }
       if($mdMedia('gt-md')) { return 50; }
     };
+
+    $scope.searchByUsername = username =>{
+      $scope.filterPhone = username;
+      $scope.getOrders();
+    }
+
+    $scope.resetSearch = ()=>{
+
+      $localStorage.admin.orderFilterSettings = {
+        filter: ["CREATE","WAIT_BUYER_PAY","TRADE_SUCCESS","FINISH","TRADE_CLOSED"],
+        start:new Date(Date.now() - 3600000 * 24 * 7),
+        end: new Date(Date.now()),
+        where:{},
+        group: -1,
+      };
+      
+      $scope.filterPhone = "";
+      $scope.filterPlatform = "";
+      $scope.selectPlan  ="";
+      $scope.selectOrderMode = "";
+      $scope.selectOrderStatus = "";
+
+      $scope.getOrders();
+    }
+
     $scope.getOrders = search => {
-      $scope.orderFilter.where["user.username"] = $scope.filterPhone;
-      $scope.orderFilter.where["platform"] = $scope.filterPlatform;
-      $scope.orderFilter.where["sku"] = $scope.selectPlan.sku;
+
+      $scope.orderFilter.where["user.username"] = $scope.filterPhone?$scope.filterPhone:"";
+      $scope.orderFilter.where["platform"] = $scope.filterPlatform?$scope.filterPlatform:"";
+      $scope.orderFilter.where["webgui_order.sku"] = $scope.selectPlan?$scope.selectPlan:"";
+      $scope.orderFilter.where["orderMode"] = $scope.selectOrderMode?$scope.selectOrderMode:"";
+      $scope.orderFilter.where["orderStatus"] = $scope.selectOrderStatus?$scope.selectOrderStatus:"";
 
       if(!$scope.payTypes.length) { return; }
       const oldTabSwitchTime = tabSwitchTime;
@@ -335,6 +392,31 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         success.orders.forEach(f => {
           $scope.orders.push(f);
         });
+
+        if($scope.filterPhone != "" && success.orders.length > 0){
+          $scope.expireGroup = {};
+          $scope.expire = 0;
+          let count = $scope.orders.filter(o=> o.status == "TRADE_SUCCESS" || o.status == "FINISH").map(o=>{
+            if(!$scope.expireGroup[o.sku]) $scope.expireGroup[o.sku] = 0;
+            if(o.orderActiveTime) $scope.expire = o.orderActiveTime;
+            $scope.expireGroup[o.sku] +=  o.cycle;
+          })
+
+          console.log("$scope.expireGroup",$scope.expireGroup);
+
+          Object.keys($scope.expireGroup).map(o=>{
+            
+            if(o.indexOf("monthly")){
+
+              var dt = new Date();
+              var newDt = dt.setMonth( dt.getMonth()+ $scope.expireGroup[o] );//.getTime();
+              console.log(newDt - new Date().getTime());
+              $scope.expire += (newDt - new Date().getTime());
+            }
+          })
+
+          console.log("$scope.expire",$scope.expire);
+        }
         if(success.maxPage > $scope.currentPage) {
           $scope.currentPage++;
         } else {

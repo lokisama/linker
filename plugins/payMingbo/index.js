@@ -195,8 +195,7 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
   const method = "app";
   
   if(oldOrder) {
-    if( platform == "alipay"){
-      return {
+    return {
         orderId:oldOrder.orderId,
         amount:oldOrder.amount,
         totalAmount:oldOrder.totalAmount,
@@ -208,20 +207,6 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
         platform: platform,
         payParams: oldOrder.payParams
       };
-    }else if( platform == "wechat"){
-      return {
-        orderId:oldOrder.orderId,
-        amount:oldOrder.amount,
-        totalAmount:oldOrder.totalAmount,
-        sku: oldOrder.sku,
-        plan: productInfo.name,
-        user: user.username,
-        gitcard: oldOrder.giftcard,
-        method: method,
-        platform: platform,
-        payParams: oldOrder.payParams
-      };
-    }
   }
   
   const groupInfo = await groupPlugin.getOneGroup(user.group);
@@ -536,7 +521,8 @@ const orderListAndPaging = async (options = {}) => {
     'paymingbo.orderId',
     'paymingbo.orderType',
     'webgui_order.name as orderName',
-    'webgui_order.sku as sku',
+    'webgui_order.sku',
+    'webgui_order.cycle',
     'webgui_order.shortComment as orderShortName',
     'giftcard.comment as comment',
     'giftcard.cutPrice',
@@ -556,11 +542,15 @@ const orderListAndPaging = async (options = {}) => {
     'paymingbo.payParams',
     'paymingbo.createTime',
     'paymingbo.expireTime',
+    'paymingbo.orderStatus as orderStatus',
+    'paymingbo.orderMode as orderMode',
+    'paymingbo.orderActiveTime as orderActiveTime',
+    'paymingbo.limit',
   ];
   let count = knex('paymingbo').select()
   .leftJoin('user', 'user.id', 'paymingbo.user')
   //.leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
-  //.leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
   //.leftJoin('giftcard','giftcard.password','paymingbo.giftcard')
   .whereBetween('paymingbo.createTime', [start, end]);
 

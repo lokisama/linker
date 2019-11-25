@@ -35,7 +35,7 @@
             <md-input-container layout="row"  layout-align="center center">
             
               <md-select multiple ng-model="selectStatus" placeholder="交易状态" flex>
-                <md-option ng-value="s" ng-repeat="s in statusGroup">{{s}}</md-option>
+                <md-option ng-value="o" ng-repeat="o in statusGroup">{{ payStatusEnum[o]}}</md-option>
               </md-select>
 
             </md-input-container>
@@ -48,8 +48,8 @@
             
             <md-input-container layout="row"  layout-align="center center">
               <md-select ng-model="selectPlan" placeholder="商品名称" flex>
-                <md-option ng-value="">all</md-option>
-                <md-option ng-value="plan" ng-repeat="plan in planGroup">{{ plan.name }}<span style="font-size: 0.8em">[{{ plan.shortComment }}]</span></md-option>
+                <md-option ng-value="">全部</md-option>
+                <md-option ng-value="o.sku" ng-repeat="o in planGroup">{{ o.name }}</md-option>
               </md-select>
             </md-input-container>
 
@@ -58,8 +58,9 @@
         <div flex  layout-margin="">
             
             <md-input-container layout="row"  layout-align="center center">
-              <md-select ng-model="someModel" placeholder="类型" flex>
-                <md-option ng-value="pt" ng-repeat="pt in payTypes">{{ pt }}</md-option>
+              <md-select ng-model="selectOrderMode" placeholder="类型" flex>
+                <md-option ng-value="">全部</md-option>
+                <md-option ng-value="o" ng-repeat="o in orderModeGroup">{{ orderModeEnum[o] }}</md-option>
               </md-select>
             </md-input-container>
 
@@ -68,8 +69,9 @@
         <div flex  layout-margin="">
             
             <md-input-container layout="row"  layout-align="center center">
-              <md-select ng-model="someModel" placeholder="商品状态" flex>
-                <md-option ng-value="opt" ng-repeat="opt in neighborhoods2">{{ opt }}</md-option>
+              <md-select ng-model="selectOrderStatus" placeholder="商品状态" flex>
+                <md-option ng-value="">全部</md-option>
+                <md-option ng-value="o" ng-repeat="o in orderStatusGroup">{{ orderStatusEnum[o] }}</md-option>
               </md-select>
             </md-input-container>
 
@@ -80,8 +82,8 @@
             <md-input-container layout="row" layout-align="center center">
               <md-select ng-model="filterPlatform" placeholder="支付平台" flex>
 
-                <md-option ng-value="">all</md-option>
-                <md-option ng-value="opt" ng-repeat="opt in platformGroup">{{ opt }}</md-option>
+                <md-option ng-value="">全部</md-option>
+                <md-option ng-value="o" ng-repeat="o in platformGroup">{{ o }}</md-option>
               </md-select>
             </md-input-container>
 
@@ -89,9 +91,17 @@
 
         <div flex  layout="row"  layout-align="center center" style="min-width:270px;">
             <md-button class="md-primary md-raised" ng-click="getOrders()">查询</md-button>
-            <md-button class="md-primary md-raised" ng-click="getOrders()">重置 </md-button>
+            <md-button class="md-primary md-raised" ng-click="resetSearch()">重置 </md-button>
         </div>
     </div>
+</md-card>
+
+<md-card>
+<div layout="row" layout-padding="" ng-if=" filterPhone != '' ">
+    <span ng-if="orders.length === 0 ">该用户VIP状态为：免费用户</span>
+    <span ng-if="orders.length > 0">该用户VIP状态为：{{ orders[0].orderShortName}}</span> 
+    <span>剩余{{expire | timeago }}</span>
+</div>
 </md-card>
 
 <div ng-if="orders.length === 0 && !isOrderLoading" class="zero-element">没有订单</div>
@@ -100,10 +110,10 @@
         <md-list>
             <md-list-item>
                 <div flex layout="row" layout-align="space-between center" style="text-align:center;font-size:0.8em">
-                    <div flex="30" flex-xs="60">
+                    <div flex="30" flex-xs="60" style="min-width:100px;">
                     充值账号
                     </div>
-                    <div flex="30" flex-xs="60">
+                    <div flex="30" flex-xs="60" style="min-width:80px;">
                     商品名称
                     </div>
                     <div flex="30" flex-xs="60">
@@ -127,7 +137,7 @@
                     <div flex="30" flex-xs="60">
                     支付平台
                     </div>
-                    <div flex="30" flex-xs="60">
+                    <div flex="30" flex-xs="60" style="min-width:158px;">
                     支付订单
                     </div>
                     <div flex="30" flex-xs="60">
@@ -138,18 +148,18 @@
             <md-divider></md-divider>
             <md-list-item ng-repeat="order in orders track by $index">
                 
-                <div flex layout="row" layout-align="space-between center" ng-click="showOrderInfo(order)" style="text-align:center;font-size:0.8em">
-                    <div flex="30" flex-xs="60" >
+                <div flex layout="row" layout-align="space-between center"  style="text-align:center;font-size:0.8em">
+                    <div flex="30" flex-xs="60" style="min-width:100px;" ng-click="searchByUsername(order.username)">
                         <span >{{order.username}}</span>
                         <!-- <span hide-gt-sm>
                             <span style="font-size: 0.9em;">{{ order.orderId }}</span><br><span style="font-size: 0.9em;">{{ order.createTime | timeago }}</span>
                         </span> -->
                     </div>
-                    <div flex="30" flex-xs="60">
-                        {{order.orderName}}<span style="font-size: 0.8em">[{{ order.orderShortName }}]</span>
+                    <div flex="30" flex-xs="60" style="min-width:80px;">
+                        {{order.orderName}}
                     </div>
                     <div flex="30" flex-xs="60">
-                        <span>{{order.giftcard? ( order.cutPrice==0 ? '体验券':'支付+打折券') :   '支付'}}</span>
+                        <span>{{ orderModeEnum[order.orderMode] }}</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         <span ng-if="order.cutPrice>0">{{order.cutPrice/10}}折</span>
@@ -166,8 +176,7 @@
                         </div>
                     </div>
                     <div flex="30" flex-xs="60"">
-                        <span ng-if="order.status=='TRADE_SUCCESS'" style="color:green;">生效中</span>
-                        <span ng-if="order.status=='CREATE'" style="color:red;">异常</span>
+                        {{ orderStatusEnum[order.orderStatus] }}
                     </div>
                     <div flex="30" flex-xs="60" style="text-align:center;font-size: 0.6em;">
                         <span >{{order.createTime | date : 'MM-dd HH:mm'}}</span>
@@ -180,7 +189,7 @@
                         </div>
                     </div>
                     <div flex="30" flex-xs="60">
-                        <span alt="{{order.trade_no}}"style="text-align:center;font-size: 0.6em;width:50px;margin:0 auto;overflow: hidden;display:block;">{{order.trade_no}}</span>
+                        <span alt="{{order.trade_no}}" style="text-align:center;font-size: 0.6em;min-width:158px;display:block;">{{order.trade_no}}</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         {{order.orderId.substr(12,6)}}
