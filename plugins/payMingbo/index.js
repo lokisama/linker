@@ -713,16 +713,23 @@ const getCsvOrder = async (options = {}) => {
 const getUserFinishOrder = async userId => {
   let orders = await knex('paymingbo').select([
     'orderId',
+    'trade_no',
+    'giftcard',
+    'totalAmount',
     'amount',
+    'orderMode',
+    'orderStatus',
     'createTime',
-  ]).where({
+  ])
+  .leftJoin('user', 'user.id', 'alipay.user')
+  .where({
     user: userId,
     //status: 'FINISH',
   }).orderBy('createTime', 'DESC');
   orders = orders.map(order => {
     return {
       orderId: order.orderId,
-      type: '支付宝',
+      //type: '支付宝',
       amount: order.amount,
       createTime: order.createTime,
     };

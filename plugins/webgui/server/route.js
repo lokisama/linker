@@ -249,6 +249,7 @@ app.get('/api/mingbo/user/order', isUser, user.getOrder);
 app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
 app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
+app.get('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
 app.post('/api/mingbo/ytb/get', user.youtube);
 
 

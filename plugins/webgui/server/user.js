@@ -860,13 +860,13 @@ exports.getOrderForMingbo = async (req, res) => {
       orders = [...orders, ...alipayOrders];
     }
 
-    const refOrders = await refOrder.getUserFinishOrder(userId);
-    orders = [...orders, ...refOrders];
+    // const refOrders = await refOrder.getUserFinishOrder(userId);
+    // orders = [...orders, ...refOrders];
 
-    if(config.plugins.giftcard && config.plugins.giftcard.use) {
-      const giftCardOrders = await giftcard.getUserFinishOrder(userId);
-      orders = [...orders, ...giftCardOrders];
-    }
+    // if(config.plugins.giftcard && config.plugins.giftcard.use) {
+    //   const giftCardOrders = await giftcard.getUserFinishOrder(userId);
+    //   orders = [...orders, ...giftCardOrders];
+    // }
 
     orders = orders.sort((a, b) => {
       return b.createTime - a.createTime;

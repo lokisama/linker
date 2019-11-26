@@ -1,6 +1,6 @@
 const app = angular.module('app');
 
-app.controller('AdminGiftController', ['$scope', '$mdMedia', '$mdSidenav', '$state', '$http', '$document', '$interval', '$timeout', '$localStorage', 'configManager',
+app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state', '$http', '$document', '$interval', '$timeout', '$localStorage', 'configManager',
   ($scope, $mdMedia, $mdSidenav, $state, $http, $document, $interval, $timeout, $localStorage, configManager) => {
     const config = configManager.getConfig();
     if(config.status === 'normal') {
@@ -484,22 +484,22 @@ app.controller('AdminGiftController', ['$scope', '$mdMedia', '$mdSidenav', '$sta
       });
     }, 'get_app');
   }
-])
+]);
 
-.controller('AdminAnalysisController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
-  ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
-    $scope.setTitle('统计管理');
+// .controller('AdminAnalysisController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
+//   ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
+//     $scope.setTitle('统计管理');
     
-    const getPageSize = () => {
-      if($mdMedia('xs')) { return 30; }
-      if($mdMedia('sm')) { return 30; }
-      if($mdMedia('md')) { return 40; }
-      if($mdMedia('gt-md')) { return 50; }
-    };
+//     const getPageSize = () => {
+//       if($mdMedia('xs')) { return 30; }
+//       if($mdMedia('sm')) { return 30; }
+//       if($mdMedia('md')) { return 40; }
+//       if($mdMedia('gt-md')) { return 50; }
+//     };
 
   
-  }
-]);
+//   }
+// ]);
 
 
 
