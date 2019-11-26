@@ -418,7 +418,6 @@ const wechatNotify = async (data) => {
   let orderId = await knex('paymingbo').update({
     status: data.result_code,
     trade_no: data.transaction_id,
-    //alipayData: JSON.stringify(data),
     payCallBack: JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
@@ -428,8 +427,12 @@ const wechatNotify = async (data) => {
 
 
   let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
+  if(info.length > 0){
+    return {"success": true, "data": info[0] };
+  }else{
+    return {"success": false, "message": "out_trade_no异常" };
+  }
   
-  return {"success": true, "data": info };
   
 };
 
@@ -449,8 +452,6 @@ const alipayNotify = async (data) => {
   let orderId = await knex('paymingbo').update({
     status: data.trade_status,
     trade_no: data.trade_no,
-
-    //alipayData: JSON.stringify(data),
     payCallBack: JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
@@ -459,8 +460,11 @@ const alipayNotify = async (data) => {
   }).then();
 
   let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
-  
-  return {"success": true, "data": info };
+  if(info.length > 0){
+    return {"success": true, "data": info[0] };
+  }else{
+    return {"success": false, "message": "out_trade_no异常" };
+  }
   
 };
 
