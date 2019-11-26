@@ -236,8 +236,8 @@ app.get('/api/user/order', isUser, user.getOrder);
 /*
  Mingbo API
  */
-app.post('/api/mingbo/giftcard/send', isAdmin, isSuperAdmin, adminGiftCard.sendGiftCardForMingboUser);
-app.post('/api/mingbo/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGiftCardForMingboUser);
+app.post('/api/mingbo/giftcard/send', /*isAdmin, isSuperAdmin,*/ adminGiftCard.sendGiftCardForMingboUser);
+app.post('/api/mingbo/giftcard/use', /*isAdmin, isSuperAdmin, */ adminGiftCard.useGiftCardForMingboUser);
 app.post('/api/mingbo/giftcard/search', isAdmin, isSuperAdmin, adminGiftCard.searchGiftcard);
 app.post('/api/mingbo/orders', isAdmin, admin.getOrdersForMingbo);
 app.get('/api/mingbo/plans',isAdmin, isSuperAdmin, admin.getPlans);

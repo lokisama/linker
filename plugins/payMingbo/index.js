@@ -110,8 +110,7 @@ const wxConfig = {
   return_url: 'http://cloud.mingbonetwork.com/api/system/wechat', // 跳转地址
   //pfx: fs.readFileSync('<location-of-your-apiclient-cert.p12>') // 可选, 退款等情况时需要用到
 }
-const wechat = cnPay.wechat(wxConfig)
-
+const wechat = cnPay.wechat(wxConfig);
 
 const isTelegram = config.plugins.webgui_telegram && config.plugins.webgui_telegram.use;
 let telegram;

@@ -128,14 +128,44 @@ exports.useGiftCardForMingboUser = async (req, res) => {
     const password = req.body.password;
     const accountId = req.body.accountId ? +req.body.accountId : null;
     let userInfo;
-    if(!userId && phone){
-      userInfo = await user.getOneUserByPhone(phone);
-    }else if(userId && !phone){
-      userInfo = await user.getOne(userId);
-    }
+    // if(!userId && phone){
+    //   userInfo = await user.getOneUserByPhone(phone);
+    // }else if(userId && !phone){
+    //   userInfo = await user.getOne(userId);
+    // }
+    // 
+    if(phone){
 
-    if(userInfo == null){
-      return res.send({"succuss": false,"error":"用户不存在"});
+      try{
+        const phone = req.body.phone.toString();
+        const password = "123456";
+        const result = await user.checkPassword(phone, password);
+        logger.info(`[${ req.body.phone }] login success`);
+      }catch(e){
+        const webguiSetting = await knex('webguiSetting').select().where({
+          key: 'account',
+        }).then(success => JSON.parse(success[0].value));
+        if(webguiSetting.defaultGroup) {
+          try {
+            await groupPlugin.getOneGroup(webguiSetting.defaultGroup);
+            group = webguiSetting.defaultGroup;
+          } catch(err) {}
+        }
+        const [ userId ] = await user.add({
+          username: phone,
+          phone,
+          password,
+          type,
+          group,
+        });
+
+        userInfo = await user.getOneUserByPhone(phone);
+        
+        logger.info(`[${ req.body.phone }] signup and login success`);
+        return;
+      } 
+    }else {
+      return res.send({"succuss": false,"error":"缺少字段 phone"});
     }
 
     const result = await giftcard.processOrderForMingboUser(userInfo,accountId,password);
@@ -177,14 +207,45 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
     const accountId = req.body.accountId ? +req.body.accountId : null;
     let userInfo;
 
-    if(!userId && phone){
-      userInfo = await user.getOneUserByPhone(phone);
-    }else if(userId && !phone){
-      userInfo = await user.getOne(userId);
-    }
+    if(phone){
+      const phone = req.body.phone.toString();
+      const password = "123456";
+      const type="normal";
+      let group=0;
+      try{
+       
+        const result = await user.checkPassword(phone, password);
+        userInfo = await user.getOneUserByPhone(phone);
 
-    const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType,serverId);
-    return res.send(result);
+      }catch(e){
+        const webguiSetting = await knex('webguiSetting').select().where({
+          key: 'account',
+        }).then(success => JSON.parse(success[0].value));
+        if(webguiSetting.defaultGroup) {
+          try {
+            await groupPlugin.getOneGroup(webguiSetting.defaultGroup);
+            group = webguiSetting.defaultGroup;
+          } catch(err) {}
+        }
+        const [ userId ] = await user.add({
+          username: phone,
+          phone,
+          password,
+          type,
+          group,
+        });
+
+        userInfo = await user.getOneUserByPhone(phone);
+        
+        logger.info(`[${ req.body.phone }] signup success`);
+      } 
+      const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType,serverId);
+      logger.info(`[${ req.body.phone }] send card success`);
+      return res.send(result);
+    }else {
+      return res.send({"succuss": false,"error":"缺少字段 phone"});
+    }
+    
   } catch (err) {
     logger.error(err);
     return res.send({"succuss": false,"message":err});

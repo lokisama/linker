@@ -146,16 +146,18 @@ const processBind = async (userId, accountId, card, serverId="") => {
 };
 
 const processBindAuto = async (userId, accountId, mingboType,serverId="") => {
-	
+
+	const hasServerId = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,serverId }).select();
+	if (hasServerId.length > 0) {
+		return { success: false, message: '已存在serverId' };
+	}
+
 	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
-	console.log(cardResult);
 	if (cardResult.length === 0) {
-		return { success: false, message: '优惠券type不存在或已用完，请联系lynca' };
+		return { success: false, message: '该type优惠券已发完，请联系lynca' };
 	}
+
 	const card = cardResult[0];
-	if (card.status !== cardStatusEnum.available && card.user !== null) {
-		return { success: false, message: '优惠券已赠送' };
-	}
 
 	const result = await processBind(userId, accountId, card ,serverId);
 
