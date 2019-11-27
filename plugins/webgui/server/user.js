@@ -321,7 +321,7 @@ exports.getGiftcards = async (req, res) =>{
       }else{
         after = page+1;
       }
-
+      console.log(giftcards.length,after,giftcards);
       return res.send({"status": 1 ,"count" : giftcards.length , "after": after ,"data": giftcards ,"success": true  });
 
     }catch(e){
