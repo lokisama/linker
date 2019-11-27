@@ -303,14 +303,31 @@ exports.alipayCallback = (req, res) => {
 exports.getGiftcards = async (req, res) =>{
     const userId = req.session.user;
     const status = req.body.status;
+    const page = req.body.page || 1;
+    const size = req.body.size || 3;
+    let after = -1;
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
-      return res.send({"success": false ,"error":"用户不存在"});
+      return res.send({"status": -1,"success": false ,"error":"用户不存在"});
     }
 
-    const giftcards = await giftcard.searchGiftcard(userId, status);
-    return res.send({"success": true ,"data": giftcards });
+    try{
+      const total = await giftcard.searchGiftcardTotal(userId, status);
+      const giftcards = await giftcard.searchGiftcard(userId, status, page, size);
+      
+      if( (page-1) * size + giftcards.length >= total ){
+        after = -1;
+      }else{
+        after = page+1;
+      }
+
+      return res.send({"status": 1 ,"count" : giftcards.length , "after": after ,"data": giftcards ,"success": true  });
+
+    }catch(e){
+
+      return res.send({ "status": -1 ,"error":e,"success": false});
+    }
 }
 
 exports.useGiftcard = async (req, res) =>{

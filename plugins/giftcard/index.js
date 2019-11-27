@@ -164,13 +164,13 @@ const processBindAuto = async (userId, accountId, mingboType,serverId="") => {
 	return result;
 };
 
-const searchGiftcard = async (userId,status = null) =>{
+const searchGiftcard = async (userId, status = null, page=1, size=100) =>{
 
 	let cardResult;
 	if(status == null){
-		cardResult= await knex(dbTableName).where({ user:userId }).select();
+		cardResult = await knex(dbTableName).where({ user:userId }).select().limit(size).offset( (page -1)*size);
 	}else{
-		cardResult= await knex(dbTableName).where({ user:userId,status: status }).select();
+		cardResult = await knex(dbTableName).where({ user:userId,status: status }).limit(size).offset( (page-1)*size);
 	}
 	
 	const data = cardResult.map(o =>{
@@ -186,7 +186,19 @@ const searchGiftcard = async (userId,status = null) =>{
 		}
 	});
 
-	return { success: true, data: data};
+	return data;
+}
+
+const searchGiftcardTotal = async (userId, status = null) =>{
+
+	let result;
+	if(status == null){
+		result = (await knex(dbTableName).count('* as cnt').where({ user:userId }))[0].cnt;
+	}else{
+		result = (await knex(dbTableName).count('* as cnt').where({ user:userId, status }))[0].cnt;;
+	}
+
+	return result;
 }
 
 const orderListAndPaging = async (options = {}) => {
@@ -419,5 +431,6 @@ exports.processBind = processBind;
 exports.processBindAuto = processBindAuto;
 exports.processOrderForMingboUser = processOrderForMingboUser;
 exports.searchGiftcard = searchGiftcard;
+exports.searchGiftcardTotal = searchGiftcardTotal;
 exports.getOneByPassword = getOneByPassword;
 exports.setCardFinish = setCardFinish;

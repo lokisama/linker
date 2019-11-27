@@ -337,7 +337,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
 
       const config = {
         out_trade_no: myOrderId,
-        total_amount: totalAmount.toFixed(2),
+        total_amount: "1.00",//totalAmount.toFixed(2),
         subject: product.name,
         body: product.comment,
         timeout: orderExpire+'m',

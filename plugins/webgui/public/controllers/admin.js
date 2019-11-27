@@ -44,22 +44,22 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     //   click: 'admin.account',
     // }, {
       name: '支付记录',
-      icon: 'attach_money',
+      icon: 'payment',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '优惠券',
-      icon: 'people',
+      icon: 'money',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
-      name: '体验券券',
-      icon: 'people',
+      name: '体验券',
+      icon: 'local_play',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '统计',
-      icon: 'people',
+      icon: 'money',
       click: 'admin.analysis'
     }, {
       name: '套餐配置',
@@ -484,22 +484,31 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       });
     }, 'get_app');
   }
-]);
-
-// .controller('AdminAnalysisController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
-//   ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
-//     $scope.setTitle('统计管理');
+])
+.controller('AdminAnalysisController', ['$scope', 'adminApi', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
+  ($scope, adminApi, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
+    $scope.setTitle('统计管理');
     
-//     const getPageSize = () => {
-//       if($mdMedia('xs')) { return 30; }
-//       if($mdMedia('sm')) { return 30; }
-//       if($mdMedia('md')) { return 40; }
-//       if($mdMedia('gt-md')) { return 50; }
-//     };
+    const getPageSize = () => {
+      if($mdMedia('xs')) { return 30; }
+      if($mdMedia('sm')) { return 30; }
+      if($mdMedia('md')) { return 40; }
+      if($mdMedia('gt-md')) { return 50; }
+    };
 
+    $scope.orderFilter = {
+      start:new Date().setMonth(new Date().getMonth -1).getTime(),
+      end: new Date(Date.now()),
+    }
+
+
+    $scope.totalAmount = 0;
+    $scope.totalTransfer = 0;
+    $scope.PaidUsers = 0;
+    $scope.PaidTimes = 0;
   
-//   }
-// ]);
+  }
+]);
 
 
 
