@@ -309,13 +309,13 @@ exports.getGiftcards = async (req, res) =>{
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
-      return res.send({"status": -1,"success": false ,"error":"用户不存在"});
+      return res.send({"status": -1 , "success": false ,"error":"用户不存在"});
     }
 
     try{
       const total = await giftcard.searchGiftcardTotal(userId, status);
       const giftcards = await giftcard.searchGiftcard(userId, status, page, size);
-      
+      console.log(size,page,after,total);
       if( (page-1) * size + giftcards.length >= total ){
         after = -1;
       }else{
