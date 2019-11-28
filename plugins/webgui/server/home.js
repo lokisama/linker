@@ -308,7 +308,7 @@ exports.login = async (req, res) => {
       }
       const [ userId ] = await user.add({
         username: phone,
-        phone,
+        phone: phone,
         password,
         type,
         group,
@@ -324,6 +324,7 @@ exports.login = async (req, res) => {
       logger.info(`[${ req.body.phone }] signup and login success`);
       return;
     }
+
     logger.error(`User[${ req.body.email }] login fail: ${ err }`);
     if(errorData.indexOf(err) < 0) {
       return res.status(500).end();
