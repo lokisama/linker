@@ -445,7 +445,7 @@ exports.getOrdersForMingbo = (req, res) => {
   options.pageSize = +req.body.pageSize || 20;
   options.search = req.body.search || '';
   options.where = req.body.where || {};
-  options.sort = req.body.sort || 'paymingbo.createTime_desc';
+  options.sort = req.body.sort || 'pay.createTime_desc';
   options.start = req.body.start;
   options.end = req.body.end;
   

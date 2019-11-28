@@ -1,5 +1,5 @@
 const log4js = require('log4js');
-const logger = log4js.getLogger('mingboPay');
+const logger = log4js.getLogger('pay');
 const cron = appRequire('init/cron');
 const config = appRequire('services/config').all();
 const fs = require('fs');
@@ -124,7 +124,7 @@ const moment = require('moment');
 const push = appRequire('plugins/webgui/server/push');
 
 const createOrder = async (user, account, orderId) => {
-  const oldOrder = await knex('paymingbo').where({
+  const oldOrder = await knex('pay').where({
     user,
     account: account ? account : null,
     orderType: orderId
@@ -157,7 +157,7 @@ const createOrder = async (user, account, orderId) => {
   //   body: orderInfo.name || 'ss续费',
   //   timeExpress: 10,
   // });
-  await knex('paymingbo').insert({
+  await knex('pay').insert({
     orderId: myOrderId,
     orderType: orderId,
     //qrcode: qrCode.qr_code,
@@ -180,7 +180,7 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
   if(+productInfo.amount <= 0) { return Promise.reject('amount error'); }
 
   console.log(Date.now() - orderExpire * 60 * 1000);
-  const oldOrder = await knex('paymingbo')
+  const oldOrder = await knex('pay')
   .where('expireTime', '<', Date.now() - orderExpire * 60 * 1000)
   .where({
     user: user.id,
@@ -258,13 +258,13 @@ const sendSuccessMail = async userId => {
 cron.minute(async () => {
   logger.info('check alipay order');
  //if(!alipay_f2f) { return; }
-  const orders = await knex('paymingbo').select().whereNotBetween('expireTime', [0, Date.now()]);
+  const orders = await knex('pay').select().whereNotBetween('expireTime', [0, Date.now()]);
   const scanOrder = order => {
     logger.info(`order: [${ order.orderId }]`);
     // if(order.status !== 'TRADE_SUCCESS' && order.status !== 'FINISH') {
     //   return alipay_f2f.checkInvoiceStatus(order.orderId).then(success => {
     //     if(success.code === '10000') {
-    //       return knex('paymingbo').update({
+    //       return knex('pay').update({
     //         status: success.trade_status
     //       }).where({
     //         orderId: order.orderId,
@@ -280,7 +280,7 @@ cron.minute(async () => {
     //   isTelegram && telegram.push(`订单[ ${ order.orderId } ][ ${ order.amount } ]支付成功`);
     //   return account.setAccountLimit(userId, accountId, order.orderType)
     //   .then(() => {
-    //     return knex('paymingbo').update({
+    //     return knex('pay').update({
     //       status: 'FINISH',
     //     }).where({
     //       orderId: order.orderId,
@@ -300,7 +300,7 @@ cron.minute(async () => {
 }, 'CheckPayMingboOrder', 1);
 
 const checkOrder = async (orderId) => {
-  const order = await knex('paymingbo').select().where({
+  const order = await knex('pay').select().where({
     orderId,
   }).then(success => {
     if(success.length) {
@@ -349,7 +349,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       const config = {
         out_trade_no: myOrderId,
         body: product.name,//product.name,
-        total_fee: 1,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
+        total_fee: 10,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
         spbill_create_ip: '180.165.231.68' // 客户端ip
       };
 
@@ -381,7 +381,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   };
   console.log(insert);
 
-  let order = await knex('paymingbo').insert(insert);
+  let order = await knex('pay').insert(insert);
 
   if(card){
     await knex('giftcard').update({orderId: myOrderId}).where({password:card.password});
@@ -414,11 +414,15 @@ const wechatNotify = async (data) => {
   if(!ok){
     return {"success":false,"error":"签名校验失败"};
   }*/
+  let resultEnum = {
+    "SUCCESS": "TRADE_SUCCESS",
+    "FAIL": "TRADE_CLOSED",
+  };
 
-  let orderId = await knex('paymingbo').update({
-    status: data.result_code,
-    trade_no: data.transaction_id,
-    payCallBack: JSON.stringify(data),
+  let orderId = await knex('pay').update({
+    "status": data.return_code == "SUCCESS"? resultEnum[data.result_code] : data.return_code,
+    "trade_no": data.return_code == "SUCCESS"? data.transaction_id : "",
+    "payCallBack": JSON.stringify(data),
   }).where({
      orderId: data.out_trade_no
   }).andWhereNot({
@@ -449,7 +453,7 @@ const alipayNotify = async (data) => {
   if(0){
     return {"success":false,"error":"签名校验失败"};
   }
-  let orderId = await knex('paymingbo').update({
+  let orderId = await knex('pay').update({
     status: data.trade_status,
     trade_no: data.trade_no,
     payCallBack: JSON.stringify(data),
@@ -471,7 +475,7 @@ const alipayNotify = async (data) => {
 const verifyCallback = (data) => {
   // const signStatus = alipay_f2f.verifyCallback(data);
   // if(signStatus) {
-  //   knex('paymingbo').update({
+  //   knex('pay').update({
   //     status: data.trade_status,
   //     alipayData: JSON.stringify(data),
   //   }).where({
@@ -488,7 +492,7 @@ const orderList = async (options = {}) => {
   if(options.userId) {
     where['user.id'] = options.userId;
   }
-  const orders = await knex('paymingbo').select([
+  const orders = await knex('pay').select([
     'alipay.orderId',
     'alipay.orderType',
     'user.id as userId',
@@ -517,34 +521,34 @@ const orderListForMingbo = async (options = {}) => {
   }
 
   if(options.orderId) {
-    where['paymingbo.orderId'] = options.orderId;
+    where['pay.orderId'] = options.orderId;
   }
 
-  const orders = await knex('paymingbo').select([
-    'paymingbo.orderId',
-    'paymingbo.orderType',
+  const orders = await knex('pay').select([
+    'pay.orderId',
+    'pay.orderType',
     'user.id',
     'user.username as phone',
-    'paymingbo.sku as sku',
-    'paymingbo.limit as limit',
-    'paymingbo.giftcard',
+    'pay.sku as sku',
+    'pay.limit as limit',
+    'pay.giftcard',
     'giftcard.mingboType as mingboType',
-    'paymingbo.amount',
-    'paymingbo.totalAmount',
-    'paymingbo.method',
-    'paymingbo.platform as platform',
-    'paymingbo.trade_no as trade_no',
-    'paymingbo.status as status',
-    'paymingbo.platform as platform',
-    //'paymingbo.payCallback as payCallbak',
-    'paymingbo.createTime',
-    'paymingbo.expireTime',
+    'pay.amount',
+    'pay.totalAmount',
+    'pay.method',
+    'pay.platform as platform',
+    'pay.trade_no as trade_no',
+    'pay.status as status',
+    'pay.platform as platform',
+    //'pay.payCallback as payCallbak',
+    'pay.createTime',
+    'pay.expireTime',
   ])
-  .leftJoin('user', 'user.id', 'paymingbo.user')
-  .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
-  .leftJoin('giftcard', 'giftcard.password', 'paymingbo.giftcard')
+  .leftJoin('user', 'user.id', 'pay.user')
+  .leftJoin('account_plugin', 'account_plugin.id', 'pay.account')
+  .leftJoin('giftcard', 'giftcard.password', 'pay.giftcard')
   .where(where)
-  .orderBy('paymingbo.createTime', 'DESC');
+  .orderBy('pay.createTime', 'DESC');
   
 
   /*orders.forEach(f => {
@@ -558,7 +562,7 @@ const orderListAndPaging = async (options = {}) => {
   const search = options.search || '';
   const group = options.group;
   const filter = options.filter || [];
-  const sort = options.sort || 'paymingbo.createTime_desc';
+  const sort = options.sort || 'pay.createTime_desc';
   const page = options.page || 1;
   const pageSize = options.pageSize || 20;
   const where = options.where || 
@@ -568,60 +572,60 @@ const orderListAndPaging = async (options = {}) => {
   const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
   const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
   const select  = [
-    'paymingbo.orderId',
-    'paymingbo.orderType',
+    'pay.orderId',
+    'pay.orderType',
     'webgui_order.name as orderName',
-    'webgui_order.sku',
+    'webgui_order.sku as sku',
     'webgui_order.cycle',
     'webgui_order.shortComment as orderShortName',
-    'giftcard.comment as comment',
+    'giftcard.comment',
     'giftcard.cutPrice',
     'giftcard.limit',
     'user.id as userId',
     'user.group as group',
-    'user.username',
+    'user.username as username',
     'account_plugin.port',
-    'paymingbo.amount',
-    'paymingbo.totalAmount',
-    'paymingbo.method',
-    'paymingbo.platform as platform',
-    'paymingbo.trade_no as trade_no',
-    'paymingbo.status',
-    'paymingbo.giftcard',
-    'paymingbo.payCallback',
-    'paymingbo.payParams',
-    'paymingbo.createTime',
-    'paymingbo.expireTime',
-    'paymingbo.orderStatus as orderStatus',
-    'paymingbo.orderMode as orderMode',
-    'paymingbo.orderActiveTime as orderActiveTime',
-    'paymingbo.limit',
+    'pay.amount',
+    'pay.totalAmount',
+    'pay.method',
+    'pay.platform as platform',
+    'pay.trade_no as trade_no',
+    'pay.status',
+    'pay.giftcard',
+    'pay.payCallback',
+    'pay.payParams',
+    'pay.createTime',
+    'pay.expireTime',
+    'pay.orderStatus as orderStatus',
+    'pay.orderMode as orderMode',
+    'pay.orderActiveTime as orderActiveTime',
+    'pay.limit',
   ];
-  let count = knex('paymingbo').select()
-  .leftJoin('user', 'user.id', 'paymingbo.user')
-  //.leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
-  .leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
-  //.leftJoin('giftcard','giftcard.password','paymingbo.giftcard')
-  .whereBetween('paymingbo.createTime', [start, end]);
+  let count = knex('pay').select(select)
+  .leftJoin('user', 'user.id', 'pay.user')
+  .leftJoin('account_plugin', 'account_plugin.id', 'pay.account')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'pay.sku')
+  .leftJoin('giftcard','giftcard.password','pay.giftcard')
+  .whereBetween('pay.createTime', [start, end]);
 
-  let orders = knex('paymingbo').select(select)
-  .leftJoin('user', 'user.id', 'paymingbo.user')
-  .leftJoin('account_plugin', 'account_plugin.id', 'paymingbo.account')
-  .leftJoin('webgui_order', 'webgui_order.sku', 'paymingbo.sku')
-  .leftJoin('giftcard','giftcard.password','paymingbo.giftcard')
-  .whereBetween('paymingbo.createTime', [start, end]);
+  let orders = knex('pay').select(select)
+  .leftJoin('user', 'user.id', 'pay.user')
+  .leftJoin('account_plugin', 'account_plugin.id', 'pay.account')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'pay.sku')
+  .leftJoin('giftcard','giftcard.password','pay.giftcard')
+  .whereBetween('pay.createTime', [start, end]);
 
   if(filter.length) {
-    count = count.whereIn('paymingbo.status', filter);
-    orders = orders.whereIn('paymingbo.status', filter);
+    count = count.whereIn('pay.status', filter);
+    orders = orders.whereIn('pay.status', filter);
   }
   if(group >= 0) {
-    count = count.leftJoin('user', 'user.id', 'paymingbo.user').where({ 'user.group': group });
+    count = count.leftJoin('user', 'user.id', 'pay.user').where({ 'user.group': group });
     orders = orders.where({ 'user.group': group });
   }
   if(search) {
-    count = count.where('paymingbo.orderId', 'like', `%${ search }%`);
-    orders = orders.where('paymingbo.orderId', 'like', `%${ search }%`);
+    count = count.where('pay.orderId', 'like', `%${ search }%`);
+    orders = orders.where('pay.orderId', 'like', `%${ search }%`);
   }
 
   if(where && Object.keys(where).length > 0 ) {
@@ -657,7 +661,7 @@ const orderListAndPaging = async (options = {}) => {
     }
   }
 
-  count = await count.count('orderId as count').then(success => success[0].count);
+  count = await count.count('pay.orderId as count').then(success => success[0].count);
   orders = await orders.orderBy(sort.split('_')[0], sort.split('_')[1]).limit(pageSize).offset((page - 1) * pageSize);
   orders.forEach(f => {
     f.payCallback = JSON.parse(f.payCallback);
@@ -680,7 +684,7 @@ const getCsvOrder = async (options = {}) => {
   const start = options.start ? moment(options.start).hour(0).minute(0).second(0).millisecond(0).toDate().getTime() : moment(0).toDate().getTime();
   const end = options.end ? moment(options.end).hour(23).minute(59).second(59).millisecond(999).toDate().getTime() : moment().toDate().getTime();
 
-  let orders = knex('paymingbo').select([
+  let orders = knex('pay').select([
     'alipay.orderId',
     'alipay.orderType',
     'user.id as userId',
@@ -715,7 +719,7 @@ const getCsvOrder = async (options = {}) => {
 };
 
 const getUserFinishOrder = async userId => {
-  let orders = await knex('paymingbo').select([
+  let orders = await knex('pay').select([
     'orderId',
     'trade_no',
     'giftcard',
@@ -742,7 +746,7 @@ const getUserFinishOrder = async userId => {
 };
 
 const refund = async (orderId, amount) => {
-  const order = await knex('paymingbo').where({ orderId }).then(s => s[0]);
+  const order = await knex('pay').where({ orderId }).then(s => s[0]);
   if(!order) { return Promise.reject('order not found'); }
   let refundAmount = order.amount;
   if(amount) { refundAmount = amount; }
@@ -756,7 +760,7 @@ const refund = async (orderId, amount) => {
 
 // cron.minute(async () => {
 //   if(!alipay_f2f) { return; }
-//   await knex('paymingbo').delete().where({ status: 'CREATE' }).whereBetween('createTime', [0, Date.now() - 1 * 24 * 3600 * 1000]);
+//   await knex('pay').delete().where({ status: 'CREATE' }).whereBetween('createTime', [0, Date.now() - 1 * 24 * 3600 * 1000]);
 // }, 'DeleteAlipayOrder', 53);
 
 

@@ -49,7 +49,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '优惠券',
-      icon: 'money',
+      icon: 'local_play',
       click: 'admin.pay',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
@@ -59,14 +59,14 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '统计',
-      icon: 'money',
+      icon: 'cloud',
       click: 'admin.analysis'
     }, {
-      name: '套餐配置',
-      icon: 'settings',
+      name: '配置-套餐',
+      icon: 'account_circle',
       click: 'admin.order',
     }, {
-      name: '优惠券配置',
+      name: '配置-优惠券',
       icon: 'settings',
       click: 'admin.listGiftCardBatch',
     },{
@@ -281,7 +281,6 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         start:new Date(Date.now() - 3600000 * 24 * 7),
         end: new Date(Date.now()),
         where:{
-          //'paymingbo.status': 'SUCCESS'
         },
         group: -1,
       };
@@ -309,7 +308,16 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       "TRADE_CLOSED":"关闭"
     };
 
+    $scope.platformEnum = {
+      "wechat":"微信",
+      "alipay":"支付宝",
+    };
+
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
+
+    $scope.filterPhone = $scope.orderFilter.where.hasOwnProperty("username")? $scope.orderFilter.where["username"] : "";
+    $scope.filterOrderId = $scope.orderFilter.where.hasOwnProperty("pay.orderId")? $scope.orderFilter.where["pay.orderId"] : "";
+    $scope.filterTradeNo = $scope.orderFilter.where.hasOwnProperty("trade_no")? $scope.orderFilter.where["trade_no"] : "";
 
     $scope.selectOrderMode = $scope.orderFilter.where.hasOwnProperty("orderMode")? $scope.orderFilter.where["orderMode"] : "";;
     $scope.orderModeGroup = Object.keys($scope.orderModeEnum);
@@ -319,13 +327,11 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
 
     $scope.selectStatus = [];
     $scope.statusGroup = Object.keys($scope.payStatusEnum);
-
-    $scope.filterPhone = $scope.orderFilter.where.hasOwnProperty("user.username")? $scope.orderFilter.where["user.username"] : "";
     
     $scope.filterPlatform = $scope.orderFilter.where.hasOwnProperty("platform")? $scope.orderFilter.where["platform"] : "";
-    $scope.platformGroup = ["alipay","wechat"];
+    $scope.platformGroup = Object.keys($scope.platformEnum);
 
-    $scope.selectPlan = $scope.orderFilter.where.hasOwnProperty("webgui_order.sku")? $scope.orderFilter.where["webgui_order.sku"] : "";
+    $scope.selectPlan = $scope.orderFilter.where.hasOwnProperty("sku")? $scope.orderFilter.where["sku"] : "";
     $scope.planGroup = [];
     adminApi.getPlans().then(success=>{
       console.log(success);
@@ -358,6 +364,8 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         group: -1,
       };
 
+      $scope.orderFilter = $localStorage.admin.orderFilterSettings;
+
       $scope.filterPhone = "";
       $scope.filterPlatform = "";
       $scope.selectPlan  ="";
@@ -369,11 +377,13 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
 
     $scope.getOrders = search => {
 
-      $scope.orderFilter.where["user.username"] = $scope.filterPhone?$scope.filterPhone:"";
+      $scope.orderFilter.where["username"] = $scope.filterPhone?$scope.filterPhone:"";
       $scope.orderFilter.where["platform"] = $scope.filterPlatform?$scope.filterPlatform:"";
-      $scope.orderFilter.where["webgui_order.sku"] = $scope.selectPlan?$scope.selectPlan:"";
+      $scope.orderFilter.where["sku"] = $scope.selectPlan?$scope.selectPlan:"";
       $scope.orderFilter.where["orderMode"] = $scope.selectOrderMode?$scope.selectOrderMode:"";
       $scope.orderFilter.where["orderStatus"] = $scope.selectOrderStatus?$scope.selectOrderStatus:"";
+      $scope.orderFilter.where["pay.orderId"] = $scope.filterOrderId?$scope.filterOrderId:"";
+      $scope.orderFilter.where["trade_no"] = $scope.filterTradeNo?$scope.filterTradeNo:"";
 
       if(!$scope.payTypes.length) { return; }
       const oldTabSwitchTime = tabSwitchTime;
