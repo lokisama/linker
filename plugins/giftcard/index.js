@@ -127,7 +127,7 @@ const processOrderForMingboUser = async (userInfo, accountId, password) => {
 	return { success: true, data: result};
 };
 
-const processBind = async (userId, accountId, card, serverId="") => {
+const processBind = async (user, accountId, card, serverId="") => {
 	// const cardResult = await knex(dbTableName).whereIn({ password }).select();
 	// if (cardResult.length === 0) {
 	// 	return { success: false, message: '充值码不存在' };
@@ -137,7 +137,8 @@ const processBind = async (userId, accountId, card, serverId="") => {
 	// 	return { success: false, message: '充值码已赠送' };
 	// }
 	await knex(dbTableName).where({ id: card.id }).update({
-		user: userId,
+		user: user.id,
+		phone: user.phone,
 		serverId: serverId,
 		usedTime: Date.now()
 	});
@@ -145,35 +146,43 @@ const processBind = async (userId, accountId, card, serverId="") => {
 	return { success: true, cardId: card.id ,  password: card.password, status: card.status, type:card.mingboType, serverId:serverId, sku: card.sku,comment:card.comment };
 };
 
-const processBindAuto = async (userId, accountId, mingboType,serverId="") => {
-
-	const hasServerId = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,serverId }).select();
-	if (hasServerId.length > 0) {
-		return { success: false, message: '已存在serverId' };
+const processBindAuto = async (user, accountId, mingboType = "", serverId = "") => {
+	
+	if ( user == null ) {
+		return { success: false, message: '用户信息异常' };
+	}else if (mingboType == "") {
+		return { success: false, message: 'mingboType不能为空' };
+	}else if (serverId == "") {
+		return { success: false, message: 'serverId不能为空' };
 	}
 
-	const cardResult = await knex(dbTableName).where({ mingboType, status: cardStatusEnum.available ,usedTime:null }).select();
+	const hasServerId = await knex(dbTableName).where({ mingboType, serverId }).select();
+	if (hasServerId.length > 0) {
+		return { success: false, message: '已存在serverId，请核实' };
+	}
+
+	const cardResult = await knex(dbTableName).where({ mingboType }).whereNull('usedTime').whereNull("user").select();
 	if (cardResult.length === 0) {
-		return { success: false, message: '该type优惠券已发完，请联系lynca' };
+		return { success: false, message: '该type优惠券已发完，请联系管理员' };
 	}
 
 	const card = cardResult[0];
 
-	const result = await processBind(userId, accountId, card ,serverId);
+	const result = await processBind(user, accountId, card ,serverId);
 
 	return result;
 };
 
-const searchGiftcard = async (userId, status = null, page=1, size=100) =>{
+const searchGiftcard = async (userId, status = null, page = 1, size = 100) =>{
 
-	let cardResult;
+	let result;
 	if(status == null){
-		cardResult = await knex(dbTableName).where({ user:userId }).select().limit(size).offset( (page -1)*size);
+		result = await knex(dbTableName).where({ user:userId }).select().limit(size).offset( (page -1)*size);
 	}else{
-		cardResult = await knex(dbTableName).where({ user:userId,status: status }).limit(size).offset( (page-1)*size);
+		result = await knex(dbTableName).where({ user:userId, status: status }).limit(size).offset( (page-1)*size);
 	}
 	
-	const data = cardResult.map(o =>{
+	const data = result.map(o =>{
 		return {
 			password : o.password,
 			status: o.status,

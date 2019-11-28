@@ -200,13 +200,12 @@ exports.useGiftCardForMingboUser = async (req, res) => {
 exports.sendGiftCardForMingboUser = async (req, res) => {
 
   try {
-    const userId = +req.body.userId;
+    //const userId = +req.body.userId;
     const phone = req.body.phone;
     const mingboType = req.body.type;
     const serverId = req.body.serverId || "";
     const accountId = req.body.accountId ? +req.body.accountId : null;
     let userInfo;
-
     if(phone){
       const phone = req.body.phone.toString();
       const password = "123456";
@@ -216,11 +215,11 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
        
         const result = await user.checkPassword(phone, password);
         userInfo = await user.getOneUserByPhone(phone);
-
       }catch(e){
         const webguiSetting = await knex('webguiSetting').select().where({
           key: 'account',
         }).then(success => JSON.parse(success[0].value));
+
         if(webguiSetting.defaultGroup) {
           try {
             await groupPlugin.getOneGroup(webguiSetting.defaultGroup);
@@ -236,11 +235,12 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
         });
 
         userInfo = await user.getOneUserByPhone(phone);
-        
         logger.info(`[${ req.body.phone }] signup success`);
       } 
-      const result = await giftcard.processBindAuto(userInfo.id, accountId, mingboType,serverId);
+
+      const result = await giftcard.processBindAuto(userInfo, accountId, mingboType,serverId);
       logger.info(`[${ req.body.phone }] send card success`);
+
       return res.send(result);
     }else {
       return res.send({"succuss": false,"error":"缺少字段 phone"});
