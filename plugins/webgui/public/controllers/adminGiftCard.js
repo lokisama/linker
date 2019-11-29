@@ -49,7 +49,7 @@ app.controller('AdminGiftCardController', ['$scope', '$http', 'addGiftCardBatchD
     $scope.toUser = "13788997536";
     $scope.send = (phone) =>{
       console.log(phone);
-      $http.post(`/api/mingbo/giftcard/send`, { "phone": phone, "type": $scope.batch.mingboType}).then(result => {
+      $http.post(`/api/mingbo/giftcard/send`, { "phone": phone, "type": $scope.batch.mingboType,"serverId":Date.now()}).then(result => {
           if(!result.data.success){
             alertDialog.show(result.data.error, '确定');
             return;
