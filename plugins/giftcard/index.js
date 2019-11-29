@@ -225,7 +225,7 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 			type: o.mingboType,
 			title: o.title,
 			subtitle: o.subtitle,
-			vipType: o.vipType || "",
+			vipType: o.vipType || 0,
 			//cutPrice: o.cutPrice,
 			//orderId: o.orderId,
 			sku: o.sku,
