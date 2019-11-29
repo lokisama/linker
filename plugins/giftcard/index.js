@@ -231,9 +231,9 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 			sku: o.sku,
 			//limit: o.limit,
 			//comment: o.comment,
-			sendTime: o.sendTime,
-			usedTime: o.usedTime,
-			expireTime: o.sendTime+ 3600*60*24*7//o.expireTime
+			sendTime: o.sendTime || 0,
+			usedTime: o.usedTime || 0,
+			expireTime: o.sendTime? o.sendTime + 3600*60*24*7 : 0//o.expireTime
 		}
 	});
 
