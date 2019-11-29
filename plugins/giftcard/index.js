@@ -181,14 +181,14 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 	let result;
 	console.log("type",type);
 
-	if( type ==1 ){
+	if( type == 1 ){
 		result = await knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
 		.where({ "user":userId , isShow:1 }).where("cutPrice",">", 0).limit(size).offset( (page -1)*size);
 	}else if( type == 2 ){
 		result = await knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
-		.where({ "user":userId , isShow:1 }).where("cutPrice", 0).limit(size).offset( (page -1)*size);
+		.where({ "user":userId , isShow:1 }).where("cutPrice","=", 0).limit(size).offset( (page -1)*size);
 	}else{
 		result = await knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
@@ -240,14 +240,29 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 	return data;
 }
 
-const searchGiftcardTotal = async (userId, status = null) =>{
+const searchGiftcardTotal = async (userId, status = null,type=0) =>{
 
 	let result;
-	if(status == null){
-		result = (await knex(dbTableName).count('* as cnt').where({ user:userId }))[0].cnt;
+	// if(status == null){
+	// 	result = (await knex(dbTableName).count('* as cnt').where({ user:userId }))[0].cnt;
+	// }else{
+	// 	result = (await knex(dbTableName).count('* as cnt').where({ user:userId, status }))[0].cnt;;
+	// }
+
+	if( type ==1 ){
+		result = (await knex(dbTableName).count('* as cnt')
+		//.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
+		.where({ "user":userId , isShow:1 }).where("cutPrice",">", 0))[0].cnt;
+	}else if( type == 2 ){
+		result = (await knex(dbTableName).count('* as cnt')
+		//.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
+		.where({ "user":userId , isShow:1 }).where("cutPrice","=", 0))[0].cnt;
 	}else{
-		result = (await knex(dbTableName).count('* as cnt').where({ user:userId, status }))[0].cnt;;
+		result = (await knex(dbTableName).count('* as cnt')
+		//.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
+		.where({ "user":userId , isShow:1 }))[0].cnt;
 	}
+
 
 	return result;
 }

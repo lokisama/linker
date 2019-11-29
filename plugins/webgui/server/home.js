@@ -260,10 +260,12 @@ exports.login = async (req, res) => {
       logger.info(`[${ req.body.email }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
+      
       res.send({
         type: result.type,
         id: result.id,
       });
+
     }else{
       req.checkBody('phone', 'Invalid phone').notEmpty();
       req.checkBody('password', 'Invalid password').notEmpty();
@@ -277,9 +279,17 @@ exports.login = async (req, res) => {
       logger.info(`[${ req.body.phone }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
-      res.send({
+      
+      let userInfo = {
         type: result.type,
         id: result.id,
+      };
+
+      return res.send({
+        "status":1,
+        "success":true,
+        "after":-1,
+        "data":userInfo
       });
     }
   } catch(err) {
@@ -317,12 +327,21 @@ exports.login = async (req, res) => {
       if(req.body.ref) { ref.addRefUser(req.body.ref, req.session.user); }
       req.session.user = userId;
       req.session.type = type;
-      res.send({
+      
+      logger.info(`[${ req.body.phone }] signup and login success`);
+
+      let userInfo = {
         type: type,
         id: userId,
+      };
+
+      return res.send({
+        "status":1,
+        "success":true,
+        "after":-1,
+        "data":userInfo
       });
-      logger.info(`[${ req.body.phone }] signup and login success`);
-      return;
+      //return;
     }
 
     logger.error(`User[${ req.body.email }] login fail: ${ err }`);
