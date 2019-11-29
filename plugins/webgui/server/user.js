@@ -332,11 +332,24 @@ exports.getGiftcards = async (req, res) =>{
 
 exports.useGiftcard = async (req, res) =>{
     const userId = req.session.user;
+    const card = req.body.card;
 
-    let userInfo = await user.getOne(userId);
-    if(userInfo == null){
-      return res.send({"success": false ,"error":"用户不存在"});
+    let cardData = await giftcard.getOneByPassword(card);
+    if(cardData){
+      if(cardData.status === "USED"){
+        return res.send({"success": false ,"error":"礼品卡已使用"});
+      }else if(!cardData.limit && !cardData.cutPrice){
+        return res.send({"success": false ,"error":"礼品卡异常"});
+      }else{
+        req.body.sku = cardData.sku;
+        req.body.limit = cardData.limit;
+        req.body.platform = "giftcard";
+        return await this.createAppOrder(req, res);
+      }
+      
     }
+
+    
   
 }
 
@@ -358,7 +371,7 @@ exports.createAppOrder = async (req, res) => {
     if(sku == null || limit == null){
       return res.send({"success": false ,"error":"套餐信息不完整"});
     }
-    console.log();
+
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
       if(cardData.status === "USED"){

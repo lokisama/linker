@@ -136,13 +136,14 @@ const processBind = async (user, accountId, card, serverId="") => {
 	// if (card.status !== cardStatusEnum.available && card.user !== null) {
 	// 	return { success: false, message: '充值码已赠送' };
 	// }
-	console.log(user);
+	//console.log(user);
 
 	await knex(dbTableName).where({ id: card.id }).update({
 		user: user.id,
 		phone: user.username,
 		serverId: serverId,
-		usedTime: Date.now()
+		sendTime:Date.now(),
+		expireTime:Date.now() + card.expireTime,
 	});
 	//return { success: true, data: { cardId: card.id , sku: card.sku, comment:card.comment , password: card.password, type:card.mingboType}};
 	return { success: true, cardId: card.id ,  password: card.password, status: card.status, type:card.mingboType, serverId:serverId, sku: card.sku,comment:card.comment };
@@ -186,21 +187,27 @@ const searchGiftcard = async (userId, status = null, page = 1, size = 100) =>{
 	}else{
 		result = await knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
-		.where({ "user":userId }).limit(size).offset( (page -1)*size);
+		.where({ "user":userId ,status }).limit(size).offset( (page -1)*size);
 	}
 	
 	console.log(result);
 	const data = result.map(o =>{
-		if(o.sku.indexOf("hourly")>=0 && o.cutPrice ==0){
+		if(o.sku && o.sku.indexOf("hourly")>=0 && o.cutPrice ==0){
 			o.showNumber = o.limit / 24;
 			o.showType = '体验天数';
-		}else if(o.sku.indexOf("daily")>=0 && o.cutPrice ==0){
+		}else if(o.sku && o.sku.indexOf("daily")>=0 && o.cutPrice ==0){
 			o.showNumber = o.limit;
 			o.showType = '体验天数';
 		}else if(o.cutPrice > 0){
 			o.showNumber = o.cutPrice/10;
 			o.showType = '折扣券';
 		}
+
+		// if(o.sku && o.sku.indexOf("game")){
+		// 	o.vipType = 1;
+		// }else if(o.sku && o.sku.indexOf("all")){
+		// 	o.vipType = 2;
+		// }
 
 
 		o.cutPrice = o.cutPrice /10;
@@ -213,13 +220,15 @@ const searchGiftcard = async (userId, status = null, page = 1, size = 100) =>{
 			type: o.mingboType,
 			title: o.title,
 			subtitle: o.subtitle,
+			vipType: o.vipType || "",
 			//cutPrice: o.cutPrice,
 			//orderId: o.orderId,
-			//sku: o.sku,
+			sku: o.sku,
 			//limit: o.limit,
 			//comment: o.comment,
+			sendTime: o.sendTime,
 			usedTime: o.usedTime,
-			expireTime: o.usedTime+ 3600*60*24*7//o.expireTime
+			expireTime: o.sendTime+ 3600*60*24*7//o.expireTime
 		}
 	});
 

@@ -98,7 +98,7 @@
         <div flex  layout-margin="">
             
             <md-input-container layout="row" layout-align="center center">
-              <md-select ng-model="filterPlatform" placeholder="支付平台" flex>
+              <md-select ng-model="filterPlatform" placeholder="支付方式" flex>
 
                 <md-option ng-value="">全部</md-option>
                 <md-option ng-value="o" ng-repeat="o in platformGroup">{{ platformEnum[o] }}</md-option>
@@ -174,14 +174,14 @@
                         </span> -->
                     </div>
                     <div flex="30" flex-xs="60" style="min-width:80px;">
-                        {{order.orderName}}
+                        {{order.orderName}}*{{order.limit}}
                     </div>
                     <div flex="30" flex-xs="60">
                         <span>{{ orderModeEnum[order.orderMode] }}</span>
                     </div>
                     <div flex="30" flex-xs="60">
                         <span ng-if="order.cutPrice>0">{{order.cutPrice/10}}折</span>
-                        <span ng-if="order.cutPrice==0">体验</span>
+                        <span ng-if="order.cutPrice==0">免费</span>
                         <span ng-if="order.cutPrice==null">-</span>
                     </div>
                     <div flex="30" flex-xs="60">
@@ -201,10 +201,7 @@
                     </div>
                     <div flex="30" flex-xs="60" style="text-align:center;">
                   
-                        <div ng-switch="order.platform">
-                        <span ng-switch-when="alipay">支付宝</span>
-                        <span ng-switch-when="wechat">微信</span>
-                        </div>
+                        {{platformEnum[order.platform]}}
                     </div>
                     <div flex="30" flex-xs="60">
                         <span alt="{{order.trade_no}}" style="text-align:center;font-size: 0.6em;min-width:158px;display:block;">

@@ -311,6 +311,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.platformEnum = {
       "wechat":"微信",
       "alipay":"支付宝",
+      "giftcard":"体验券",
     };
 
     $scope.orderFilter = $localStorage.admin.orderFilterSettings;
