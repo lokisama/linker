@@ -303,7 +303,7 @@ exports.alipayCallback = (req, res) => {
 exports.getGiftcards = async (req, res) =>{
     const userId = req.session.user;
     const status = req.body.status;
-    const type = req.body.type;
+    const type = req.body.type || 0;
     const page = req.body.page || 1;
     const size = req.body.size || 3;
     let after = -1;
@@ -317,10 +317,10 @@ exports.getGiftcards = async (req, res) =>{
       const total = await giftcard.searchGiftcardTotal(userId, status,type);
       const giftcards = await giftcard.searchGiftcard(userId, status, type, page, size);
       console.log((page-1) * size , giftcards.length , total);
-      if( (page-1) * size + giftcards.length <= total ){
-        after = -1;
-      }else{
+      if( (page-1) * size + giftcards.length < total ){
         after = page+1;
+      }else{
+        after = -1;
       }
       console.log(giftcards.length,after,giftcards);
       return res.send({"status": 1 ,"count" : giftcards.length , "after": after ,"data": giftcards ,"success": true  });
