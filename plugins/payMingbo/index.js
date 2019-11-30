@@ -204,8 +204,8 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
         plan: productInfo.name,
         user: user.username,
         gitcard: oldOrder.giftcard,
-        method: method,
-        platform: platform,
+        method: oldOrder.method,
+        platform: oldOrder.platform,
         payParams: oldOrder.payParams
       };
   }
@@ -228,6 +228,7 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
     user: result.user,
     gitcard: result.gitcard,
     method: result.method,
+    platform: result.platform,
     payParams:result.payParams
   };
 };

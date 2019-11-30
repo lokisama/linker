@@ -251,11 +251,11 @@ app.post('/api/mingbo/ytb/get', user.youtube);
  Mingbo API USER
  */
 app.get('/api/mingbo/user/plans', isUser, user.getPriceByUser);
-app.get('/api/mingbo/user/order', isUser, user.getOrder);
-app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
 app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
+app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
+// app.get('/api/mingbo/user/order', isUser, user.getOrder);
 app.get('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
 
 

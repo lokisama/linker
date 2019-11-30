@@ -310,14 +310,14 @@ exports.getGiftcards = async (req, res) =>{
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
-      return res.send({"status": -1 , "success": false ,"error":"用户不存在"});
+      return res.send({"status": -1 , "success": false ,"message":"用户不存在"});
     }
 
     try{
-      const total = await giftcard.searchGiftcardTotal(userId, status);
+      const total = await giftcard.searchGiftcardTotal(userId, status,type);
       const giftcards = await giftcard.searchGiftcard(userId, status, type, page, size);
-      console.log(size,page,after,total);
-      if( (page-1) * size + giftcards.length >= total ){
+      console.log((page-1) * size , giftcards.length , total);
+      if( (page-1) * size + giftcards.length <= total ){
         after = -1;
       }else{
         after = page+1;
@@ -327,7 +327,7 @@ exports.getGiftcards = async (req, res) =>{
 
     }catch(e){
 
-      return res.send({ "status": -1 ,"error":e,"success": false});
+      return res.send({ "status": -1 ,"message":e, "success": false});
     }
 }
 
@@ -338,14 +338,15 @@ exports.useGiftcard = async (req, res) =>{
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
       if(cardData.status === "USED"){
-        return res.send({"success": false ,"error":"礼品卡已使用"});
+        return res.send({"status": -1 , "success": false ,"message":"礼品卡已使用"});
       }else if(!cardData.limit && !cardData.cutPrice){
-        return res.send({"success": false ,"error":"礼品卡异常"});
+        return res.send({"status": -1 , "success": false ,"message":"礼品卡异常"});
       }else{
         req.body.sku = cardData.sku;
         req.body.limit = cardData.limit;
         req.body.platform = "giftcard";
-        return await this.createAppOrder(req, res);
+        let data = await this.createAppOrder(req, res);
+        return res.send({"status": 1  , "after": -1 ,"data": data ,"success": true  });
       }
       
     }
@@ -366,31 +367,62 @@ exports.createAppOrder = async (req, res) => {
 
     let userInfo = await user.getOne(userId);
     if(userInfo == null){
-      return res.send({"success": false ,"error":"用户不存在"});
+      return res.send({
+        "status": -1,
+        "success": false ,
+        "message":"用户不存在",
+        "data":{}
+      });
     }
 
     if(sku == null || limit == null){
-      return res.send({"success": false ,"error":"套餐信息不完整"});
+      return res.send({
+        "status": -1,
+        "success": false ,
+        "message":"套餐信息不完整",
+        "data":{}
+      });
     }
 
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
       if(cardData.status === "USED"){
-        return res.send({"success": false ,"error":"礼品卡已使用"});
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"礼品卡已使用",
+          "data":{}
+        });
       }else if(!cardData.limit && !cardData.cutPrice){
-        return res.send({"success": false ,"error":"礼品卡异常"});
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"礼品卡异常",
+          "data":{}
+        });
       }else{
-        await giftcard.setCardFinish(userId,accountId,card);
+        await giftcard.setCardFinish(userId,accountId,cardData.password);
       }
       
     }
 
     const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, platform);
-
+    return res.send({
+      "status": 1,
+      "success": true ,
+      "message":"",
+      "data":alipayOrder
+    });
     return res.send(alipayOrder);
   } catch(err) {
+
     console.log(err);
-    return res.send({"success":false,"message":err});
+    return res.send({
+      "status": -1,
+      "success": false ,
+      "message":err,
+      "data":{}
+    });
     //res.status(403).end();
   }
 };
