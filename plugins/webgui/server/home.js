@@ -244,9 +244,9 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
 
-  const phone = req.body.phone.toString();
-  const password = req.body.password;
-  const outId = req.body.outId;
+  let phone;
+  let password = req.body.password;
+  let outId;
 
   try {
     delete req.session.user;
@@ -270,13 +270,14 @@ exports.login = async (req, res) => {
       
       res.send({
         id: result.id,
-        type: result.type,
-        phone: result.phone,
-        outId: result.outId,
-        vipType: result.vipType
+        type: result.type
       });
 
     }else{
+      phone = req.body.phone.toString();
+      outId = req.body.outId;
+      password = req.body.password;
+
       req.checkBody('phone', 'Invalid phone').notEmpty();
       req.checkBody('password', 'Invalid password').notEmpty();
       req.checkBody('outId', 'Invalid Id').notEmpty();
