@@ -128,7 +128,8 @@ const createOrder = async (user, account, orderId) => {
     user,
     account: account ? account : null,
     orderType: orderId
-  }).where('expireTime', '>', Date.now() + 15 * 60 * 1000).where({
+  }).where('expireTime', '>', Date.now() + 15 * 60 * 1000)
+  .where({
     status: 'CREATE',
   }).then(success => {
     return success[0];
@@ -180,8 +181,9 @@ const createOrderForMingboUser = async (user, account, sku, limit, card ,platfor
   if(+productInfo.amount <= 0) { return Promise.reject('amount error'); }
 
   console.log(Date.now() - orderExpire * 60 * 1000);
+
   const oldOrder = await knex('pay')
-  .where('expireTime', '<', Date.now() - orderExpire * 60 * 1000)
+  .where('expireTime', '>', Date.now() + orderExpire * 60 * 1000)
   .where({
     user: user.id,
     sku: sku,
@@ -319,11 +321,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   
   let totalAmount = 0;
   if(card){
-    if(card.cutPrice === 0){
-      totalAmount = 0;
-    }else{
-      totalAmount = product.amount* card.cutPrice/100;
-    }
+    totalAmount = product.amount* card.cutPrice/100;
   }else{
     totalAmount = product.amount;
   }
@@ -331,14 +329,21 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   let myOrderId = moment().format('YYYYMMDDHHmmss') + Math.random().toString().substr(2, 6);
   let payParams = '';
   let method = 'app';
+  let orderMode = "charge";
+  let orderModeEnum = {
+    "charge":"充值",
+    "recharge":"续费",
+    "update":"升级",
+    "free":"体验"
+  };
 
   if(totalAmount > 0){
-    console.log(totalAmount,platform);
+
     if(platform == 'alipay'){
 
       const config = {
         out_trade_no: myOrderId,
-        total_amount: "1.00",//totalAmount.toFixed(2),
+        total_amount: "1.01",//totalAmount.toFixed(2),
         subject: product.name,
         body: product.comment,
         timeout: orderExpire+'m',
@@ -349,18 +354,20 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       
       const config = {
         out_trade_no: myOrderId,
-        body: product.name,//product.name,
-        total_fee: 10,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
+        body: product.name,
+        total_fee: 1.01,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
         spbill_create_ip: '180.165.231.68' // 客户端ip
       };
 
       payParams = await wechat.app(config);
-      console.log(payParams);
       payParams = JSON.stringify(payParams);
     }
+
+  }else{
+    orderMode = "free";
   }
 
-  logger.info(`创建订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
+  logger.info(`创建[${orderModeEnum[orderMode]}]订单: [orderId: ${ myOrderId }][amount: ${ totalAmount }][account: ${ account }]`);
 
 
   const insert = {
@@ -377,6 +384,8 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
     user: user.id,
     account: account ? account : null,
     status: 'CREATE',
+    orderMode:orderMode,
+    orderStatus:0,
     createTime: Date.now(),
     expireTime: Date.now() + orderExpire * 60 * 1000,
   };
@@ -664,6 +673,7 @@ const orderListAndPaging = async (options = {}) => {
 
   count = await count.count('pay.orderId as count').then(success => success[0].count);
   orders = await orders.orderBy(sort.split('_')[0], sort.split('_')[1]).limit(pageSize).offset((page - 1) * pageSize);
+  console.log()
   orders.forEach(f => {
     f.payCallback = JSON.parse(f.payCallback);
   });

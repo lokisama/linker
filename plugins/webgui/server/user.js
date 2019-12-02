@@ -308,10 +308,14 @@ exports.getGiftcards = async (req, res) =>{
     const size = req.body.size || 3;
     let after = -1;
 
-    let userInfo = await user.getOne(userId);
-    if(userInfo == null){
-      return res.send({"status": -1 , "success": false ,"message":"用户不存在"});
-    }
+    // let userInfo = await user.getOne(userId);
+    // if(userInfo == null){
+    //   return res.send({
+    //     "status": -1 , 
+    //     "success": false ,
+    //     "message":"用户不存在"
+    //   });
+    // }
 
     try{
       const total = await giftcard.searchGiftcardTotal(userId, status,type);
@@ -323,7 +327,13 @@ exports.getGiftcards = async (req, res) =>{
         after = -1;
       }
       console.log(giftcards.length,after,giftcards);
-      return res.send({"status": 1 ,"count" : giftcards.length , "after": after ,"data": giftcards ,"success": true  });
+      return res.send({
+        "status": 1 ,
+        "count" : giftcards.length , 
+        "after": after ,
+        "data": giftcards ,
+        "success": true  
+      });
 
     }catch(e){
 
@@ -338,15 +348,27 @@ exports.useGiftcard = async (req, res) =>{
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
       if(cardData.status === "USED"){
-        return res.send({"status": -1 , "success": false ,"message":"礼品卡已使用"});
+        return res.send({
+          "status": -1 , 
+          "success": false ,
+          "message":"礼品卡已使用"
+        });
       }else if(!cardData.limit && !cardData.cutPrice){
-        return res.send({"status": -1 , "success": false ,"message":"礼品卡异常"});
+        return res.send({
+          "status": -1 , 
+          "success": false ,
+          "message":"礼品卡异常"
+        });
       }else{
         req.body.sku = cardData.sku;
         req.body.limit = cardData.limit;
         req.body.platform = "giftcard";
         let data = await this.createAppOrder(req, res);
-        return res.send({"status": 1  , "after": -1 ,"data": data ,"success": true  });
+        return res.send({
+          "status": 1  ,
+          "success": true  ,
+          "data": data 
+        });
       }
       
     }
@@ -364,23 +386,22 @@ exports.createAppOrder = async (req, res) => {
     const platform = req.body.platform;
     const accountId = req.body.accountId ? +req.body.accountId : null;
     //const method = req.body.method ? req.body.method : 'app';
-
-    let userInfo = await user.getOne(userId);
-    if(userInfo == null){
-      return res.send({
-        "status": -1,
-        "success": false ,
-        "message":"用户不存在",
-        "data":{}
-      });
-    }
+    // let userInfo = await user.getOne(userId);
+    // if(userInfo == null){
+    //   return res.send({
+    //     "status": -1,
+    //     "success": false ,
+    //     "message":"用户不存在",
+    //     //"data":{}
+    //   });
+    // }
 
     if(sku == null || limit == null){
       return res.send({
         "status": -1,
         "success": false ,
         "message":"套餐信息不完整",
-        "data":{}
+        //"data":{}
       });
     }
 
@@ -391,14 +412,14 @@ exports.createAppOrder = async (req, res) => {
           "status": -1,
           "success": false ,
           "message":"礼品卡已使用",
-          "data":{}
+          //"data":{}
         });
       }else if(!cardData.limit && !cardData.cutPrice){
         return res.send({
           "status": -1,
           "success": false ,
           "message":"礼品卡异常",
-          "data":{}
+          //"data":{}
         });
       }else{
         await giftcard.setCardFinish(userId,accountId,cardData.password);
@@ -406,7 +427,7 @@ exports.createAppOrder = async (req, res) => {
       
     }
 
-    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, platform);
+    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(req.userInfo, accountId, sku, limit , cardData, platform);
     return res.send({
       "status": 1,
       "success": true ,
@@ -421,7 +442,7 @@ exports.createAppOrder = async (req, res) => {
       "status": -1,
       "success": false ,
       "message":err,
-      "data":{}
+      //"data":{}
     });
     //res.status(403).end();
   }
@@ -505,34 +526,23 @@ exports.getPrice = async (req, res) => {
   }
 };
 
-exports.getPriceByUser = async (req, res) => {
+exports.getUserPlans = async (req, res) => {
   try {
-    const accountId = +req.query.accountId;
-    let accountInfo;
-    let changeOrderTypeId = 0;
-    let orderInfo;
-    const isExpired = account => {
-      if(!account) { return true; }
-      const accountData = JSON.parse(account.data);
-      const time = {
-        '2': 7 * 24 * 3600000,
-        '3': 30 * 24 * 3600000,
-        '4': 24 * 3600000,
-        '5': 3600000,
-      };
-      const expire = accountData.create + time[account.type] * accountData.limit;
-      return expire <= Date.now();
-    };
-    if(accountId) {
-      orderInfo = await orderPlugin.getOneOrderByAccountId(accountId);
-      accountInfo = await knex('account_plugin').where({ id: accountId }).then(s => s[0]);
-      if(orderInfo && !orderInfo.changeOrderType) {
-        changeOrderTypeId = orderInfo.id;
-      }
-    }
+    const userId = req.session.user;
+    const page = req.body.page;
     const groupId = req.userInfo.group;
+    let max = 6;
+    let size = 3;
+    let after = -1;
+    let currentOrder = [];
+
     let orders = await orderPlugin.getOrders();
     orders = orders.filter(f => f.isShow == 1);
+    currentOrder = orders.slice((page-1)*size , orders.length >= page *size ? page *size : orders.length);
+    if(orders.length > page * size ){
+      after = page+1;
+    }
+
     const groupSetting = await groupPlugin.getOneGroup(groupId);
     if(groupSetting.order) {
       orders = orders.filter(f => {
@@ -541,23 +551,50 @@ exports.getPriceByUser = async (req, res) => {
       if(orderInfo) {
         orders = orders.filter(f => {
           if(!f.baseId) { return true; }
-          if(f.baseId === orderInfo.id && !isExpired(accountInfo)) { return true; }
+          if(f.baseId === orderInfo.id) { return true; }
           return false;
         });
       } else {
         orders = orders.filter(f => !f.baseId);
       }
     }
-    let currentOrder = [];
-    if(changeOrderTypeId && !isExpired(accountInfo)) {
-      currentOrder = orders.filter(f => {
-        return (f.id === changeOrderTypeId || f.baseId === changeOrderTypeId);
-      });
+
+    const giftcards = await giftcard.searchGiftcard(userId, "AVAILABLE", page, 1, 10);
+    let cards=[];
+    if(giftcards.length > 0){
+      cards = giftcards[0];
     }
-    return res.send({success:true,data:currentOrder.length ? currentOrder : orders});
+    currentOrder = currentOrder.map(f=>{
+      return {
+        "sku": f.sku,
+        "title": f.name,
+        "subTitle":f.comment,
+        "amount":f.amount,
+        "vipType": f.vipType
+      }
+    });
+    // if(changeOrderTypeId && !isExpired(accountInfo)) {
+    //   currentOrder = orders.filter(f => {
+    //     return (f.id === changeOrderTypeId || f.baseId === changeOrderTypeId);
+    //   });
+    // }
+    return res.send({
+      status:1,
+      success:true,
+      after: after,
+      data:{
+        plan: currentOrder,
+        giftcard: cards
+      }
+    });
+
   } catch(err) {
     console.log(err);
-    res.status(403).end();
+    return res.send({
+      status:-1,
+      success:false,
+      message:err,
+    });  
   }
 };
 

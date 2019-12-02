@@ -56,6 +56,12 @@ const addUser = async (options) => {
     if(options.telegramId) {
       Object.assign(insert, { telegram: options.telegramId });
     }
+    if(options.outId) {
+      Object.assign(insert, { outId: options.outId });
+    }
+    if(options.phone) {
+      Object.assign(insert, { phone: options.phone });
+    }
     const user = await knex('user').insert(insert);
     return user;
   } catch(err) {
@@ -66,7 +72,7 @@ const addUser = async (options) => {
 
 const checkPassword = async (username, password) => {
   try {
-    const user = await knex('user').select(['id', 'type', 'username', 'password']).where({
+    const user = await knex('user').select(['id', 'type', 'username', 'password','vipType',"outId","phone"]).where({
       username,
     }).then(s => s[0]);
     if(!user) {
@@ -150,10 +156,7 @@ const getRecentLoginUsers = async (number, group) => {
 };
 
 const getOneUser = async (id) => {
-  const user = await knex('user').select().where({
-    type: 'normal',
-    id,
-  });
+  const user = await knex('user').select().where({id}).orWhere({type:"normal"}).orWhere({type:"vip"}).orWhere({type:"svip"});
   if(!user.length) {
     return Promise.reject('User not found');
   }

@@ -243,11 +243,17 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+
+  const phone = req.body.phone.toString();
+  const password = req.body.password;
+  const outId = req.body.outId;
+
   try {
     delete req.session.user;
     delete req.session.type;
+    delete req.session.vipType;
 
-    if(!req.body.phone){
+    if(!req.body.phone && req.body.email){
       req.checkBody('email', 'Invalid email').isEmail();
       req.checkBody('password', 'Invalid password').notEmpty();
       const validation = await req.getValidationResult();
@@ -260,35 +266,43 @@ exports.login = async (req, res) => {
       logger.info(`[${ req.body.email }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
+      req.session.vipType = result.vipType;
       
       res.send({
-        type: result.type,
         id: result.id,
+        type: result.type,
+        phone: result.phone,
+        outId: result.outId,
+        vipType: result.vipType
       });
 
     }else{
       req.checkBody('phone', 'Invalid phone').notEmpty();
       req.checkBody('password', 'Invalid password').notEmpty();
+      req.checkBody('outId', 'Invalid Id').notEmpty();
       const validation = await req.getValidationResult();
       if(!validation.isEmpty()) {
         throw('invalid body');
       }
-      const phone = req.body.phone.toString();
-      const password = req.body.password;
-      const result = await user.checkPassword(phone, password);
+      
+      const result = await user.checkPassword(outId, password);
+      
       logger.info(`[${ req.body.phone }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
+      req.session.vipType = result.vipType;
       
       let userInfo = {
-        type: result.type,
         id: result.id,
+        type: result.type,
+        phone: result.phone,
+        outId: result.outId,
+        vipType: result.vipType
       };
 
       return res.send({
         "status":1,
         "success":true,
-        "after":-1,
         "data":userInfo
       });
     }
@@ -306,6 +320,7 @@ exports.login = async (req, res) => {
       const password = req.body.password;
       let group = 0;
       let type = 'normal';
+      let vipType = 0;
       
       const webguiSetting = await knex('webguiSetting').select().where({
         key: 'account',
@@ -316,13 +331,18 @@ exports.login = async (req, res) => {
           group = webguiSetting.defaultGroup;
         } catch(err) {}
       }
-      const [ userId ] = await user.add({
-        username: phone,
-        phone: phone,
+      let userConfig = {
+        username: outId,
         password,
+        phone: phone,
+        outId: outId,
         type,
-        group,
-      });
+        vipType,
+        group
+      };
+      console.log(userConfig);
+      const [ userId ] = await user.add(userConfig);
+      console.log(outId);
       
       if(req.body.ref) { ref.addRefUser(req.body.ref, req.session.user); }
       req.session.user = userId;
@@ -331,14 +351,16 @@ exports.login = async (req, res) => {
       logger.info(`[${ req.body.phone }] signup and login success`);
 
       let userInfo = {
-        type: type,
         id: userId,
+        type: type,
+        phone: phone,
+        outId: outId,
+        vipType: vipType
       };
 
       return res.send({
         "status":1,
         "success":true,
-        "after":-1,
         "data":userInfo
       });
       //return;

@@ -22,35 +22,71 @@ const knex = appRequire('init/knex').knex;
 const config = appRequire('services/config').all();
 
 const isUser = (req, res, next) => {
+  console.log("req.session",req.session);
   if (req.session.type === 'normal') {
-    knex('user').where({ id: req.session.user, type: 'normal' }).then(s => s[0]).then(user => {
-      if(!user) { return res.status(401).end(); }
+    knex('user').where({ id: req.session.user }).then(s => s[0]).then(user => {
+      if(!user) { 
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"无权限"
+        }); 
+      }
       req.userInfo = user;
       return next();
     }).catch(err => {
-      return res.status(401).end();
+      return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"无权限"
+        }); 
     });
   } else {
-    return res.status(401).end();
-  }
+    return res.send({
+      "status": -1,
+      "success": false ,
+      "message":"无权限"
+    }); 
+}
 };
 
 const isAdmin = (req, res, next) => {
   if (req.session.type === 'admin') {
     knex('user').where({ id: req.session.user, type: 'admin' }).then(s => s[0]).then(user => {
-      if(!user) { return res.status(401).end(); }
+      if(!user) { 
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"无权限"
+        }); 
+      }
       req.adminInfo = user;
       return next();
     }).catch(err => {
-      return res.status(401).end();
+      return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"无权限"
+        }); 
     });
   } else {
-    return res.status(401).end();
+    return res.send({
+      "status": -1,
+      "success": false ,
+      "message":"无权限"
+    }); 
   }
 };
 
 const isSuperAdmin = (req, res, next) => {
-  if(req.session.user !== 1) { return res.status(401).end(); }
+  if(req.session.user !== 1) { 
+    return res.send({
+      "status": -1,
+      "success": false ,
+      "message":"无权限",
+      //"data":{}
+    });  
+  }
   next();
 };
 
@@ -250,7 +286,8 @@ app.post('/api/mingbo/ytb/get', user.youtube);
 /*
  Mingbo API USER
  */
-app.get('/api/mingbo/user/plans', isUser, user.getPriceByUser);
+app.get('/api/mingbo/user/plans', isUser, user.getUserPlans);
+app.post('/api/mingbo/user/plans', isUser, user.getUserPlans);
 app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
