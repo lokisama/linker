@@ -415,12 +415,12 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
 let planMingboType = (sku) =>{
   try{
     let toMingboType = {
-      "game_monthly":14,
-      "all_monthly":13,
-      "game_quarterly":15,
-      "all_quarterly":16,
-      "game_yearly":17,
-      "all_yearly":18,
+      "game_monthly":"14",
+      "all_monthly":"13",
+      "game_quarterly":"15",
+      "all_quarterly":"16",
+      "game_yearly":"17",
+      "all_yearly":"18",
     };
     return toMingboType[sku];
   }catch(e){
