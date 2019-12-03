@@ -671,7 +671,11 @@ exports.macLogin = (req, res) => {
 exports.logout = (req, res) => {
   delete req.session.user;
   delete req.session.type;
-  res.send('success');
+  res.send({
+    "status":1,
+    "success":true,
+    "message":"成功登出"
+  });
 };
 
 exports.status = async (req, res) => {

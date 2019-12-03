@@ -181,18 +181,24 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 	let result;
 
 	if( type == 1 ){
-		result = await knex(dbTableName).select()
+		result = knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
-		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked }).where("cutPrice",">", 0).limit(size).offset( (page -1)*size);
+		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked }).where("cutPrice",">", 0)
 	}else if( type == 2 ){
-		result = await knex(dbTableName).select()
+		result = knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
-		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked }).where("cutPrice","=", 0).limit(size).offset( (page -1)*size);
+		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked }).where("cutPrice","=", 0)
 	}else{
-		result = await knex(dbTableName).select()
+		result = knex(dbTableName).select()
 		.leftJoin('giftcard_config', 'giftcard_config.type', `giftcard.mingboType`)
-		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked }).limit(size).offset( (page -1)*size);
+		.where({ "user":userId , isShow:1 }).whereNot({ "status": cardStatusEnum.revoked })
 	}
+
+	if(status != null){
+		result = result.where("status",status);
+	}
+
+	result = await result.limit(size).offset( (page -1)*size);
 	
 	const data = result.map(o =>{
 		if(o.sku && o.sku.indexOf("hourly")>=0 && o.cutPrice ==0){
@@ -221,6 +227,7 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 			password : o.password || "",
 			status: o.status || "",
 			type: o.mingboType || -1,
+			serverId: o.serverId,
 			title: o.title || "",
 			subTitle: o.subTitle || "",
 			desc: o.desc || "",

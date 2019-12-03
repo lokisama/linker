@@ -347,7 +347,13 @@ exports.useGiftcard = async (req, res) =>{
 
     let cardData = await giftcard.getOneByPassword(card);
     if(cardData){
-      if(cardData.status === "USED"){
+      if(cardData.cutPrice && cardData.cutPrice>0){
+        return res.send({
+          "status": -2 , 
+          "success": false ,
+          "message":"优惠券无法直接使用，请购买VIP套餐时使用"
+        });
+      }else if(cardData.status === "USED"){
         return res.send({
           "status": -1 , 
           "success": false ,
@@ -355,11 +361,11 @@ exports.useGiftcard = async (req, res) =>{
         });
       }else if(!cardData.limit && !cardData.cutPrice){
         return res.send({
-          "status": -1 , 
+          "status": -10 , 
           "success": false ,
           "message":"礼品卡异常"
         });
-      }else{
+      }else {
         req.body.sku = cardData.sku;
         req.body.limit = cardData.limit;
         req.body.platform = "giftcard";
@@ -570,6 +576,7 @@ exports.getUserPlans = async (req, res) => {
         "title": f.name,
         "subTitle":f.comment,
         "amount":f.amount,
+        "cycle":f.cycle,
         "vipType": f.vipType
       }
     });
@@ -581,7 +588,7 @@ exports.getUserPlans = async (req, res) => {
     return res.send({
       status:1,
       success:true,
-      after: after,
+      //after: after,
       data:{
         plan: currentOrder,
         giftcard: cards
