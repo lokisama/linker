@@ -412,6 +412,22 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
   };
 };
 
+let planMingboType = (sku) =>{
+  try{
+    let toMingboType = {
+      "game_monthly":14,
+      "all_monthly":13,
+      "game_quarterly":15,
+      "all_quarterly":16,
+      "game_yearly":17,
+      "all_yearly":18,
+    };
+    return toMingboType[sku];
+  }catch(e){
+    return -1;
+  }
+}
+
 const wechatNotify = async (data) => {
   /**
  * 签名校验
@@ -442,6 +458,7 @@ const wechatNotify = async (data) => {
 
   let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
   if(info.length > 0){
+    info[0].mingboType = planMingboType(info[0].sku);
     return {"success": true, "data": info[0] };
   }else{
     return {"success": false, "message": "out_trade_no异常" };
@@ -475,6 +492,7 @@ const alipayNotify = async (data) => {
 
   let info = await orderListForMingbo({"orderId":data.out_trade_no}).then();
   if(info.length > 0){
+    info[0].mingboType = planMingboType(info[0].sku);
     return {"success": true, "data": info[0] };
   }else{
     return {"success": false, "message": "out_trade_no异常" };
