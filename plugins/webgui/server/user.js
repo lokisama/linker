@@ -454,7 +454,7 @@ exports.createAppOrder = async (req, res) => {
   }
 };
 
-let setPlanMingboType = (sku){
+let setPlanMingboType = (sku) =>{
   try{
     let toMingboType = {
       "game_monthly":14,
