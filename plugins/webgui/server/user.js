@@ -454,11 +454,28 @@ exports.createAppOrder = async (req, res) => {
   }
 };
 
+let setPlanMingboType = (sku){
+  try{
+    let toMingboType = {
+      "game_monthly":14,
+      "all_monthly":13,
+      "game_quarterly":15,
+      "all_quarterly":16,
+      "game_yearly":17,
+      "all_yearly":18,
+    };
+    return toMingboType[sku];
+  }catch(e){
+    return -1;
+  }
+}
+
 exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   console.log(data);
   try{
-    const signStatus = await payMingboPlugin.alipayNotify(data);
+    let result = await payMingboPlugin.alipayNotify(data);
+    result.mingboType = setPlanMingboType(result.sku);
     return res.send(signStatus);
   }catch(e){
     return res.send({"success": false ,"error":e});
@@ -469,8 +486,9 @@ exports.alipayCallbackMingbo = async (req, res) => {
 exports.wechatCallbackMingbo = async (req, res) => {
   const data = req.body;
   try{
-    const signStatus = await payMingboPlugin.wechatNotify(data);
-    return res.send(signStatus);
+    const result = await payMingboPlugin.wechatNotify(data);
+    result.mingboType = setPlanMingboType(result.sku);
+    return res.send(result);
   }catch(e){
     return res.send({"success": false ,"error":e});
   }
