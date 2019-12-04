@@ -424,7 +424,7 @@ let planMingboType = (sku) =>{
     };
     return toMingboType[sku];
   }catch(e){
-    return -1;
+    return "-1";
   }
 }
 
@@ -747,30 +747,113 @@ const getCsvOrder = async (options = {}) => {
   return orders;
 };
 
-const getUserFinishOrder = async userId => {
+const getUserFinishOrder = async (userId,limit=20,offset=0) => {
+
   let orders = await knex('pay').select([
     'orderId',
     'trade_no',
+    'status',
     'giftcard',
-    'totalAmount',
     'amount',
+    'totalAmount',
+    'platform',
     'orderMode',
     'orderStatus',
-    'createTime',
+    'payParams',
+    'payCallback',
+    'pay.createTime as createTime',
   ])
-  .leftJoin('user', 'user.id', 'alipay.user')
+  .leftJoin('user', 'user.id', 'pay.user')
   .where({
     user: userId,
     //status: 'FINISH',
-  }).orderBy('createTime', 'DESC');
+  })
+  .andWhereNot("totalAmount",0)
+  .orderBy('createTime', 'DESC')
+  .limit(limit).offset(offset);
+
+  
   orders = orders.map(order => {
+    let payTime = "";
+    if(order.platform == "alipay"){
+    
+      payTime = order.payCallback ? JSON.parse(order.payCallback).gmt_payment : "";
+    
+    }else if(order.platform == "wechat"){
+      payTime = order.payCallback ? JSON.parse(order.payCallback).time_end : "";
+      
+      if(payTime != ""){
+        payTime = moment(payTime, ["YYYYMMDDHHmmss"]).format('YYYY-MM-DD HH:mm:ss')
+      }
+    }
+
     return {
       orderId: order.orderId,
-      //type: '支付宝',
+      playform: order.platform,
+      status: order.status,
       amount: order.amount,
+      totalAmount: order.totalAmount,
       createTime: order.createTime,
+      payTime: payTime,
+      payParams: order.payParams
     };
   });
+  
+  return orders;
+};
+
+const getUserFinishOrderTotal = async (userId,limit=20,offset=0) => {
+
+  let orders = await knex('pay').select([
+    'orderId',
+    'trade_no',
+    'status',
+    'giftcard',
+    'amount',
+    'totalAmount',
+    'platform',
+    'orderMode',
+    'orderStatus',
+    'payParams',
+    'payCallback',
+    'pay.createTime as createTime',
+  ])
+  .leftJoin('user', 'user.id', 'pay.user')
+  .where({
+    user: userId,
+    //status: 'FINISH',
+  })
+  .andWhereNot("totalAmount",0)
+  .orderBy('createTime', 'DESC')
+  .limit(limit).offset(offset);
+
+  
+  orders = orders.map(order => {
+    let payTime = "";
+    if(order.platform == "alipay"){
+    
+      payTime = order.payCallback ? JSON.parse(order.payCallback).gmt_payment : "";
+    
+    }else if(order.platform == "wechat"){
+      payTime = order.payCallback ? JSON.parse(order.payCallback).time_end : "";
+      
+      if(payTime != ""){
+        payTime = moment(payTime, ["YYYYMMDDHHmmss"]).format('YYYY-MM-DD HH:mm:ss')
+      }
+    }
+
+    return {
+      orderId: order.orderId,
+      playform: order.platform,
+      status: order.status,
+      amount: order.amount,
+      totalAmount: order.totalAmount,
+      createTime: order.createTime,
+      payTime: payTime,
+      payParams: order.payParams
+    };
+  });
+  
   return orders;
 };
 

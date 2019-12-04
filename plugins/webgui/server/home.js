@@ -242,6 +242,25 @@ exports.signup = async (req, res) => {
   }
 };
 
+exports.getUserInfo = (req, res) => {
+  const userId = req.session.user;
+  const vipType = req.session.vipType;
+  const result = {
+    id:req.userInfo.id,
+    outId: req.userInfo.outId,
+    username: req.userInfo.username,
+    phone: req.userInfo.phone,
+    type: req.userInfo.type,
+    vipType: req.userInfo.vipType
+  };
+
+  return res.send( {
+    "status":1,
+    "success":true,
+    "data":result
+  });
+}
+
 exports.login = async (req, res) => {
 
   let phone;

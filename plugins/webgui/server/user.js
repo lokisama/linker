@@ -960,11 +960,14 @@ exports.getOrderForMingbo = async (req, res) => {
   try {
     const userId = req.session.user;
     let orders = [];
+    let after = -1;
+    let page = req.body.page || 1;
+    let size = req.body.size || 10;
 
     if(config.plugins.alipay && config.plugins.alipay.use) {
       // const alipayOrders = await alipayPlugin.getUserFinishOrder(userId);
-      const alipayOrders = await payMingboPlugin.getUserFinishOrder(userId);
-      orders = [...orders, ...alipayOrders];
+      const payOrders = await payMingboPlugin.getUserFinishOrder(userId, size, (page-1)*size);
+      orders = [...orders, ...payOrders];
     }
 
     // const refOrders = await refOrder.getUserFinishOrder(userId);
@@ -978,7 +981,13 @@ exports.getOrderForMingbo = async (req, res) => {
     orders = orders.sort((a, b) => {
       return b.createTime - a.createTime;
     });
-    res.send(orders);
+
+    res.send({
+      status: 1,
+      success: true,
+      data: orders
+    });
+
   } catch(err) {
     console.log(err);
     res.status(403).end();

@@ -286,6 +286,7 @@ app.post('/api/mingbo/ytb/get', user.youtube);
 /*
  Mingbo API USER
  */
+app.get('/api/mingbo/user/info', isUser, home.getUserInfo);
 app.get('/api/mingbo/user/plans', isUser, user.getUserPlans);
 app.post('/api/mingbo/user/plans', isUser, user.getUserPlans);
 //app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
