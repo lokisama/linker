@@ -408,7 +408,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         if(oldTabSwitchTime !== tabSwitchTime) { return; }
         if(!search && $scope.menuSearch.text) { return; }
         if(search && search !== $scope.menuSearch.text) { return; }
-        $scope.orders = [];
+        //$scope.orders = [];
         success.orders.forEach(f => {
           $scope.orders.push(f);
         });

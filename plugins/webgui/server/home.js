@@ -9,12 +9,15 @@ const flow = appRequire('plugins/flowSaver/flow');
 const knex = appRequire('init/knex').knex;
 const emailPlugin = appRequire('plugins/email/index');
 const groupPlugin = appRequire('plugins/group/index');
+const payPlugin = appRequire('plugins/payMingbo/index');
 const push = appRequire('plugins/webgui/server/push');
 const macAccount = appRequire('plugins/macAccount/index');
 const ref = appRequire('plugins/webgui_ref/index');
 const rp = require('request-promise');
 const TwitterLogin = appRequire('plugins/webgui/server/twitterLogin');
 const redis = appRequire('init/redis').redis;
+
+const moment = require('moment');
 
 const isTelegram = config.plugins.webgui_telegram && config.plugins.webgui_telegram.use;
 let telegram;
@@ -242,16 +245,24 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.getUserInfo = (req, res) => {
+exports.getUserInfo = async (req, res) => {
   const userId = req.session.user;
   const vipType = req.session.vipType;
+  //let active = await payPlugin.getUserActiveTime(userId);
+  let vipInfo = await payPlugin.getUserExpireTime(userId);
+  
+  // let showDays = moment( active+expire).diff( moment( active), 'day');
+
+  // console.log(active, active+expire,showDays);
+
   const result = {
     id:req.userInfo.id,
     outId: req.userInfo.outId,
     username: req.userInfo.username,
     phone: req.userInfo.phone,
     type: req.userInfo.type,
-    vipType: req.userInfo.vipType
+    vipType: vipInfo.find(o=>o.status=="生效").vipType,
+    vipInfo: vipInfo
   };
 
   return res.send( {

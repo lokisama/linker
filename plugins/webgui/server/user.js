@@ -566,7 +566,7 @@ exports.getUserPlans = async (req, res) => {
     }
 
     const giftcards = await giftcard.searchGiftcard(userId, "AVAILABLE", page, 1, 10);
-    let cards=[];
+    let cards={};
     if(giftcards.length > 0){
       cards = giftcards[0];
     }
@@ -959,15 +959,19 @@ exports.getOrder = async (req, res) => {
 exports.getOrderForMingbo = async (req, res) => {
   try {
     const userId = req.session.user;
+    const page = req.body.page || 1;
+    const size = req.body.size || 10;
+
     let orders = [];
     let after = -1;
-    let page = req.body.page || 1;
-    let size = req.body.size || 10;
-
+    let count = 0;
     if(config.plugins.alipay && config.plugins.alipay.use) {
       // const alipayOrders = await alipayPlugin.getUserFinishOrder(userId);
+      count = await payMingboPlugin.getUserFinishOrderTotal(userId);
       const payOrders = await payMingboPlugin.getUserFinishOrder(userId, size, (page-1)*size);
       orders = [...orders, ...payOrders];
+
+      if(page*size < count) after = page+1;
     }
 
     // const refOrders = await refOrder.getUserFinishOrder(userId);
@@ -982,9 +986,13 @@ exports.getOrderForMingbo = async (req, res) => {
       return b.createTime - a.createTime;
     });
 
+    
+
     res.send({
       status: 1,
       success: true,
+      count:count,
+      after:after,
       data: orders
     });
 

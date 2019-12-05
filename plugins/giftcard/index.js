@@ -207,6 +207,15 @@ const searchGiftcard = async (userId, status = null, type = 0, page = 1, size = 
 		}else if(o.sku && o.sku.indexOf("daily")>=0 && o.cutPrice ==0){
 			o.showNumber = o.limit;
 			o.showType = '体验天数';
+		}else if(o.sku && o.sku.indexOf("monthly")>=0 && o.cutPrice ==0){
+			o.showNumber = o.limit * 30;
+			o.showType = '体验天数';
+		}else if(o.sku && o.sku.indexOf("quarterly")>=0 && o.cutPrice ==0){
+			o.showNumber = o.limit * 90;
+			o.showType = '体验天数';
+		}else if(o.sku && o.sku.indexOf("yearly")>=0 && o.cutPrice ==0){
+			o.showNumber = o.limit * 365;
+			o.showType = '体验天数';
 		}else if(o.cutPrice > 0){
 			o.showNumber = o.cutPrice/10;
 			o.showType = '折扣券';

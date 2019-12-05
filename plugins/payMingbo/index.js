@@ -7,9 +7,11 @@ const ref = appRequire('plugins/webgui_ref/time');
 const orderPlugin = appRequire('plugins/webgui_order');
 const groupPlugin = appRequire('plugins/group');
 const giftcardPlugin = appRequire('plugins/giftcard');
-
+const knex = appRequire('init/knex').knex;
+const account = appRequire('plugins/account/index');
+const moment = require('moment');
+const push = appRequire('plugins/webgui/server/push');
 const path = require('path');
-
 const ytdl = require('ytdl-core');
 // TypeScript: import ytdl from 'ytdl-core'; with --esModuleInterop
 // TypeScript: import * as ytdl from 'ytdl-core'; with --allowSyntheticDefaultImports
@@ -118,10 +120,7 @@ if(isTelegram) {
   telegram = appRequire('plugins/webgui_telegram/admin');
 }
 
-const knex = appRequire('init/knex').knex;
-const account = appRequire('plugins/account/index');
-const moment = require('moment');
-const push = appRequire('plugins/webgui/server/push');
+
 
 const createOrder = async (user, account, orderId) => {
   const oldOrder = await knex('pay').where({
@@ -258,12 +257,89 @@ const sendSuccessMail = async userId => {
   await emailPlugin.sendMail(user.email, orderMail.title, orderMail.content);
 };
 
-cron.minute(async () => {
-  logger.info('check alipay order');
+cron.second(async () => {
+  logger.info('check pay order');
  //if(!alipay_f2f) { return; }
-  const orders = await knex('pay').select().whereNotBetween('expireTime', [0, Date.now()]);
+ 
+  //体验券直接完成
+  await knex('pay').update({
+    status: 'FINISH',
+    orderMode : 'free'
+  }).where({ platform: 'giftcard' });//.whereNot("status","FINISH");
+
+  //完成订单
+  await knex('pay').update({
+    status: 'FINISH',
+    orderMode: 'charge',
+  }).whereNotNull("payCallback");//.whereNot({ status : 'FINISH'});
+
+  await knex('pay').update({
+    orderStatus: 1,
+  }).where('expireTime','>',Date.now()).where({ status : 'FINISH'});
+
+  //关闭过期支付
+  await knex('pay').update({
+    status: 'TRADE_CLOSED',
+  })
+  .where('expireTime','<',Date.now())
+  .where("platform","aliyun").orWhere("platform","wechat");//.whereNot({ status : 'FINISH'});
+
+  //关闭过期支付
+  await knex('pay').update({
+    orderStatus: -1,
+  }).where("status","TRADE_CLOSED");
+
+
+  //处理未完成订单 
+  const orders = await knex('pay').select();//.whereNot('status', "FINISH");
   const scanOrder = order => {
-    logger.info(`order: [${ order.orderId }]`);
+    
+
+    if(order.payCallback || order.platform == "giftcard"){
+      let payTime = 0;
+      if(order.platform == 'alipay'){
+        payTime = JSON.parse(order.payCallback).gmt_payment;
+        payTime = moment(payTime).valueOf();
+      }else if(order.platform == 'wechat'){
+        payTime = JSON.parse(order.payCallback).time_end;
+        payTime =  moment(payTime, 'YYYYMMDDHHmmss').valueOf();
+      }else if(order.platform == 'giftcard'){
+        payTime = order.createTime;
+      }
+
+      let expireTime = 0;
+      if(order.sku.indexOf("monthly") > 0){
+        expireTime = moment(payTime).add(1, "months").valueOf();
+      }else if(order.sku.indexOf("quarterly") > 0){
+        expireTime = moment(payTime).add(3, "months").valueOf();
+      }else if(order.sku.indexOf("yearly") > 0){
+        expireTime = moment(payTime).add(1, "years").valueOf();
+      }else if(order.sku.indexOf("daily") > 0){
+        expireTime = moment(payTime).add(order.limit, "days").valueOf();
+      }else if(order.sku.indexOf("hourly") > 0){
+        expireTime = moment(payTime).add(order.limit, "hours").valueOf();
+      }
+
+      let addTime = (expireTime - payTime)>0 ? expireTime - payTime : 0;
+      let isExpired = (expireTime - moment().valueOf()) < 0;
+      //"0":"已冻结",
+      // "1":"生效中",
+      // "2":"已到期",
+      // "-1":"异常"
+
+      logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
+      // payTime = moment(payTime).format("YYYY-MM-DD HH:mm:ss");
+
+      return knex('pay').update({
+        activeTime: payTime,
+        payTime: payTime,
+        expireTime: expireTime,
+        addTime: addTime,
+        orderStatus: isExpired ? 2:1
+      }).where({
+        orderId: order.orderId
+      });
+    }
     // if(order.status !== 'TRADE_SUCCESS' && order.status !== 'FINISH') {
     //   return alipay_f2f.checkInvoiceStatus(order.orderId).then(success => {
     //     if(success.code === '10000') {
@@ -283,11 +359,11 @@ cron.minute(async () => {
     //   isTelegram && telegram.push(`订单[ ${ order.orderId } ][ ${ order.amount } ]支付成功`);
     //   return account.setAccountLimit(userId, accountId, order.orderType)
     //   .then(() => {
-    //     return knex('pay').update({
-    //       status: 'FINISH',
-    //     }).where({
-    //       orderId: order.orderId,
-    //     });
+        // return knex('pay').update({
+        //   status: 'FINISH',
+        // }).where({
+        //   orderId: order.orderId,
+        // });
     //   }).then(() => {
     //     logger.info(`订单支付成功: [${ order.orderId }][${ order.amount }][account: ${ accountId }]`);
     //     ref.payWithRef(userId, order.orderType);
@@ -297,10 +373,10 @@ cron.minute(async () => {
     //   });
     // };
   };
-  // for(const order of orders) {
-  //   await scanOrder(order);
-  // }
-}, 'CheckPayMingboOrder', 1);
+  for(const order of orders) {
+    await scanOrder(order);
+  }
+}, 'CheckPayMingboOrder', 10);
 
 const checkOrder = async (orderId) => {
   const order = await knex('pay').select().where({
@@ -623,10 +699,11 @@ const orderListAndPaging = async (options = {}) => {
     'pay.payCallback',
     'pay.payParams',
     'pay.createTime',
+    'pay.payTime',
     'pay.expireTime',
     'pay.orderStatus as orderStatus',
     'pay.orderMode as orderMode',
-    'pay.orderActiveTime as orderActiveTime',
+    'pay.activeTime as activeTime',
     'pay.limit',
   ];
   let count = knex('pay').select(select)
@@ -641,6 +718,7 @@ const orderListAndPaging = async (options = {}) => {
   .leftJoin('account_plugin', 'account_plugin.id', 'pay.account')
   .leftJoin('webgui_order', 'webgui_order.sku', 'pay.sku')
   .leftJoin('giftcard','giftcard.password','pay.giftcard')
+  //.whereNot("pay.platform","giftcard")
   .whereBetween('pay.createTime', [start, end]);
 
   if(filter.length) {
@@ -751,19 +829,23 @@ const getUserFinishOrder = async (userId,limit=20,offset=0) => {
 
   let orders = await knex('pay').select([
     'orderId',
+    'webgui_order.name as name',
+    'shortComment',
     'trade_no',
     'status',
     'giftcard',
-    'amount',
-    'totalAmount',
+    'pay.amount as amount',
+    'pay.totalAmount as totalAmount',
     'platform',
     'orderMode',
     'orderStatus',
+    'activeTime',
     'payParams',
     'payCallback',
     'pay.createTime as createTime',
   ])
   .leftJoin('user', 'user.id', 'pay.user')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'pay.sku')
   .where({
     user: userId,
     //status: 'FINISH',
@@ -774,32 +856,83 @@ const getUserFinishOrder = async (userId,limit=20,offset=0) => {
 
   
   orders = orders.map(order => {
-    let payTime = "";
-    if(order.platform == "alipay"){
-    
-      payTime = order.payCallback ? JSON.parse(order.payCallback).gmt_payment : "";
-    
-    }else if(order.platform == "wechat"){
-      payTime = order.payCallback ? JSON.parse(order.payCallback).time_end : "";
-      
-      if(payTime != ""){
-        payTime = moment(payTime, ["YYYYMMDDHHmmss"]).format('YYYY-MM-DD HH:mm:ss')
-      }
-    }
 
     return {
       orderId: order.orderId,
+      title: order.shortComment + " " + order.name,
       platform: order.platform,
+      activeTime: order.payTime,
       status: order.status,
       amount: order.amount,
       totalAmount: order.totalAmount,
       createTime: order.createTime,
-      payTime: payTime,
+      payTime: order.payTime,
       payParams: order.payParams
     };
   });
   
   return orders;
+};
+
+const getUserFinishOrderTotal = async (userId,limit=20,offset=0) => {
+
+  let orders = await knex('pay').count("orderId as count")
+  .leftJoin('user', 'user.id', 'pay.user')
+  .leftJoin('webgui_order', 'webgui_order.sku', 'pay.sku')
+  .where({
+    user: userId,
+    //status: 'FINISH',
+  })
+  .andWhereNot("totalAmount",0);
+  
+  return orders.length > 0? orders[0].count:0;
+};
+
+const getUserExpireTime = async (userId) => {
+  let result = [];
+
+  let sum = await knex('pay').sum('addTime as addTime').min("payTime as payTime")
+  .groupBy("orderType")
+  .select("orderType")
+  .where({
+    user: userId,
+    orderStatus:1
+  });
+
+  sum.map(o=> {
+
+    let expireTime = o.payTime+o.addTime;
+
+    result.push({
+      vipType:o.orderType,
+      status:"生效",
+      startTime: o.payTime,
+      expireTime: expireTime
+    });
+  })
+
+  for(let i=0; i< result.length;i++){
+
+    let o = result[i];
+    //获取当前时间
+    let m1 = moment();
+    //获取需要对比的时间
+    let m2 = moment(o.expireTime);
+    //计算相差多少天 day可以是second minute
+    let days = m2.diff(m1, 'day');
+    let diff = m2.valueOf() - m1.valueOf();
+
+    o.status =  diff > 0 ? "生效" : "过期";
+    o.comment = "剩余" + days + "天";
+    
+    if(i>0){
+      let p = result[i-1];
+      p.status =  diff > 0 ? "冻结" : "生效";
+    }
+    
+  }
+
+  return result;
 };
 
 const refund = async (orderId, amount) => {
@@ -840,6 +973,8 @@ exports.checkOrder = checkOrder;
 exports.verifyCallback = verifyCallback;
 exports.getCsvOrder = getCsvOrder;
 exports.getUserFinishOrder = getUserFinishOrder;
+exports.getUserFinishOrderTotal = getUserFinishOrderTotal;
+exports.getUserExpireTime = getUserExpireTime;
 exports.refund = refund;
 
 exports.createOrderForMingboUser = createOrderForMingboUser;
