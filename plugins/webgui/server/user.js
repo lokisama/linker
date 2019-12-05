@@ -24,6 +24,63 @@ const payMingboPlugin = appRequire('plugins/payMingbo/index');
 
 const alipay = appRequire('plugins/alipay/index');
 
+exports.getAccountForMingbo = async (req, res) => {
+  
+  try {
+    const userId = req.session.user;
+    let servers = await knex('server')
+    .select(['id' , 'vipType', 'host', 'name', 'method', 'comment'])
+    .orderBy('vipType','id');
+
+    let accounts = await account.getAccount({userId});
+    accounts = accounts.map(f => {
+      f.server = f.server ? JSON.parse(f.server) : f.server;
+      f.data = f.data ? JSON.parse(f.data) : f.data;
+      return {
+        id: f.id,
+        active: f.active,
+        userId: f.userId,
+        port: f.port,
+        password: f.password
+      };
+    });
+
+    if(accounts.length > 0){
+
+      servers = servers.map(o=>{
+        o.port = accounts[0].port;
+        o.password = accounts[0].password;
+        return o;
+      })
+
+      return res.send({
+        status:1,
+        success:true,
+        data: servers
+      });
+
+    }else{
+
+      return res.send({
+        status:-1,
+        success:false,
+        message: "请购买VIP加速线路"
+      });
+    }
+
+      
+
+    
+  } catch (err) {
+    console.log(err);
+    return res.send({
+      status: -1,
+      success:false,
+      message:err
+    });
+  }
+};
+
 exports.getAccount = async (req, res) => {
   try {
     const userId = req.session.user;
