@@ -376,7 +376,7 @@ cron.second(async () => {
   for(const order of orders) {
     await scanOrder(order);
   }
-}, 'CheckPayMingboOrder', 10);
+}, 'CheckPayMingboOrder', 60);
 
 const checkOrder = async (orderId) => {
   const order = await knex('pay').select().where({
