@@ -423,22 +423,73 @@ exports.useGiftcard = async (req, res) =>{
           "message":"礼品卡异常"
         });
       }else {
-        req.body.sku = cardData.sku;
-        req.body.limit = cardData.limit;
-        req.body.platform = "giftcard";
-        let data = await this.createAppOrder(req, res);
+        let order = await this.createGiftcardOrder(req.userInfo,card);
+        let vipInfo = await payMingboPlugin.getUserExpireTime(userId);
         return res.send({
           "status": 1  ,
           "success": true  ,
-          "data": data 
+          "data": vipInfo 
         });
+      }
+    }else{
+      return res.send({
+          "status": -1  ,
+          "success": false  ,
+          "message": '优惠券异常' 
+        });
+    }
+}
+
+exports.createGiftcardOrder = async (userInfo,card) => {
+  try {
+    const userId = userInfo.id;
+    const platform = 'giftcard';
+    const sku = card.sku;
+    const limit = card.limit;
+    const accountId = null;
+
+    if(sku == null || limit == null){
+      return res.send({
+        "status": -1,
+        "success": false ,
+        "message":"套餐信息不完整",
+        //"data":{}
+      });
+    }
+
+    let cardData = await giftcard.getOneByPassword(card);
+    if(cardData){
+      if(cardData.status === "USED"){
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"礼品卡已使用",
+          //"data":{}
+        });
+      }else if(!cardData.limit && !cardData.cutPrice){
+        return res.send({
+          "status": -1,
+          "success": false ,
+          "message":"礼品卡异常",
+          //"data":{}
+        });
+      }else{
+        await giftcard.setCardFinish(userId,accountId,cardData.password);
       }
       
     }
 
-    
-  
-}
+    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , cardData, platform);
+    return alipayOrder;
+    //return res.send(alipayOrder);
+  } catch(err) {
+
+    console.log(err);
+    return {
+      "message":err
+    };
+  }
+};
 
 exports.createAppOrder = async (req, res) => {
   try {
@@ -497,7 +548,7 @@ exports.createAppOrder = async (req, res) => {
       "message":"",
       "data":alipayOrder
     });
-    return res.send(alipayOrder);
+    //return res.send(alipayOrder);
   } catch(err) {
 
     console.log(err);

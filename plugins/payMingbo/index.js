@@ -905,7 +905,6 @@ const getUserExpireTime = async (userId) => {
 
     result.push({
       vipType:o.orderType,
-      status:"生效",
       startTime: o.payTime,
       expireTime: expireTime
     });
@@ -922,17 +921,21 @@ const getUserExpireTime = async (userId) => {
     let days = m2.diff(m1, 'day');
     let diff = m2.valueOf() - m1.valueOf();
 
-    o.status =  diff > 0 ? "生效" : "过期";
-    o.comment = "剩余" + days + "天";
+    o.days = days;
+    //o.comment = "剩余" + days + "天";
     
     if(i>0){
       let p = result[i-1];
-      p.status =  diff > 0 ? "冻结" : "生效";
+      let id = await knex('user').update({
+        vipType: o.vipType
+      }).where({
+        id:userId
+      });
     }
     
   }
 
-  return result;
+  return result[result.length-1];
 };
 
 const refund = async (orderId, amount) => {

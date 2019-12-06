@@ -250,7 +250,7 @@ exports.getUserInfo = async (req, res) => {
   const vipType = req.session.vipType;
   //let active = await payPlugin.getUserActiveTime(userId);
   let vipInfo = await payPlugin.getUserExpireTime(userId);
-  
+  req.session.vipType = vipInfo.vipType;
   // let showDays = moment( active+expire).diff( moment( active), 'day');
 
   // console.log(active, active+expire,showDays);
@@ -261,9 +261,11 @@ exports.getUserInfo = async (req, res) => {
     username: req.userInfo.username,
     phone: req.userInfo.phone,
     type: req.userInfo.type,
-    vipType: vipInfo.find(o=>o.status=="生效").vipType,
+    vipType: vipInfo.vipType,
     vipInfo: vipInfo
   };
+
+
 
   return res.send( {
     "status":1,
