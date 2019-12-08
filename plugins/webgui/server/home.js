@@ -332,20 +332,23 @@ exports.login = async (req, res) => {
           "data":'outId or phone err'
         });
       }
-         
+
       const result = await user.checkPassword(phone, password);
 
       logger.info(`[${ req.body.phone }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
       req.session.vipType = result.vipType;
+      const vipInfo = await payPlugin.getUserExpireTime(result.id);
       
       let userInfo = {
         id: result.id,
-        type: result.type,
-        phone: result.phone,
         outId: result.outId,
-        vipType: result.vipType
+        username: phone,
+        phone: result.phone,
+        type: result.type,
+        vipType: result.vipType,
+        vipInfo: vipInfo || {},
       };
 
       return res.send({
@@ -396,13 +399,16 @@ exports.login = async (req, res) => {
       req.session.type = type;
       
       logger.info(`[${ req.body.phone }] signup and login success`);
+      const vipInfo = await payPlugin.getUserExpireTime(userId);
 
       let userInfo = {
         id: userId,
-        type: type,
-        phone: phone,
         outId: outId,
-        vipType: vipType
+        username: phone,
+        phone: phone,
+        type: type,
+        vipType: vipType,
+        vipInfo: vipInfo || {}
       };
 
       return res.send({
