@@ -264,30 +264,28 @@ cron.second(async () => {
   //体验券直接完成
   await knex('pay').update({
     status: 'FINISH',
-    orderMode : 'free'
+    orderMode : 'free',
+    orderStatus: 1,
   }).where({ platform: 'giftcard' });//.whereNot("status","FINISH");
 
   //完成订单
   await knex('pay').update({
     status: 'FINISH',
     orderMode: 'charge',
+    orderStatus: 1,
   }).whereNotNull("payCallback");//.whereNot({ status : 'FINISH'});
 
-  await knex('pay').update({
-    orderStatus: 1,
-  }).where('expireTime','>',Date.now()).where({ status : 'FINISH'});
+  // await knex('pay').update({
+  //   orderStatus: 1,
+  // }).where('expireTime','>',Date.now()).where({ status : 'FINISH'});
 
   //关闭过期支付
   await knex('pay').update({
     status: 'TRADE_CLOSED',
+    orderStatus:-1,
   })
   .where('expireTime','<',Date.now())
   .where("platform","aliyun").orWhere("platform","wechat");//.whereNot({ status : 'FINISH'});
-
-  //关闭过期支付
-  await knex('pay').update({
-    orderStatus: -1,
-  }).where("status","TRADE_CLOSED");
 
 
   //处理未完成订单 
@@ -331,6 +329,7 @@ cron.second(async () => {
       // payTime = moment(payTime).format("YYYY-MM-DD HH:mm:ss");
 
       return knex('pay').update({
+        status: "FINISH",
         activeTime: payTime,
         payTime: payTime,
         expireTime: expireTime,
@@ -376,7 +375,7 @@ cron.second(async () => {
   for(const order of orders) {
     await scanOrder(order);
   }
-}, 'CheckPayMingboOrder', 60);
+}, 'CheckPayMingboOrder', 10);
 
 const checkOrder = async (orderId) => {
   const order = await knex('pay').select().where({
@@ -394,6 +393,7 @@ const checkOrder = async (orderId) => {
 const createAppOrder = async (user, account, sku, limit, card, platform='alipay' ) =>{
 
   let product = await orderPlugin.getOneBySku(sku);
+  let vipType = product.vipType;
   
   let totalAmount = 0;
   if(card){
@@ -448,7 +448,8 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
 
   const insert = {
     orderId: myOrderId,
-    orderType: product.id,
+    orderType: product.vipType,
+    orderStatus: 1,
     method: method,
     platform: platform,
     amount: product.amount.toFixed(2),
@@ -459,10 +460,11 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
     payParams : payParams,
     user: user.id,
     account: account ? account : null,
-    status: 'CREATE',
+    status: platform=="giftcard"?'TRADE_SUCCESS':'CREATE',
     orderMode:orderMode,
     orderStatus:0,
     createTime: Date.now(),
+    activeTime: platform=="giftcard" ? Date.now() : 0,
     expireTime: Date.now() + orderExpire * 60 * 1000,
   };
   console.log(insert);
@@ -850,7 +852,7 @@ const getUserFinishOrder = async (userId,limit=20,offset=0) => {
     user: userId,
     //status: 'FINISH',
   })
-  .andWhereNot("totalAmount",0)
+  // .andWhereNot("totalAmount",0)
   .orderBy('createTime', 'DESC')
   .limit(limit).offset(offset);
 
@@ -883,7 +885,7 @@ const getUserFinishOrderTotal = async (userId,limit=20,offset=0) => {
     user: userId,
     //status: 'FINISH',
   })
-  .andWhereNot("totalAmount",0);
+  // .andWhereNot("totalAmount",0);
   
   return orders.length > 0? orders[0].count:0;
 };
@@ -898,6 +900,8 @@ const getUserExpireTime = async (userId) => {
     user: userId,
     orderStatus:1
   });
+
+  console.log(sum);
 
   sum.map(o=> {
 
@@ -934,6 +938,8 @@ const getUserExpireTime = async (userId) => {
     }
     
   }
+
+  console.log(result);
 
   return result[result.length-1];
 };

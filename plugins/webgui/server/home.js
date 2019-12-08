@@ -246,14 +246,12 @@ exports.signup = async (req, res) => {
 };
 
 exports.getUserInfo = async (req, res) => {
-  const userId = req.session.user;
-  const vipType = req.session.vipType;
-  //let active = await payPlugin.getUserActiveTime(userId);
-  let vipInfo = await payPlugin.getUserExpireTime(userId);
-  req.session.vipType = vipInfo.vipType;
-  // let showDays = moment( active+expire).diff( moment( active), 'day');
 
-  // console.log(active, active+expire,showDays);
+  const userId = req.session.user;
+  const vipInfo = await payPlugin.getUserExpireTime(userId);
+  const vipType = vipInfo? vipInfo.vipType : 0;
+
+  req.session.vipType = vipType;
 
   const result = {
     id:req.userInfo.id,
@@ -261,11 +259,9 @@ exports.getUserInfo = async (req, res) => {
     username: req.userInfo.username,
     phone: req.userInfo.phone,
     type: req.userInfo.type,
-    vipType: vipInfo.vipType,
-    vipInfo: vipInfo
+    vipType: vipType,
+    vipInfo: vipInfo ? vipInfo : {}
   };
-
-
 
   return res.send( {
     "status":1,
@@ -275,7 +271,6 @@ exports.getUserInfo = async (req, res) => {
 }
 
 exports.login = async (req, res) => {
-
   let phone;
   let password = req.body.password;
   let outId;
@@ -317,9 +312,29 @@ exports.login = async (req, res) => {
       if(!validation.isEmpty()) {
         throw('invalid body');
       }
-      
-      const result = await user.checkPassword(outId, password);
-      
+      try{
+        const id =await knex('user').update({
+          outId: outId,
+          phone: phone,
+          username: phone,
+          password: user.createPassword(password,phone)
+        }).where({
+          outId: outId
+        }).orWhere({
+          username: phone
+        });
+
+        console.log(id);
+      }catch(err){
+        return res.send({
+          "status":-1,
+          "success":false,
+          "data":'outId or phone err'
+        });
+      }
+         
+      const result = await user.checkPassword(phone, password);
+
       logger.info(`[${ req.body.phone }] login success`);
       req.session.user = result.id;
       req.session.type = result.type;
@@ -373,9 +388,8 @@ exports.login = async (req, res) => {
         vipType,
         group
       };
-      console.log(userConfig);
+
       const [ userId ] = await user.add(userConfig);
-      console.log(outId);
       
       if(req.body.ref) { ref.addRefUser(req.body.ref, req.session.user); }
       req.session.user = userId;

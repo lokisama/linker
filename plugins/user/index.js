@@ -290,3 +290,4 @@ exports.getOneAdmin = getOneAdmin;
 exports.getUserAndPaging = getUserAndPaging;
 exports.delete = deleteUser;
 exports.changePassword = changePassword;
+exports.createPassword = createPassword;
