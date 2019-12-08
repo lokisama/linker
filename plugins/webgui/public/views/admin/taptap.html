@@ -1,0 +1,172 @@
+<!-- <md-tabs md-dynamic-height md-border-bottom>
+    <md-tab ng-repeat="payType in payTypes"
+            label="{{payType.name}}"
+            md-on-select="selectPayType(payType.name)">
+    </md-tab>
+</md-tabs> -->
+<md-card>
+    <div layout="row">
+        <div flex  layout-margin="">
+            
+            <md-input-container class="md-inline-block">
+                <label translate>更新日期</label>
+                <!-- <input type="text" required name="start" ng-model="orderFilter.start"> -->
+                <md-datepicker ng-model="filter.start" md-hide-icons="calendar"></md-datepicker>
+            </md-input-container>
+        
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container flex layout="row"  layout-align="center center">
+              <label>TapId</label>
+              <input type="text" ng-model="filterTapId">
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container flex layout="row"  layout-align="center center">
+              <label>游戏名</label>
+              <input type="text" ng-model="filterGameName">
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container flex layout="row"  layout-align="center center">
+              <label>分类</label>
+              <input type="text" ng-model="filterGameType">
+            </md-input-container>
+
+        </div>
+
+        <div flex  layout-margin="">
+            
+            <md-input-container layout="row"  layout-align="center center">
+            
+              <md-select multiple ng-model="selectStatus" placeholder="游戏状态" flex>
+                <md-option ng-value="o" ng-repeat="o in statusGroup">{{ gameStatusEnum[o]}}</md-option>
+              </md-select>
+
+            </md-input-container>
+
+        </div>
+    </div>
+
+    <div layout="row">
+        
+
+        <div flex  layout="row"  layout-align="center center" style="min-width:270px;">
+            <md-button class="md-primary md-raised" ng-click="getOrders()">查询</md-button>
+            <md-button class="md-primary md-raised" ng-click="resetSearch()">重置 </md-button>
+        </div>
+    </div>
+</md-card>
+
+<md-card>
+<div layout="row" layout-padding="" ng-if=" filterTapId != '' && orders.length > 0">
+    。。。
+</div>
+</md-card>
+
+<div ng-if="orders.length === 0 && !isOrderLoading" class="zero-element">没有订单</div>
+<div ng-show="orders.length">
+    <md-card>
+        <md-list>
+            <md-list-item>
+                <div flex layout="row" layout-align="space-between center" style="text-align:center;font-size:0.8em">
+                    <div flex="30" flex-xs="60" style="min-width:100px;">
+                    图标
+                    </div>
+                    <div flex="30" flex-xs="60" style="min-width:80px;">
+                    tapId
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    游戏名
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    简介图
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    视频
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    状态
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    下载地址
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    包大小
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    更新时间
+                    </div>
+                    <div flex="30" flex-xs="60">
+                    创建时间
+                    </div>
+                </div>
+            </md-list-item>
+            <md-divider></md-divider>
+            <md-list-item ng-repeat="game in games track by $index">
+                
+                <div flex layout="row" layout-align="space-between center"  style="text-align:center;font-size:0.8em">
+                    <div flex="30" flex-xs="60" style="min-width:100px;" >
+                        <img src="{{game.icon}}" width="80"/>
+                        <!-- <span hide-gt-sm>
+                            <span style="font-size: 0.9em;">{{ order.orderId }}</span><br><span style="font-size: 0.9em;">{{ order.createTime | timeago }}</span>
+                        </span> -->
+                    </div>
+                    <div flex="30" flex-xs="60" style="min-width:80px;">
+                        {{game.tapId}}
+                    </div>
+                    <div flex="30" flex-xs="60" style="min-width:80px;">
+                        {{game.gameName}}
+                    </div>
+                    <div flex="30" flex-xs="60">
+                        <img src="{{ game.images.split(',')[0] }}" width="100"/>
+                    </div>
+                    <div flex="30" flex-xs="60">
+                        <a target="_blank" ng-if="game.videos !='' " href="{{game.videos}}">有视频</a>
+                        <span ng-if="game.videos =='' " href="{{game.videos}}">无视频</span>
+                    </div>
+                    <div flex="30" flex-xs="60">
+                        {{game.androidStatus}}
+                    </div>
+                    <div flex="30" flex-xs="60"">
+                       <a target="_blank" ng-if="game.androidUrl !='' " href="{{game.videos}}">有包</a>
+                    <span ng-if="game.androidUrl =='' " href="{{game.videos}}">无包</span>
+                    </div>
+                    <div flex="30" flex-xs="60"">
+                        {{ game.packageSize }}
+                    </div>
+                    <div flex="30" flex-xs="60" style="text-align:center;font-size: 0.6em;">
+                        <span >{{game.updateTimeParsed | date : 'MM-dd HH:mm:ss'}}</span>
+                    </div>
+                    <div flex="30" flex-xs="60" style="text-align:center;font-size: 0.6em;">
+                        <span >{{game.createTime | date : 'MM-dd HH:mm:ss'}}</span>
+                    </div>
+                    
+                </div>
+                <md-divider></md-divider>
+            </md-list-item>
+            <md-list-item  in-view="view($inview)" ng-if="orders.length && !isOrderPageFinish">
+                <div flex layout="row" layout-align="center center">
+                    <md-progress-circular md-mode="indeterminate" class="md-hue-2" md-diameter="20px"></md-progress-circular>
+                </div>
+                <md-divider></md-divider>
+            </md-list-item>
+        </md-list>
+    </md-card>
+</div>
+<div layout-fill layout="row" layout-align="center center" in-view="view($inview)" ng-if="!orders.length && !isOrderPageFinish">
+    <div flex style="height: 180px;"></div>
+    <div flex layout="row" layout-align="center center">
+        <md-progress-circular md-mode="indeterminate" class="md-accent"></md-progress-circular>
+    </div>
+    <div flex style="height: 180px;"></div>
+</div>
+

@@ -46,21 +46,25 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       name: '支付记录',
       icon: 'payment',
       click: 'admin.pay',
-      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+      //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '优惠券',
       icon: 'local_play',
       click: 'admin.pay',
-      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+      //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '体验券',
       icon: 'local_play',
       click: 'admin.pay',
-      hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+      //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '统计',
       icon: 'cloud',
       click: 'admin.analysis'
+    }, {
+      name: '查询-Tap游戏',
+      icon: 'people',
+      click: 'admin.tap',
     }, {
       name: '配置-套餐',
       icon: 'account_circle',
@@ -508,7 +512,7 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     };
 
     $scope.orderFilter = {
-      start:new Date().setMonth(new Date().getMonth -1).getTime(),
+      start:new Date(new Date().setMonth(new Date().getMonth() -1)),
       end: new Date(Date.now()),
     }
 
@@ -518,6 +522,36 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     $scope.PaidUsers = 0;
     $scope.PaidTimes = 0;
   
+  }
+]).controller('AdminTapController', ['$scope', '$http', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
+  ($scope, $http, orderDialog, $mdMedia, $localStorage, orderFilterDialog, $timeout, $state) => {
+    $scope.setTitle('Tap查询');
+    
+    const getPageSize = () => {
+      if($mdMedia('xs')) { return 30; }
+      if($mdMedia('sm')) { return 30; }
+      if($mdMedia('md')) { return 40; }
+      if($mdMedia('gt-md')) { return 50; }
+    };
+
+    $scope.filter = {
+      start: new Date(),
+    };
+
+    $scope.page=1;
+
+    $http.get("http://apis.lynca.tech/MingboService/listTapGames?isInnerUse=true&page="+$scope.page).then(res=>{
+      console.log(res.data);
+      const data = res.data;
+      try{
+        if(data.entities && data.entities.length >0){
+          $scope.games = data.entities;
+        }
+      }catch(e){
+        console.log(e);
+      }
+
+    })
   }
 ]);
 

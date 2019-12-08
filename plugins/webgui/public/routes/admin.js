@@ -32,6 +32,12 @@ app.config(['$stateProvider', $stateProvider => {
       controller: 'AdminAnalysisController',
       templateUrl: `${ cdn }/public/views/admin/analysis.html`,
     })
+    .state('admin.tap', {
+      url: '/tap',
+      controller: 'AdminTapController',
+      templateUrl: `${ cdn }/public/views/admin/taptap.html`,
+    })
+
     .state('admin.unfinished', {
       url: '/unfinished',
       templateUrl: `${ cdn }/public/views/admin/unfinished.html`,
