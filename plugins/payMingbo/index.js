@@ -13,6 +13,9 @@ const moment = require('moment');
 const push = appRequire('plugins/webgui/server/push');
 const path = require('path');
 const ytdl = require('ytdl-core');
+
+const { request } = require('http');
+const { parse } = require('url');
 // TypeScript: import ytdl from 'ytdl-core'; with --esModuleInterop
 // TypeScript: import * as ytdl from 'ytdl-core'; with --allowSyntheticDefaultImports
 // TypeScript: import ytdl = require('ytdl-core'); with neither of the above
@@ -325,7 +328,7 @@ cron.second(async () => {
       // "2":"已到期",
       // "-1":"异常"
 
-      logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
+      //logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
       // payTime = moment(payTime).format("YYYY-MM-DD HH:mm:ss");
 
       return knex('pay').update({
@@ -1002,6 +1005,67 @@ const checkPackage = async (list) =>{
   return result;
 }
 
+const getReport = async () => {
+  const r1 = await knex('pay').sum("totalAmount as totalPay");//.where({"status":"TRADE_SUCCESS"});
+  const r2 = await knex('pay').sum("totalAmount as totalFinish").where({"status":"FINISH"});
+  const r3 = await knex('pay').count("user as PaidUsers").where({"status":"FINISH"}).groupBy("user");
+  const r4 = await knex('pay').count("id as PaidTimes").where({"status":"FINISH"});
+
+  return {
+
+    "totalPay":r1.length > 0 ? r1[0].totalPay.toFixed(2) : 0,
+    "totalFinish":r2.length > 0 ? r2[0].totalFinish.toFixed(2)  : 0,
+    "PaidUsers":r3.length > 0 ? r3[0].PaidUsers : 0,
+    "PaidTimes":r4.length > 0 ? r4[0].PaidTimes : 0,
+  }
+
+}
+
+const getTapGames = async (page) => {
+  const req = await httpGET("http://apis.lynca.tech/MingboService/listTapGames?isInnerUse=true&page="+page);
+  
+  return req;
+}
+
+const httpGET = (url) => {
+  return new Promise((resolve, reject) => {
+    //params = stringify(params);
+    const { hostname, path } = parse(url);
+    const options = {
+      hostname,
+      path,
+      method: 'GET',
+      // headers: {
+      //   'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+      // },
+      // body: params
+    };
+    let data = '';
+    const req = request(options, res => {
+      res.setEncoding('utf8');
+      
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (error) {
+          error.message = 'Cannot resolve the interface returned data';
+          reject(error);
+        }
+      });
+    });
+    req.on('error', error => {
+      reject(error);
+    });
+    req.write(data);
+    req.end();
+  });
+}
+
+
+
 exports.orderListAndPaging = orderListAndPaging;
 exports.orderList = orderList;
 exports.createOrder = createOrder;
@@ -1018,3 +1082,5 @@ exports.alipayNotify = alipayNotify;
 exports.wechatNotify = wechatNotify;
 exports.youtube = youtube;
 exports.checkPackage = checkPackage;
+exports.getTapGames = getTapGames;
+exports.getReport = getReport;

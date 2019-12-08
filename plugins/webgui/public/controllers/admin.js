@@ -47,16 +47,16 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       icon: 'payment',
       click: 'admin.pay',
       //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
-    }, {
-      name: '优惠券',
-      icon: 'local_play',
-      click: 'admin.pay',
-      //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
-    }, {
-      name: '体验券',
-      icon: 'local_play',
-      click: 'admin.pay',
-      //hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+    // }, {
+    //   name: '优惠券',
+    //   icon: 'local_play',
+    //   click: 'admin.pay',
+    //   hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
+    // }, {
+    //   name: '体验券',
+    //   icon: 'local_play',
+    //   click: 'admin.pay',
+    //   hide: !($scope.config.paypal || $scope.config.giftcard || $scope.config.refCode || $scope.config.alipay),
     }, {
       name: '统计',
       icon: 'cloud',
@@ -517,10 +517,18 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
     }
 
 
-    $scope.totalAmount = 0;
-    $scope.totalTransfer = 0;
+    $scope.totalPay = 0;
+    $scope.totalFinish = 0;
     $scope.PaidUsers = 0;
     $scope.PaidTimes = 0;
+
+    adminApi.getReport().then(success=>{
+      console.log(success);
+      $scope.totalPay = success.totalPay;
+      $scope.totalFinish = success.totalFinish;
+      $scope.PaidUsers = success.PaidUsers;
+      $scope.PaidTimes = success.PaidTimes;
+    })
   
   }
 ]).controller('AdminTapController', ['$scope', '$http', 'orderDialog', '$mdMedia', '$localStorage', 'orderFilterDialog', '$timeout', '$state',
@@ -534,24 +542,173 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
       if($mdMedia('gt-md')) { return 50; }
     };
 
-    $scope.filter = {
-      start: new Date(),
-    };
+    $scope.taptap = $localStorage.taptap?$localStorage.taptap:{list:[],page:0,totalCount:0};
 
-    $scope.page=1;
 
-    $http.get("http://apis.lynca.tech/MingboService/listTapGames?isInnerUse=true&page="+$scope.page).then(res=>{
-      console.log(res.data);
-      const data = res.data;
-      try{
-        if(data.entities && data.entities.length >0){
-          $scope.games = data.entities;
-        }
-      }catch(e){
-        console.log(e);
+    $scope.statusGroup = ["试玩","下载","敬请期待","预约","暂不售卖","停止研发","关闭注册","已停服","暂不开放","下架"];
+    $scope.selectStatus = [];
+
+    $scope.filterGameType = "";
+    $scope.filterGameName = "";
+    $scope.filterTapId = "";
+    $scope.sortByUpdateTime = false;
+
+    $scope.filter = [];
+    $scope.origin = $localStorage.taptap ? $localStorage.taptap.list : [];
+    $scope.currentPage = $localStorage.taptap ? $localStorage.taptap.page : 0;
+    $scope.totalCount = $localStorage.taptap ? $localStorage.taptap.totalCount : 0;
+    $scope.page = 1;
+    $scope.size = 30;
+    $scope.totalPage = 0;
+    $scope.isFinished = false;
+    $scope.isPause = false;
+
+
+    $scope.init = () =>{
+
+    }
+
+
+    $scope.setPage = (page) => {
+
+      $scope.filter = angular.copy($scope.origin);
+
+      if($scope.selectStatus.length > 0){
+
+        $scope.filter = $scope.filter.filter(o=>{
+          return $scope.selectStatus.indexOf(o.androidStatus) >=0 
+        });
+
       }
 
-    })
+      if($scope.filterGameType != ""){
+
+        $scope.filter = $scope.filter.filter(o=>{
+          return o.gameType == $scope.filterGameType;
+        });
+
+      }
+
+      if($scope.filterGameName != ""){
+
+        $scope.filter = $scope.filter.filter(o=>{
+          return o.gameName.indexOf($scope.filterGameName) >= 0;
+        });
+
+      }
+
+      if($scope.filterTapId != ""){
+
+        $scope.filter = $scope.filter.filter(o=>{
+          return o.tapId == $scope.filterTapId;
+        });
+
+      }
+
+      if($scope.sortByUpdateTime == true){
+
+        $scope.filter = $scope.filter.sort( (o1,o2)=>{
+          let t1 = o1.updateTime.replace('年','-').replace('月','-').replace('日','');
+          let t2 = o2.updateTime.replace('年','-').replace('月','-').replace('日','');
+
+          o1.sortTime = new Date(t1).getTime();
+          o2.sortTime = new Date(t2).getTime();
+
+          console.log(o1.sortTime,o2.sortTime);
+
+          return o2.sortTime - o1.sortTime;
+        });
+
+      }
+
+
+      $scope.totalCount = $scope.filter.length;
+      $scope.totalPage = parseInt($scope.filter.length / $scope.size);
+      console.log("$scope.filter",$scope.filter.length);
+
+      $scope.page = page;
+      $scope.games = $scope.filter.slice( (page-1)*$scope.size, page*$scope.size);
+      
+    }
+
+    $scope.sortByUpdateTimeDesc = ()=>{
+      $scope.sortByUpdateTime = true;
+      $scope.setPage(1);
+    }
+
+    $scope.nextPage = ()=>{
+      $scope.page = $scope.page+1;
+      $scope.setPage($scope.page);
+    }
+
+    $scope.prevPage = ()=>{
+      $scope.page = $scope.page-1;
+      $scope.setPage($scope.page);
+    }
+
+    $scope.pause = () =>{
+      $scope.isPause = !$scope.isPause;
+      $scope.getAllGames($localStorage.taptap.page+1);
+    }
+
+
+    $scope.getAllGames = (page)=>{
+        if($scope.isPause) {
+          $localStorage.taptap.list = angular.copy($scope.origin);
+          return;
+        }
+
+        if(page==0) {
+          $localStorage.taptap = {list:[],page:0,totalCount:0};
+          $scope.origin = [];
+        } 
+
+        $scope.isFinished = true;
+        $http.get("/api/mingbo/tap/list/" + page).then(res => {
+          try{
+
+            const data = res.data;
+
+            $scope.size = data.limit;
+            $scope.next = data.nextPageToken;
+            $scope.currentPage = page;
+            $scope.totalPage = page;
+            $localStorage.taptap.page = page;
+            $localStorage.taptap.totalCount = data.totalCount;
+            $scope.taptap = $localStorage.taptap;
+
+            if(data.entities && data.entities.length >0){
+
+              if(page==0){
+                $scope.games = data.entities;
+              }
+              
+              const currentPage = [...data.entities.map(o=>{
+                o.description = "";
+                o.updateLog = "";
+                return o;
+              })];
+
+              $scope.origin = $scope.origin.concat(currentPage);
+              console.log($scope.origin.length);
+
+              $scope.totalCount = $scope.origin.length;
+
+              if($scope.next && $scope.next != "" ){
+                $scope.getAllGames(page + 1);
+              }else{
+                $scope.isFinished = false;
+                $localStorage.taptap.list = angular.copy($scope.origin);
+                return;
+              }
+            }
+          }catch(e){
+            console.log(e);
+          }
+      })
+    }
+
+    
   }
 ]);
 

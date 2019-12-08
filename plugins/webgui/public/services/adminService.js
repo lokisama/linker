@@ -22,7 +22,9 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
       type,
     } }).then(success => success.data);
   };
-
+  const getReport = ()=>{
+    return $http.get('/api/mingbo/report').then(success => success.data);
+  }
   const getPlans = () =>{
     return $http.get('/api/mingbo/plans').then(success => success.data);
   };
@@ -325,6 +327,7 @@ app.factory('adminApi', ['$http', '$q', 'moment', 'preload', '$timeout', 'config
     getUser,
     getOrder,
     getPlans,
+    getReport,
     getCsvOrder,
     getServer,
     getAccount,

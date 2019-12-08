@@ -280,6 +280,7 @@ app.post('/api/mingbo/giftcard/use', isAdmin, isSuperAdmin, adminGiftCard.useGif
 app.post('/api/mingbo/giftcard/search', isAdmin, isSuperAdmin, adminGiftCard.searchGiftcard);
 app.post('/api/mingbo/orders', isAdmin, admin.getOrdersForMingbo);
 app.get('/api/mingbo/plans',isAdmin, isSuperAdmin, admin.getPlans);
+app.get('/api/mingbo/report', isAdmin, admin.getReport);
 app.post('/api/mingbo/ytb/get', user.youtube);
 
 
@@ -291,6 +292,7 @@ app.get('/api/mingbo/user/plans', isUser, user.getUserPlans);
 app.post('/api/mingbo/user/plans', isUser, user.getUserPlans);
 app.get('/api/mingbo/user/servers', isUser, user.getAccountForMingbo);
 app.post('/api/mingbo/user/package/check', isUser, user.checkPackage);
+app.get('/api/mingbo/tap/list/:page',user.getTapGames);
 //app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
@@ -298,6 +300,7 @@ app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
 // app.get('/api/mingbo/user/order', isUser, user.getOrder);
 app.get('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
 app.post('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
+
 
 
 if (config.plugins.webgui_telegram && config.plugins.webgui_telegram.use) {

@@ -1096,3 +1096,13 @@ exports.checkPackage = async (req,res) =>{
     });
   }
 }
+
+exports.getTapGames = async (req, res) =>{
+  //try{
+    const page = parseInt(req.params.page) || 0;
+    const result = await payMingboPlugin.getTapGames(page);
+    return res.send(result);
+  // }catch(e){
+  //   return res.send({"success":false});
+  // }
+}

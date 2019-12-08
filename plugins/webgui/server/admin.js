@@ -871,3 +871,15 @@ exports.getAccountAndPaging = async (req, res) => {
     res.status(403).end();
   }
 };
+
+exports.getReport =  async (req, res) => {
+try {
+    
+    const accounts = await payMingbo.getReport();
+    return res.send(accounts);
+    
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
