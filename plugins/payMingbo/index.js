@@ -972,7 +972,34 @@ const youtube = async (url) => {
   }
   console.log("format",format);
   return format;
+}
 
+const checkPackage = async (list) =>{
+  let result = {};
+
+  const check = async (package) => {
+    const r = await knex('package_list').where({package:package}).select("package","allowInstall","allowVpn","comment");
+
+    if(r.length > 0){
+      return r[0];
+    }else{
+      const config = {
+        package:package,
+        allowVpn:0,
+        allowInstall:1,
+        comment:package
+      };
+      await knex('package_list').insert(config);
+      return config;
+    }
+  };
+
+  for(let i =0; i<list.length; i++){
+    const o = list[i];
+    result[o]= await check(o);
+  }
+
+  return result;
 }
 
 exports.orderListAndPaging = orderListAndPaging;
@@ -985,9 +1012,9 @@ exports.getUserFinishOrder = getUserFinishOrder;
 exports.getUserFinishOrderTotal = getUserFinishOrderTotal;
 exports.getUserExpireTime = getUserExpireTime;
 exports.refund = refund;
-
 exports.createOrderForMingboUser = createOrderForMingboUser;
 exports.createAppOrder = createAppOrder;
 exports.alipayNotify = alipayNotify;
 exports.wechatNotify = wechatNotify;
 exports.youtube = youtube;
+exports.checkPackage = checkPackage;

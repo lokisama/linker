@@ -1078,3 +1078,21 @@ exports.youtube = async (req, res) => {
     res.status(403).end();
   }
 }
+
+exports.checkPackage = async (req,res) =>{
+  try{
+    const list = req.body.list;
+    const result = await payMingboPlugin.checkPackage(list); 
+    return res.send({
+      status: 1,
+      success: true,
+      data: result
+    });
+  }catch(err){
+    return res.send({
+      status: -1,
+      success: false,
+      message: err
+    });
+  }
+}
