@@ -926,9 +926,11 @@ const getUserExpireTime = async (userId) => {
     let m2 = moment(o.expireTime);
     //计算相差多少天 day可以是second minute
     let days = m2.diff(m1, 'day');
+    let hours = m2.diff(m1, 'hour');
     let diff = m2.valueOf() - m1.valueOf();
 
     o.days = days;
+    o.hours = hours;
     //o.comment = "剩余" + days + "天";
     
     if(i>0){
