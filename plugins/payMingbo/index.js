@@ -929,7 +929,9 @@ const getUserExpireTime = async (userId) => {
     let hours = m2.diff(m1, 'hour');
     let diff = m2.valueOf() - m1.valueOf();
 
-    o.days = days;
+    console.log(m1.valueOf(),m2.valueOf());
+    
+    // o.days = days;
     o.hours = hours;
     //o.comment = "剩余" + days + "天";
     
