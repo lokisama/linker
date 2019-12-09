@@ -20,7 +20,7 @@ const alipayPlugin = appRequire('plugins/alipay/index');
 const macAccountPlugin = appRequire('plugins/macAccount/index');
 const accountFlow = appRequire('plugins/account/accountFlow');
 
-const payMingboPlugin = appRequire('plugins/payMingbo/index');
+const mingboPlugin = appRequire('plugins/payMingbo/index');
 
 const alipay = appRequire('plugins/alipay/index');
 
@@ -481,7 +481,7 @@ exports.createGiftcardOrder = async (userInfo,card) => {
     }
 
     await giftcard.setCardFinish(userId,accountId,card.password);
-    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , card, platform);
+    const alipayOrder = await mingboPlugin.createOrderForMingboUser(userInfo, accountId, sku, limit , card, platform);
     return alipayOrder;
 
   } catch(err) {
@@ -515,7 +515,7 @@ exports.createAppOrder = async (req, res) => {
       }
     }
 
-    const alipayOrder = await payMingboPlugin.createOrderForMingboUser(req.userInfo, accountId, sku, limit , cardInfo, platform);
+    const alipayOrder = await mingboPlugin.createOrderForMingboUser(req.userInfo, accountId, sku, limit , cardInfo, platform);
     return res.send({
       "status": 1,
       "success": true ,
@@ -540,7 +540,7 @@ exports.createAppOrder = async (req, res) => {
 exports.alipayCallbackMingbo = async (req, res) => {
   const data = req.body;
   try{
-    let result = await payMingboPlugin.alipayNotify(data);
+    let result = await mingboPlugin.alipayNotify(data);
     return res.send(result);
   }catch(e){
     return res.send({"success": false ,"error":e});
@@ -551,7 +551,7 @@ exports.alipayCallbackMingbo = async (req, res) => {
 exports.wechatCallbackMingbo = async (req, res) => {
   const data = req.body;
   try{
-    const result = await payMingboPlugin.wechatNotify(data);
+    const result = await mingboPlugin.wechatNotify(data);
     return res.send(result);
   }catch(e){
     return res.send({"success": false ,"error":e});
@@ -1049,8 +1049,8 @@ exports.getOrderForMingbo = async (req, res) => {
     let count = 0;
     if(config.plugins.alipay && config.plugins.alipay.use) {
       // const alipayOrders = await alipayPlugin.getUserFinishOrder(userId);
-      count = await payMingboPlugin.getUserFinishOrderTotal(userId);
-      const payOrders = await payMingboPlugin.getUserFinishOrder(userId, size, (page-1)*size);
+      count = await mingboPlugin.getUserFinishOrderTotal(userId);
+      const payOrders = await mingboPlugin.getUserFinishOrder(userId, size, (page-1)*size);
       orders = [...orders, ...payOrders];
 
       if(page*size < count) after = page+1;
@@ -1110,7 +1110,7 @@ exports.addMacAccount = async (req, res) => {
 exports.youtube = async (req, res) => {
   try {
     const url = req.body.url;
-    const info = await payMingboPlugin.youtube(url);
+    const info = await mingboPlugin.youtube(url);
     console.log("return",info);
     return res.send(info);
   } catch(err) {
@@ -1122,7 +1122,7 @@ exports.youtube = async (req, res) => {
 exports.checkPackage = async (req,res) =>{
   try{
     const list = req.body.list;
-    const result = await payMingboPlugin.checkPackage(list); 
+    const result = await mingboPlugin.checkPackage(list); 
     return res.send({
       status: 1,
       success: true,
@@ -1140,9 +1140,44 @@ exports.checkPackage = async (req,res) =>{
 exports.getTapGames = async (req, res) =>{
   //try{
     const page = parseInt(req.params.page) || 0;
-    const result = await payMingboPlugin.getTapGames(page);
+    const result = await mingboPlugin.getTapGames(page);
     return res.send(result);
   // }catch(e){
   //   return res.send({"success":false});
   // }
+}
+
+exports.filterTapGames = async (req, res) =>{
+  try{
+    const page = req.body.page || 0;
+    const size = req.body.size || 10;
+    const key = req.body.key || "androidStatus";
+    const filter = req.body.filter || ["下载"];
+
+    if(!key){
+      throw("key不能为空");
+    }
+
+    if(!filter){
+      throw("filter不能为空");
+    }
+
+    if(Array.isArray(filter) == false){
+      throw("filter格式错误");
+    }
+
+    try{
+      let r = await mingboPlugin.filterTapGames(page,size,key,filter);
+      res.send(r);
+    }catch(e){
+      filterTapGames(req,res);
+    }
+
+  }catch(e){
+    res.send({
+      success:false,
+      message: e
+    })
+  }
+  
 }

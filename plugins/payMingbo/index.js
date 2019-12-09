@@ -13,6 +13,15 @@ const moment = require('moment');
 const push = appRequire('plugins/webgui/server/push');
 const path = require('path');
 const ytdl = require('ytdl-core');
+var TableStore = require('tablestore');
+const  {client,TSHelper} = require("./aliyun-ots-utils");
+
+// var client = new TableStore.Client({
+//   accessKeyId: 'LTAI4Fo3DFPF5heh9zAo4Cqq',
+//   secretAccessKey: 'JwmG3Gh3Lp0MqOWHucMDMZW1E1Qm4Z',
+//   endpoint: 'https://instance.cn-shanghai.ots.aliyuncs.com',
+//   instancename: 'mingboservice'
+// });
 
 const { request } = require('http');
 const { parse } = require('url');
@@ -1026,9 +1035,42 @@ const getReport = async () => {
 }
 
 const getTapGames = async (page) => {
-  const req = await httpGET("http://apis.lynca.tech/MingboService/listTapGames?isInnerUse=true&page="+page);
   
-  return req;
+  let i = 0;
+
+  await knex('pull_task').update({
+    "startTime": Date.now(),
+    "status": 1
+  }).where({
+    "name": "taptap"
+  });
+
+  try{
+    const req = await httpGET("http://apis.lynca.tech/MingboService/listTapGames?isInnerUse=true&page="+page);
+    if(req && req.entities.length >0){
+
+      const insert = req.entities.map(o=>{
+        o.tags = o.tags.join(",");
+        // await knex("taptap").insert(o);
+        return o;
+      })
+      // const result = 
+    }
+
+    return req.map(o=>{
+      o.entities = [];
+      return o;
+    });
+
+  }catch(e){
+    i++;
+    console.log("retry: "+i);
+    pullTapGames(page);
+    
+    if(i>=3) {
+      return null;
+    }
+  }
 }
 
 const httpGET = (url) => {
@@ -1068,6 +1110,100 @@ const httpGET = (url) => {
   });
 }
 
+const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
+    let sortFieldName = "createTime";
+    let queryMap = {
+        MATCH_QUERY: {//1
+            queryType: TableStore.QueryType.MATCH_QUERY,
+            query: {
+                fieldName: "pic_id",
+                text: "pic_id_5"
+            }
+        },
+        MATCH_QUERY_OR: {//1
+            queryType: TableStore.QueryType.MATCH_QUERY,
+            query: {
+                fieldName: "pic_description",
+                text: "some info",
+                minimumShouldMatch: 2,
+                operator: TableStore.QueryOperator.OR
+            }
+        },
+        MATCH_PHRASE_QUERY: {//2
+            queryType: TableStore.QueryType.MATCH_PHRASE_QUERY,
+            query: {
+                fieldName: "androidStatus",
+                text: "预约"
+            }
+        },
+        FILTER_QUERIES:{
+          queryType: TableStore.QueryType.BOOL_QUERY,
+          query: {
+            shouldQueries:[],
+            minimumShouldMatch : 1
+          }
+        }
+    };
+
+    console.log(filter);
+    filter.map(o=>{
+      let queryConfig = {
+          queryType: TableStore.QueryType.MATCH_PHRASE_QUERY,
+          query: {
+              fieldName: key,
+              text: o,
+              operator: TableStore.QueryOperator.OR
+          }
+      };
+      queryMap.FILTER_QUERIES.query.shouldQueries.push(queryConfig);
+    })
+
+    const params = {
+      tableName: "TapGame",
+      indexName: "TapGame",
+      searchQuery: {
+          offset: page * size,
+          limit: size,
+          getTotalCount: true,
+          query: queryMap.FILTER_QUERIES,
+          sort: {
+              sorters: [
+                  {
+                      fieldSort: {
+                          fieldName: sortFieldName,
+                          order: TableStore.SortOrder.SORT_ORDER_ASC
+                      }
+                  }
+              ]
+          }
+      },
+      columnToGet: {
+          returnType: TableStore.ColumnReturnType.RETURN_ALL,//RETURN_SPECIFIED RETURN_NONE RETURN_ALL
+          // returnNames: ["tapId", "gameName", "needPay", "totalPay", "totalInstall", "totalLike", 
+          // "company", "publisher", "developer",
+          // "rating","language","description",
+          // "updateTime","updateTimeParsed",
+          // "packageSize","currentVersion","website","images","videos","gameStatus","videoScreenShot","icon","tags",
+          // "androidUrl","androidStatus","iosUrl","iosStatus","gameType","bangName","time","updateLog","createTime","expireTime"]
+      },
+      routingValues: [
+          // [{count: Long.fromNumber(0), pic_id: "pic_id_0"}],//pk顺序与创建index时routingFields一致
+          // [{count: Long.fromNumber(3), pic_id: "pic_id_3"}],
+      ]
+    };
+    const data = await client.search(params);
+    // console.log('success 1:', JSON.stringify(data, null, 2));
+    const r =TSHelper.parseRange(data);
+    r.limit = size;
+    r.offset = page * size;
+    r.sortFieldName = sortFieldName;
+    r.sortOrder = TableStore.SortOrder.SORT_ORDER_ASC;
+    r.nextPageToken = data.nextToken ? data.nextToken.toString("base64") : null;
+    console.log("nextToken", r.nextPageToken);
+    return r;
+     
+}
+
 
 
 exports.orderListAndPaging = orderListAndPaging;
@@ -1088,3 +1224,4 @@ exports.youtube = youtube;
 exports.checkPackage = checkPackage;
 exports.getTapGames = getTapGames;
 exports.getReport = getReport;
+exports.filterTapGames = filterTapGames;

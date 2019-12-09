@@ -677,31 +677,14 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
             $localStorage.taptap.totalCount = data.totalCount;
             $scope.taptap = $localStorage.taptap;
 
-            if(data.entities && data.entities.length >0){
-
-              if(page==0){
-                $scope.games = data.entities;
-              }
-              
-              const currentPage = [...data.entities.map(o=>{
-                o.description = "";
-                o.updateLog = "";
-                return o;
-              })];
-
-              $scope.origin = $scope.origin.concat(currentPage);
-              console.log($scope.origin.length);
-
-              $scope.totalCount = $scope.origin.length;
-
-              if($scope.next && $scope.next != "" ){
-                $scope.getAllGames(page + 1);
-              }else{
-                $scope.isFinished = false;
-                $localStorage.taptap.list = angular.copy($scope.origin);
-                return;
-              }
+            if($scope.next && $scope.next != "" ){
+              $scope.getAllGames(page + 1);
+            }else{
+              $scope.isFinished = false;
+              $localStorage.taptap.list = angular.copy($scope.origin);
+              return;
             }
+
           }catch(e){
             console.log(e);
           }
