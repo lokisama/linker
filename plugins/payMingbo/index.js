@@ -978,7 +978,7 @@ const youtube = async (url) => {
 }
 
 const checkPackage = async (list) =>{
-  let result = {};
+  let result = [];
 
   const check = async (package) => {
     const r = await knex('package_list').where({package:package}).select("package","allowInstall","allowVpn","comment");
@@ -999,7 +999,7 @@ const checkPackage = async (list) =>{
 
   for(let i =0; i<list.length; i++){
     const o = list[i];
-    result[o]= await check(o);
+    result.push(await check(o));
   }
 
   return result;

@@ -492,6 +492,12 @@ const setCardFinish = async (userId,accountId,password) =>{
 	});
 }
 
+const setCardHide = async (userId,accountId,password) =>{
+	await knex(dbTableName).where({ password }).update({
+		isShow:0
+	});
+}
+
 
 const getOneByPassword = async(password)=>{
 	const card = await knex(dbTableName).select().where({ password });
@@ -515,3 +521,4 @@ exports.searchGiftcard = searchGiftcard;
 exports.searchGiftcardTotal = searchGiftcardTotal;
 exports.getOneByPassword = getOneByPassword;
 exports.setCardFinish = setCardFinish;
+exports.setCardHide = setCardHide;

@@ -28,9 +28,14 @@ exports.getAccountForMingbo = async (req, res) => {
   
   try {
     const userId = req.session.user;
+    const page =  req.body.page || 1;
+    const size = req.body.size || 12;
+
     let servers = await knex('server')
     .select(['id' , 'vipType', 'host', 'name', 'method', 'comment'])
     .orderBy('vipType','id');
+
+    let after = -1;
 
     let accounts = await account.getAccount({userId});
     accounts = accounts.map(f => {
@@ -53,10 +58,16 @@ exports.getAccountForMingbo = async (req, res) => {
         return o;
       })
 
+      let start = (page-1)*size;
+      let end = page* size > servers.length ? servers.length : page* size;
+      after = page* size > servers.length ? -1 : page+1;
+
+      servers = servers.slice( start , end );
       return res.send({
-        status:1,
-        success:true,
-        data: servers
+        status : 1,
+        success : true,
+        after : after,
+        data  : servers
       });
 
     }else{
@@ -428,6 +439,35 @@ exports.useGiftcard = async (req, res) =>{
   }
 }
 
+exports.delGiftcard = async (req, res) =>{
+    // try{
+    const userId = req.session.user;
+    const card = req.body.card;
+
+    let cardInfo = await giftcard.getOneByPassword(card);
+    console.log(card,cardInfo.user == userId);
+
+    if(cardInfo.user == userId){
+     
+        let order = await giftcard.setCardHide(card);
+        return res.send({
+          "status": 1  ,
+          "success": true,
+          "data": order 
+        });
+
+    }else{
+      throw("无删除权限");
+    }
+  // }catch(err){
+  //   return res.send({
+  //     "status": -1  ,
+  //     "success": false  ,
+  //     "message": err 
+  //   });
+  // }
+}
+
 exports.createGiftcardOrder = async (userInfo,card) => {
   try {
     const userId = userInfo.id;
@@ -608,7 +648,7 @@ exports.getUserPlans = async (req, res) => {
     }
 
     const giftcards = await giftcard.searchGiftcard(userId, "AVAILABLE", page, 1, 10);
-    let cards={};
+    let cards = null;
     if(giftcards.length > 0){
       cards = giftcards[0];
     }
