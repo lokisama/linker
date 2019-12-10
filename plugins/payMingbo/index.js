@@ -278,7 +278,7 @@ cron.second(async () => {
     status: 'FINISH',
     orderMode : 'free',
     orderStatus: 1,
-  }).where({ platform: 'giftcard' });//.whereNot("status","FINISH");
+  }).where({ platform: 'giftcard' }).whereNot("status","FINISH");
 
   //完成订单
   await knex('pay').update({
