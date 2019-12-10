@@ -1166,12 +1166,10 @@ exports.filterTapGames = async (req, res) =>{
       throw("filter格式错误");
     }
 
-    try{
-      let r = await mingboPlugin.filterTapGames(page,size,key,filter);
-      res.send(r);
-    }catch(e){
-      filterTapGames(req,res);
-    }
+    
+    let r = await mingboPlugin.filterTapGames(page,size,key,filter);
+    res.send(r);
+    
 
   }catch(e){
     res.send({

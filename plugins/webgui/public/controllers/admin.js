@@ -664,26 +664,23 @@ app.controller('AdminController', ['$scope', '$mdMedia', '$mdSidenav', '$state',
         } 
 
         $scope.isFinished = true;
-        $http.get("/api/mingbo/tap/list/" + page).then(res => {
+        $http.post("/api/mingbo/taptap/filter",{
+          page: page,
+          size: 20,
+          key: "androidStatus",
+          filter:["下载","试玩","预约","敬请期待"]
+        }).then(res => {
           try{
 
             const data = res.data;
 
+            $scope.currentPage = page;
             $scope.size = data.limit;
             $scope.next = data.nextPageToken;
-            $scope.currentPage = page;
             $scope.totalPage = page;
             $localStorage.taptap.page = page;
             $localStorage.taptap.totalCount = data.totalCount;
             $scope.taptap = $localStorage.taptap;
-
-            if($scope.next && $scope.next != "" ){
-              $scope.getAllGames(page + 1);
-            }else{
-              $scope.isFinished = false;
-              $localStorage.taptap.list = angular.copy($scope.origin);
-              return;
-            }
 
           }catch(e){
             console.log(e);

@@ -395,11 +395,6 @@ TSHelper.prototype={
 			let attr={};
 			_.each(item.primaryKey,function (hash) {
 				attr[hash.name]=hash.value;
-				try{
-					attr[hash.name]=JSON.parse(hash.value);
-				}catch(e){
-					attr[hash.name]=hash.value;
-				}
 			})
 
 			_.each(item.attributes,function(column){

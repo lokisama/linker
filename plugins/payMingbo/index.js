@@ -1113,14 +1113,14 @@ const httpGET = (url) => {
 const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
     let sortFieldName = "createTime";
     let queryMap = {
-        MATCH_QUERY: {//1
+        MATCH_QUERY: {
             queryType: TableStore.QueryType.MATCH_QUERY,
             query: {
                 fieldName: "pic_id",
                 text: "pic_id_5"
             }
         },
-        MATCH_QUERY_OR: {//1
+        MATCH_QUERY_OR: {
             queryType: TableStore.QueryType.MATCH_QUERY,
             query: {
                 fieldName: "pic_description",
@@ -1145,7 +1145,6 @@ const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
         }
     };
 
-    console.log(filter);
     filter.map(o=>{
       let queryConfig = {
           queryType: TableStore.QueryType.MATCH_PHRASE_QUERY,
@@ -1197,7 +1196,7 @@ const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
     r.limit = size;
     r.offset = page * size;
     r.sortFieldName = sortFieldName;
-    r.sortOrder = TableStore.SortOrder.SORT_ORDER_ASC;
+    r.sortOrder = "asc";
     r.nextPageToken = data.nextToken ? data.nextToken.toString("base64") : null;
     console.log("nextToken", r.nextPageToken);
     return r;
