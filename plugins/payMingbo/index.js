@@ -431,7 +431,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
 
       const config = {
         out_trade_no: myOrderId,
-        total_amount: "1.01",//totalAmount.toFixed(2),
+        total_amount: "0.01",//totalAmount.toFixed(2),
         subject: product.name,
         body: product.comment,
         timeout: orderExpire+'m',
@@ -443,8 +443,8 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       const config = {
         out_trade_no: myOrderId,
         body: product.name,
-        total_fee: 1.01,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
-        spbill_create_ip: '180.165.231.68' // 客户端ip
+        total_fee: 0.01,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
+        spbill_create_ip: '180.165.231.68' // 客户端ip TODO
       };
 
       payParams = await wechat.app(config);
