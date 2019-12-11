@@ -316,7 +316,7 @@ exports.login = async (req, res) => {
           "data":'outId or phone err'
         });
       }
-      // try{
+      try{
         const id = await knex('user').update({
           outId: outId,
           phone: phone,
@@ -329,13 +329,13 @@ exports.login = async (req, res) => {
         });
 
         console.log(id);
-      // }catch(err){
-      //   return res.send({
-      //     "status":-1,
-      //     "success":false,
-      //     "data":'outId or phone err'
-      //   });
-      // }
+      }catch(err){
+        return res.send({
+          "status":-1,
+          "success":false,
+          "data":'outId or phone err'
+        });
+      }
 
       const result = await user.checkPassword(phone, password);
 
