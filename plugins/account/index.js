@@ -583,6 +583,7 @@ const setAccountLimit = async (userId, accountId, orderId) => {
 };
 
 const setAccountLimitForMingbo = async (userId, accountId, sku) => {
+  console.log("start ", userId,sku);
   const orderInfo = await orderPlugin.getOneBySku(sku);
   if(orderInfo.baseId) {
     await knex('webgui_flow_pack').insert({
@@ -696,7 +697,7 @@ const setAccountLimitForMingbo = async (userId, accountId, sku) => {
     };
     const port = await getNewPort();
     await addAccount(orderType, {
-      orderId,
+      orderId:orderInfo.id,
       user: userId,
       port,
       password: 'lynca'+Math.random().toString().substr(2,10),

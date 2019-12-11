@@ -337,9 +337,9 @@ cron.second(async () => {
       // "2":"已到期",
       // "-1":"异常"
 
-      //logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
+      logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
       // payTime = moment(payTime).format("YYYY-MM-DD HH:mm:ss");
-      await account.setAccountLimitForMingbo(userId, null, order.sku);
+      await account.setAccountLimitForMingbo(order.user, null, order.sku);
 
       await knex('pay').update({
         status: "FINISH",
