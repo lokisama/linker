@@ -275,7 +275,7 @@ cron.second(async () => {
  
   //体验券直接完成
   await knex('pay').update({
-    status: 'FINISH',
+    // status: 'FINISH',
     orderMode : 'free',
     orderStatus: 1,
   }).where({ platform: 'giftcard' }).whereNot("status","FINISH");
@@ -285,7 +285,7 @@ cron.second(async () => {
     status: 'FINISH',
     orderMode: 'charge',
     orderStatus: 1,
-  }).whereNotNull("payCallback");//.whereNot({ status : 'FINISH'});
+  }).whereNotNull("payCallback").whereNot({ status : 'FINISH'});
 
   // await knex('pay').update({
   //   orderStatus: 1,
@@ -297,12 +297,12 @@ cron.second(async () => {
     orderStatus:-1,
   })
   .where('expireTime','<',Date.now())
-  .where("platform","aliyun").orWhere("platform","wechat");//.whereNot({ status : 'FINISH'});
+  .where("platform","aliyun").orWhere("platform","wechat").whereNot({ status : 'FINISH'});
 
 
   //处理未完成订单 
-  const orders = await knex('pay').select();//.whereNot('status', "FINISH");
-  const scanOrder = order => {
+  const orders = await knex('pay').select().whereNot('status', "FINISH");
+  const scanOrder = async order => {
     
 
     if(order.payCallback || order.platform == "giftcard"){
@@ -339,8 +339,9 @@ cron.second(async () => {
 
       //logger.info(`order: [${ order.orderId }] payTime:[${ payTime}] expireTime:[${ expireTime}] addTime:[${ addTime  }]`);
       // payTime = moment(payTime).format("YYYY-MM-DD HH:mm:ss");
+      await account.setAccountLimitForMingbo(userId, null, order.sku);
 
-      return knex('pay').update({
+      await knex('pay').update({
         status: "FINISH",
         activeTime: payTime,
         payTime: payTime,
@@ -350,6 +351,8 @@ cron.second(async () => {
       }).where({
         orderId: order.orderId
       });
+
+      
     }
     // if(order.status !== 'TRADE_SUCCESS' && order.status !== 'FINISH') {
     //   return alipay_f2f.checkInvoiceStatus(order.orderId).then(success => {
@@ -431,7 +434,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
 
       const config = {
         out_trade_no: myOrderId,
-        total_amount: "0.01",//totalAmount.toFixed(2),
+        total_amount: totalAmount.toFixed(2),
         subject: product.shortComment + " " +product.name,
         body: product.comment,
         timeout: orderExpire+'m',
@@ -443,7 +446,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       const config = {
         out_trade_no: myOrderId,
         body: product.shortComment + " " +product.name,
-        total_fee: 0.01,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
+        total_fee: totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
         spbill_create_ip: '180.165.231.68' // 客户端ip TODO
       };
 

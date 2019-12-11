@@ -1043,6 +1043,7 @@ exports.getOrderForMingbo = async (req, res) => {
     const userId = req.session.user;
     const page = req.body.page || 1;
     const size = req.body.size || 10;
+    const orderId = req.body.orderId;
 
     let orders = [];
     let after = -1;
@@ -1068,6 +1069,11 @@ exports.getOrderForMingbo = async (req, res) => {
       return b.createTime - a.createTime;
     });
 
+    if(orderId){
+      orders = orders.filter(o=>o.orderId == orderId);
+      console.log("orderId",orderId);
+      console.log("orders",orders);
+    }
     
 
     res.send({
@@ -1080,7 +1086,11 @@ exports.getOrderForMingbo = async (req, res) => {
 
   } catch(err) {
     console.log(err);
-    res.status(403).end();
+    res.send({
+      status: -1,
+      success: false,
+      message:"返回异常"
+    });
   }
 };
 

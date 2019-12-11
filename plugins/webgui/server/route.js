@@ -302,7 +302,7 @@ app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);
 app.post('/api/mingbo/user/giftcard/del', isUser, user.delGiftcard);
 app.post('/api/mingbo/user/creatAppOrder', isUser, user.createAppOrder);
 // app.get('/api/mingbo/user/order', isUser, user.getOrder);
-app.get('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
+// app.get('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
 app.post('/api/mingbo/user/order', isUser, user.getOrderForMingbo);
 
 

@@ -582,6 +582,206 @@ const setAccountLimit = async (userId, accountId, orderId) => {
   return;
 };
 
+const setAccountLimitForMingbo = async (userId, accountId, sku) => {
+  const orderInfo = await orderPlugin.getOneBySku(sku);
+  if(orderInfo.baseId) {
+    await knex('webgui_flow_pack').insert({
+      accountId,
+      flow: orderInfo.flow,
+      createTime: Date.now(),
+    });
+    await accountFlow.edit(accountId);
+    return;
+  }
+  const limit = orderInfo.cycle;
+  const orderType = orderInfo.type;
+  let account;
+  if(accountId) {
+    account = await knex('account_plugin').select().where({ id: accountId }).then(success => {
+      if(success.length) {
+        return success[0];
+      }
+      return null;
+    });
+  }
+  if(!accountId || !account) {
+    const getNewPort = () => {
+      let orderPorts = [];
+      if(orderInfo.portRange !== '0') {
+        try {
+          orderInfo.portRange.split(',').filter(f => f.trim()).forEach(f => {
+            if(f.indexOf('-')) {
+              const start = f.split('-').filter(f => f.trim())[0];
+              const end = f.split('-').filter(f => f.trim())[1];
+              if(start >= end) { return; }
+              for(let p = start; p <= end; p++) {
+                orderPorts.indexOf(p) >= 0 || orderPorts.push(p);
+              }
+            } else {
+              orderPorts.indexOf(+f) >= 0 || orderPorts.push(+f);
+            }
+          });
+        } catch(err) {
+          console.log(err);
+        }
+      }
+      return knex('webguiSetting').select().where({
+        key: 'account',
+      }).then(success => {
+        if(!success.length) { return Promise.reject('settings not found'); }
+        success[0].value = JSON.parse(success[0].value);
+        return success[0].value.port;
+      }).then(port => {
+        if(port.random) {
+          const getRandomPort = () => {
+            if(orderPorts.length) {
+              return orderPorts[Math.floor(Math.random() * orderPorts.length)];
+            } else {
+              return Math.floor(Math.random() * (port.end - port.start + 1) + port.start);
+            }
+          };
+          let retry = 0;
+          let myPort = getRandomPort();
+          const checkIfPortExists = port => {
+            let myPort = port;
+            return knex('account_plugin').select()
+            .where({ port }).then(success => {
+              if(success.length && retry <= 30) {
+                retry++;
+                myPort = getRandomPort();
+                return checkIfPortExists(myPort);
+              } else if (success.length && retry > 30) {
+                return Promise.reject('Can not get a random port');
+              } else {
+                return myPort;
+              }
+            });
+          };
+          return checkIfPortExists(myPort);
+        } else {
+          let query;
+          if(orderPorts.length) {
+            query = knex('account_plugin').select()
+            .whereIn('port', orderPorts)
+            .orderBy('port', 'ASC');
+          } else {
+            query = knex('account_plugin').select()
+            .whereBetween('port', [port.start, port.end])
+            .orderBy('port', 'ASC');
+          }
+          return query.then(success => {
+            const portArray = success.map(m => m.port);
+            let myPort;
+            if(orderPorts.length) {
+              for(const p of orderPorts) {
+                if(portArray.indexOf(+p) < 0) {
+                  myPort = p; break;
+                }
+              }
+            } else {
+              for(let p = port.start; p <= port.end; p++) {
+                if(portArray.indexOf(+p) < 0) {
+                  myPort = p; break;
+                }
+              }
+            }
+            if(myPort) {
+              return myPort;
+            } else {
+              return Promise.reject('no port');
+            }
+          });
+        }
+      });
+    };
+    const port = await getNewPort();
+    await addAccount(orderType, {
+      orderId,
+      user: userId,
+      port,
+      password: 'lynca'+Math.random().toString().substr(2,10),
+      time: Date.now(),
+      limit,
+      flow: orderInfo.flow,
+      server: orderInfo.server,
+      autoRemove: orderInfo.autoRemove ? 1 : 0,
+      autoRemoveDelay: orderInfo.autoRemoveDelay,
+      multiServerFlow: orderInfo.multiServerFlow ? 1 : 0,
+      active: orderInfo.active,
+    });
+    return;
+  }
+
+  const compareType = (current, order) => {
+    if(current === order) { return false; }
+    else if(current === 3) { return true; }
+    else if(current === 2 && order !== 3) { return true; }
+    else if(current === 4 && order === 5) { return true; }
+    else { return false; }
+  };
+  const onlyIncreaseTime = compareType(account.type, orderType);
+  if(onlyIncreaseTime) {
+    const accountData = JSON.parse(account.data);
+    const timePeriod = {
+      '2': 7 * 86400 * 1000,
+      '3': 30 * 86400 * 1000,
+      '4': 1 * 86400 * 1000,
+      '5': 3600 * 1000,
+    };
+    let expireTime = accountData.create + accountData.limit * timePeriod[account.type];
+    if(expireTime <= Date.now()) {
+      expireTime = timePeriod[orderType] * limit + Date.now();
+    } else {
+      expireTime += timePeriod[orderType] * limit;
+    }
+    let countTime = timePeriod[account.type];
+    accountData.create = expireTime - countTime;
+    accountData.limit = 1;
+    while(accountData.create >= Date.now()) {
+      accountData.limit += 1;
+      accountData.create -= countTime;
+    }
+    await knex('account_plugin').update({
+      data: JSON.stringify(accountData),
+    }).where({ id: accountId });
+    await accountFlow.edit(accountId);
+    return;
+  }
+
+  const accountData = JSON.parse(account.data);
+  accountData.flow = orderInfo.flow;
+  const timePeriod = {
+    '2': 7 * 86400 * 1000,
+    '3': 30 * 86400 * 1000,
+    '4': 1 * 86400 * 1000,
+    '5': 3600 * 1000,
+  };
+  let expireTime = accountData.create + accountData.limit * timePeriod[account.type];
+  if(expireTime <= Date.now()) {
+    expireTime = timePeriod[orderType] * limit + Date.now();
+  } else {
+    expireTime += timePeriod[orderType] * limit;
+  }
+  let countTime = timePeriod[orderType];
+  accountData.create = expireTime - countTime;
+  accountData.limit = 1;
+  while(accountData.create >= Date.now()) {
+    accountData.limit += 1;
+    accountData.create -= countTime;
+  }
+  // let port = await getAccount({ id: accountId }).then(success => success[0].port);
+  await knex('account_plugin').update({
+    type: orderType,
+    orderId,
+    data: JSON.stringify(accountData),
+    server: orderInfo.server,
+    autoRemove: orderInfo.autoRemove ? 1 : 0,
+    multiServerFlow: orderInfo.multiServerFlow ? 1 : 0,
+  }).where({ id: accountId });
+  await accountFlow.edit(accountId);
+  return;
+};
+
 const addAccountTime = async (userId, accountId, accountType, accountPeriod = 1) => {
   // type: 2 周 ,3 月, 4 天, 5 小时
   const getTimeByType = type => {
@@ -982,6 +1182,7 @@ exports.changePort = changePort;
 exports.addAccountLimit = addAccountLimit;
 exports.addAccountLimitToMonth = addAccountLimitToMonth;
 exports.setAccountLimit = setAccountLimit;
+exports.setAccountLimitForMingbo = setAccountLimitForMingbo;
 exports.addAccountTime = addAccountTime;
 
 exports.banAccount = banAccount;
