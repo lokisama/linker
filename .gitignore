@@ -42,7 +42,6 @@ config/development.yml
 
 .vscode
 lib
-webgui.yml
 ss.sqlite
 plugins/webgui/libs/bundle.js
 plugins/webgui/libs/lib.js

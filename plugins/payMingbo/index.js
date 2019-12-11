@@ -432,7 +432,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       const config = {
         out_trade_no: myOrderId,
         total_amount: "0.01",//totalAmount.toFixed(2),
-        subject: product.name,
+        subject: product.shortComment + " " +product.name,
         body: product.comment,
         timeout: orderExpire+'m',
       };
@@ -442,7 +442,7 @@ const createAppOrder = async (user, account, sku, limit, card, platform='alipay'
       
       const config = {
         out_trade_no: myOrderId,
-        body: product.name,
+        body: product.shortComment + " " +product.name,
         total_fee: 0.01,//totalAmount.toFixed(2), // 直接以元为单位 //totalAmount.toFixed(2),
         spbill_create_ip: '180.165.231.68' // 客户端ip TODO
       };
@@ -1157,7 +1157,7 @@ const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
       queryMap.FILTER_QUERIES.query.shouldQueries.push(queryConfig);
     })
 
-    const params = {
+    let params = {
       tableName: "TapGame",
       indexName: "TapGame",
       searchQuery: {
@@ -1190,7 +1190,37 @@ const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
           // [{count: Long.fromNumber(3), pic_id: "pic_id_3"}],
       ]
     };
-    const data = await client.search(params);
+    console.log(queryMap.FILTER_QUERIES);
+
+    let data = {};
+    let nextToken;
+
+    if( page*size + size < 2000){
+      data = await client.search(params);
+      nextToken = data.nextToken;
+    }else{
+
+      let searchQuery = {
+          token: nextToken,
+          limit: size,
+          getTotalCount: true,
+          query: queryMap.FILTER_QUERIES,
+          sort: {
+              sorters: [
+                  {
+                      fieldSort: {
+                          fieldName: sortFieldName,
+                          order: TableStore.SortOrder.SORT_ORDER_ASC
+                      }
+                  }
+              ]
+          }
+      };
+
+      params.searchQuery = searchQuery;
+      data = await client.search(params);
+
+    }
     // console.log('success 1:', JSON.stringify(data, null, 2));
     const r =TSHelper.parseRange(data);
     r.limit = size;

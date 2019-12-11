@@ -1154,6 +1154,8 @@ exports.filterTapGames = async (req, res) =>{
     const key = req.body.key || "androidStatus";
     const filter = req.body.filter || ["下载"];
 
+    const updateTimeParsed = req.query.updateTimeParsed || 0;
+
     if(!key){
       throw("key不能为空");
     }
@@ -1167,8 +1169,8 @@ exports.filterTapGames = async (req, res) =>{
     }
 
     
-    let r = await mingboPlugin.filterTapGames(page,size,key,filter);
-    res.send(r);
+      let r = await mingboPlugin.filterTapGames(page,size,key,filter);
+      res.send(r);
     
 
   }catch(e){

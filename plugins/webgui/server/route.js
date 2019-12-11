@@ -295,7 +295,7 @@ app.post('/api/mingbo/user/servers', isUser, user.getAccountForMingbo);
 app.post('/api/mingbo/user/package/check', isUser, user.checkPackage);
 app.get('/api/mingbo/tap/list/:page',user.getTapGames);
 // app.get('/api/mingbo/taptap', isUser, user.getTapData);
-app.post('/api/mingbo/taptap/filter', user.filterTapGames);
+app.post('/api/listTapGames', user.filterTapGames);
 //app.get('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/list', isUser, user.getGiftcards);
 app.post('/api/mingbo/user/giftcard/use', isUser, user.useGiftcard);

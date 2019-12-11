@@ -9,7 +9,7 @@ var YAML = require('yamljs');
 
 // Load yaml file using YAML.load
 
-var ath_url=path.resolve(__dirname, '../../ath.yaml');
+var ath_url=path.resolve(__dirname, '../../ath.yml');
 console.log(ath_url);
 
 var config = YAML.load(ath_url);
