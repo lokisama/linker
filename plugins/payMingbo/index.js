@@ -282,7 +282,7 @@ cron.second(async () => {
 
   //完成订单
   await knex('pay').update({
-    status: 'FINISH',
+    // status: 'FINISH',
     orderMode: 'charge',
     orderStatus: 1,
   }).whereNotNull("payCallback").whereNot({ status : 'FINISH'});

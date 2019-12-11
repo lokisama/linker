@@ -585,6 +585,7 @@ const setAccountLimit = async (userId, accountId, orderId) => {
 const setAccountLimitForMingbo = async (userId, accountId, sku) => {
   console.log("start ", userId,sku);
   const orderInfo = await orderPlugin.getOneBySku(sku);
+  console.log("vipType",orderInfo.vipType);
   if(orderInfo.baseId) {
     await knex('webgui_flow_pack').insert({
       accountId,
@@ -696,6 +697,7 @@ const setAccountLimitForMingbo = async (userId, accountId, sku) => {
       });
     };
     const port = await getNewPort();
+    console.log("port",port);
     await addAccount(orderType, {
       orderId:orderInfo.id,
       user: userId,
