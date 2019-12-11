@@ -310,13 +310,17 @@ exports.login = async (req, res) => {
       req.checkBody('outId', 'Invalid Id').notEmpty();
       const validation = await req.getValidationResult();
       if(!validation.isEmpty()) {
-        throw('invalid body');
+        return res.send({
+          "status":-1,
+          "success":false,
+          "data":'outId or phone err'
+        });
       }
-      try{
-        const id =await knex('user').update({
+      // try{
+        const id = await knex('user').update({
           outId: outId,
           phone: phone,
-          username: phone,
+          // username: phone,
           password: user.createPassword(password,phone)
         }).where({
           outId: outId
@@ -325,13 +329,13 @@ exports.login = async (req, res) => {
         });
 
         console.log(id);
-      }catch(err){
-        return res.send({
-          "status":-1,
-          "success":false,
-          "data":'outId or phone err'
-        });
-      }
+      // }catch(err){
+      //   return res.send({
+      //     "status":-1,
+      //     "success":false,
+      //     "data":'outId or phone err'
+      //   });
+      // }
 
       const result = await user.checkPassword(phone, password);
 
