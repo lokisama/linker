@@ -282,6 +282,8 @@ app.post('/api/mingbo/orders', isAdmin, admin.getOrdersForMingbo);
 app.get('/api/mingbo/plans',isAdmin, isSuperAdmin, admin.getPlans);
 app.get('/api/mingbo/report', isAdmin, admin.getReport);
 app.post('/api/mingbo/ytb/get', user.youtube);
+app.post('/api/listTapGames/push', user.pushQueue);
+app.post('/api/listTapGames/pull', user.pullQueue);
 
 
 /*

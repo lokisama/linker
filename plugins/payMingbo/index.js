@@ -15,6 +15,7 @@ const path = require('path');
 const ytdl = require('ytdl-core');
 var TableStore = require('tablestore');
 const  {client,TSHelper} = require("./aliyun-ots-utils");
+const redis = appRequire('init/redis').redis;
 
 // var client = new TableStore.Client({
 //   accessKeyId: 'LTAI4Fo3DFPF5heh9zAo4Cqq',
@@ -269,6 +270,7 @@ const sendSuccessMail = async userId => {
   await emailPlugin.sendMail(user.email, orderMail.title, orderMail.content);
 };
 
+//有问题
 cron.second(async () => {
   logger.info('check pay order');
  //if(!alipay_f2f) { return; }
@@ -1235,6 +1237,22 @@ const filterTapGames = async (page=1 ,size = 10, key , filter)=>{
     return r;
      
 }
+
+const pushToRefreshQueue = async (model) =>{
+  await redis.lpush('RefreshTapGames:Queue', JSON.stringify(model));
+  const len = await redis.llen('RefreshTapGames:Queue');
+  return len;
+}
+
+
+const getFromRefreshQueue = async () =>{
+  const model = await redis.lpop('RefreshTapGames:Queue');
+  return JSON.parse(model);
+}
+
+
+exports.pushToRefreshQueue = pushToRefreshQueue;
+exports.getFromRefreshQueue = getFromRefreshQueue;
 
 
 

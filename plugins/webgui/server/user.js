@@ -1129,6 +1129,32 @@ exports.youtube = async (req, res) => {
   }
 }
 
+exports.pushQueue = async (req, res) => {
+  try {
+    const gameName = req.body.gameName;
+    const tapId = req.body.tapId;
+
+    const result = await mingboPlugin.pushToRefreshQueue({"gameName":gameName,"tapId":tapId});
+
+    return res.send({"success":true, "data":result});
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+}
+
+exports.pullQueue = async (req, res) => {
+  try {
+
+    const result = await mingboPlugin.getFromRefreshQueue();
+
+    return res.send({"success":true, "data":result});
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+}
+
 exports.checkPackage = async (req,res) =>{
   try{
     const list = req.body.list;
