@@ -273,10 +273,12 @@ exports.batchSendGiftCardForMingboUser = async (req, res) => {
     const phone = o.phpne;
     const type = o.type;
     const serverId = o.serverId;
+    const outId = o.outId;
 
     return {
       "success": true,
       "phone":  o.phone,
+      "outId":  o.outId,
       "type":   o.type,
       "serverId":o.serverId,
       "cardId":1,
