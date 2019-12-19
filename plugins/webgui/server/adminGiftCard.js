@@ -266,6 +266,32 @@ exports.sendGiftCardForMingboUser = async (req, res) => {
   }
 };
 
+exports.batchSendGiftCardForMingboUser = async (req, res) => {
+  const batch = req.body.batchList;
+
+  const result = batch.map(o=>{
+    const phone = o.phpne;
+    const type = o.type;
+    const serverId = o.serverId;
+
+    return {
+      "success": true,
+      "phone":  o.phone,
+      "type":   o.type,
+      "serverId":o.serverId,
+      "cardId":1,
+      "password":"xsxsx",
+      "status": "AVAILABLE",
+      "sku": "base_hourly",
+      "comment": "0.5天免费"
+    };
+  })
+
+  // console.log(batch);
+
+  return res.send({"success":true, "data":result});
+}
+
 exports.searchGiftcard = async (req, res) => {
   try {
 

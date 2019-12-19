@@ -272,6 +272,9 @@ app.get('/api/user/order', isUser, user.getOrder);
 /*
  Mingbo API ADMIN
  */
+
+
+app.post('/api/mingbo/giftcard/batchSend', isAdmin, isSuperAdmin, adminGiftCard.batchSendGiftCardForMingboUser);
 app.post('/api/mingbo/giftcard/send', isAdmin, isSuperAdmin, adminGiftCard.sendGiftCardForMingboUser);
 app.post('/api/mingbo/alipay/callback', user.alipayCallbackMingbo);
 app.post('/api/mingbo/wechat/callback', user.wechatCallbackMingbo);
